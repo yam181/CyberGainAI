@@ -13,14 +13,37 @@ st.set_page_config(
     layout="centered"
 )
 
+# -------------------------
+# RTL interface styling
+# -------------------------
 st.markdown("""
 <style>
 .stApp {
     max-width: 950px;
     margin: auto;
 }
+
 [data-testid="stChatMessage"] {
     border-radius: 12px;
+}
+
+.rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+[data-testid="stChatInput"] textarea {
+    direction: auto;
+    text-align: start;
+}
+
+input, textarea {
+    text-align: start;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -61,13 +84,13 @@ You are CyberGain AI, an assistant specializing in:
 IT, Cloud Computing, Networking, Linux, Windows Server,
 and defensive cybersecurity.
 
-Always answer in the same language as the user's latest message.
-Support Arabic, English, Hebrew, and other languages.
-If the user changes language, change your response language too.
-
-Be clear, concise, and beginner-friendly.
-Provide step-by-step instructions when useful.
-Focus on legal, authorized, defensive cybersecurity.
+LANGUAGE:
+- Always answer in the same language as the user's latest message.
+- Support Arabic, English, Hebrew, and other languages.
+- If the user changes language, change your response language.
+- Use clear, beginner-friendly explanations.
+- Give step-by-step instructions when helpful.
+- Focus on legal and authorized cybersecurity.
 """
 
 
@@ -88,8 +111,12 @@ if "history_loaded" not in st.session_state:
 # Login and signup
 # -------------------------
 if st.session_state.user is None:
+    st.markdown(
+        '<div class="rtl">',
+        unsafe_allow_html=True
+    )
     st.title("🛡️ CyberGain AI")
-    st.caption("Your AI assistant for IT, Cloud & Cybersecurity")
+    st.caption("مساعدك الذكي في IT وCloud والأمن السيبراني")
 
     login_tab, signup_tab = st.tabs([
         "تسجيل الدخول | Login",
@@ -144,9 +171,7 @@ if st.session_state.user is None:
             use_container_width=True
         ):
             if len(new_password) < 8:
-                st.warning(
-                    "كلمة المرور يجب أن تكون 8 أحرف على الأقل."
-                )
+                st.warning("كلمة المرور يجب أن تكون 8 أحرف على الأقل.")
             elif not new_email.strip():
                 st.warning("اكتب البريد الإلكتروني.")
             else:
@@ -171,11 +196,12 @@ if st.session_state.user is None:
                     st.error("خطأ أثناء إنشاء الحساب:")
                     st.code(f"{type(e).__name__}: {e}")
 
+    st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
 
 # -------------------------
-# Load saved messages
+# Load saved chat history
 # -------------------------
 user_id = str(st.session_state.user.id)
 
@@ -207,7 +233,7 @@ if not st.session_state.history_loaded:
 
 
 # -------------------------
-# Chat interface
+# Main chat interface
 # -------------------------
 st.title("🛡️ CyberGain AI")
 st.caption("IT • Cloud • Networking • Linux • Cybersecurity")
@@ -229,8 +255,8 @@ with st.sidebar:
     ):
         try:
             supabase.auth.sign_out()
-        except Exception as e:
-            st.warning(f"تعذّر تسجيل الخروج من الخدمة: {e}")
+        except Exception:
+            pass
 
         st.session_state.user = None
         st.session_state.messages = []
@@ -238,7 +264,9 @@ with st.sidebar:
         st.rerun()
 
 
+# -------------------------
 # Display messages
+# -------------------------
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -276,9 +304,7 @@ if prompt:
                 answer = response.choices[0].message.content
 
                 if not answer:
-                    raise RuntimeError(
-                        "The AI returned an empty answer."
-                    )
+                    raise RuntimeError("The AI returned an empty answer.")
 
                 st.markdown(answer)
 
@@ -317,8 +343,5 @@ if prompt:
         ]).execute()
 
     except Exception as e:
-        st.error(
-            "وصلتك الإجابة، لكن فشل حفظ المحادثة في Supabase:"
-        )
+        st.error("وصلتك الإجابة، لكن فشل حفظ المحادثة:")
         st.code(f"{type(e).__name__}: {e}")
-
