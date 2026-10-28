@@ -12,7 +12,11 @@ st.set_page_config(
 SYSTEM_PROMPT = """
 أنت CyberGain AI، مساعد متخصص في IT وCloud والشبكات
 وLinux وWindows Server والأمن السيبراني الدفاعي.
-أجب بالعربية البسيطة وباختصار، وركز على الحماية والاستخدام المصرح به.
+
+- أجب بالعربية البسيطة وباختصار.
+- استخدم كلمات سهلة للمبتدئين.
+- أعط مثالًا بسيطًا عند الحاجة.
+- ركز على الحماية والاستخدام المصرح به.
 """
 
 st.title("🛡️ CyberGain AI")
@@ -24,18 +28,20 @@ try:
             st.secrets["SUPABASE_URL"],
             st.secrets["SUPABASE_KEY"]
         )
-
     db = st.session_state.supabase
 
-except Exception:
-    st.error("تعذر الاتصال بقاعدة البيانات. تأكد من إعدادات Secrets.")
+except Exception as e:
+    st.error("فشل الاتصال بـ Supabase")
+    st.error(f"{type(e).__name__}: {e}")
     st.stop()
+
 
 if "user" not in st.session_state:
     st.session_state.user = None
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
 
 if not st.session_state.user:
     st.subheader("🔐 حسابك الشخصي")
@@ -47,7 +53,10 @@ if not st.session_state.user:
     )
 
     email = st.text_input("البريد الإلكتروني")
-    password = st.text_input("كلمة المرور", type="password")
+    password = st.text_input(
+        "كلمة المرور",
+        type="password"
+    )
 
     if st.button("متابعة", use_container_width=True):
         if not email or not password:
@@ -62,8 +71,9 @@ if not st.session_state.user:
 
                     if result.session is None:
                         st.info(
-                            "إذا طُلب تأكيد البريد، افتح رسالة Supabase "
-                            "وأكّد حسابك، ثم سجّل الدخول."
+                            "إذا طُلب تأكيد البريد الإلكتروني، "
+                            "افتح رسالة Supabase وأكّد حسابك، "
+                            "ثم ارجع وسجّل الدخول."
                         )
                     else:
                         st.session_state.user = result.user
@@ -87,19 +97,22 @@ if not st.session_state.user:
                     )
 
                     st.session_state.messages = [
-                        {"role": item["role"], "content": item["content"]}
+                        {
+                            "role": item["role"],
+                            "content": item["content"]
+                        }
                         for item in history.data
                     ]
 
                     st.rerun()
 
-            except Exception:
-                st.error(
-                    "تعذّر تسجيل الدخول أو إنشاء الحساب. "
-                    "تأكد من بياناتك وإعدادات Supabase."
-                )
+            except Exception as e:
+                st.error("حدث خطأ أثناء تسجيل الدخول أو إنشاء الحساب.")
+                st.error(f"نوع الخطأ: {type(e).__name__}")
+                st.error(str(e))
 
     st.stop()
+
 
 user = st.session_state.user
 st.caption(f"الحساب: {user.email}")
@@ -107,10 +120,12 @@ st.caption(f"الحساب: {user.email}")
 if st.button("تسجيل الخروج"):
     try:
         db.auth.sign_out()
-    finally:
-        st.session_state.user = None
-        st.session_state.messages = []
-        st.rerun()
+    except Exception as e:
+        st.error(f"خطأ أثناء تسجيل الخروج: {e}")
+    st.session_state.user = None
+    st.session_state.messages = []
+    st.rerun()
+
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -136,20 +151,26 @@ if question:
 
         with st.chat_message("assistant"):
             with st.spinner("🧠 يفكر..."):
-                client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+                client = Groq(
+                    api_key=st.secrets["GROQ_API_KEY"]
+                )
 
                 response = client.chat.completions.create(
                     model="openai/gpt-oss-120b",
                     messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT}
+                        {
+                            "role": "system",
+                            "content": SYSTEM_PROMPT
+                        }
                     ] + st.session_state.messages,
                     max_tokens=300,
                     temperature=0.2
                 )
 
-                answer = response.choices[0].message.content
-                if not answer:
-                    answer = "ما وصلني جواب. جرّب مرة ثانية."
+                answer = (
+                    response.choices[0].message.content
+                    or "ما وصلني جواب. جرّب مرة ثانية."
+                )
 
                 st.markdown(answer)
 
@@ -164,8 +185,7 @@ if question:
             "content": answer
         })
 
-    except Exception:
-        st.error(
-            "حدث خطأ أثناء حفظ المحادثة أو الحصول على الرد. "
-            "تحقق من إعدادات Supabase وGroq."
-        )
+    except Exception as e:
+        st.error("حدث خطأ أثناء إرسال السؤال أو حفظ المحادثة.")
+        st.error(f"نوع الخطأ: {type(e).__name__}")
+        st.error(str(e))
