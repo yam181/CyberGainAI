@@ -4,6 +4,7 @@ from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone
 import html
+import uuid
 
 # -------------------------
 # Page settings
@@ -11,50 +12,22 @@ import html
 st.set_page_config(
     page_title="CyberGain AI",
     page_icon="🛡️",
-    layout="centered"
+    layout="wide"
 )
 
-# -------------------------
-# Interface styling
-# -------------------------
 st.markdown("""
 <style>
-.stApp {
-    max-width: 950px;
-    margin: auto;
-}
-
-[data-testid="stChatMessage"] {
-    border-radius: 12px;
-}
-
+.stApp { max-width: 1250px; margin: auto; }
+[data-testid="stChatMessage"] { border-radius: 12px; }
 [data-testid="stChatInput"] textarea {
-    direction: auto !important;
     text-align: start !important;
-}
-
-input, textarea {
-    text-align: start;
 }
 </style>
 """, unsafe_allow_html=True)
 
 
 # -------------------------
-# Automatic text direction
-# -------------------------
-def display_message(content):
-    safe_content = html.escape(content)
-    st.markdown(
-        f'<div dir="auto" style="text-align: start; '
-        f'white-space: pre-wrap; overflow-wrap: anywhere;">'
-        f'{safe_content}</div>',
-        unsafe_allow_html=True
-    )
-
-
-# -------------------------
-# Connect to services
+# Services
 # -------------------------
 @st.cache_resource
 def get_supabase():
@@ -63,13 +36,9 @@ def get_supabase():
         st.secrets["SUPABASE_KEY"]
     )
 
-
 @st.cache_resource
 def get_groq():
-    return Groq(
-        api_key=st.secrets["GROQ_API_KEY"]
-    )
-
+    return Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 try:
     supabase = get_supabase()
@@ -80,39 +49,47 @@ except Exception as e:
     st.stop()
 
 
-# -------------------------
-# AI instructions
-# -------------------------
 SYSTEM_PROMPT = """
-You are CyberGain AI, an assistant specializing in:
-IT, Cloud Computing, Networking, Linux, Windows Server,
+You are CyberGain AI, an assistant specializing in IT,
+Cloud Computing, networking, Linux, Windows Server,
 and defensive cybersecurity.
 
 Always respond in the same language as the user's latest message.
 Support Arabic, English, Hebrew, and other languages.
-When the user changes language, change your response language too.
-
-Keep answers clear and beginner-friendly.
-Give step-by-step instructions when useful.
-Focus on legal, authorized, defensive cybersecurity.
+Be clear, friendly, and beginner-friendly.
+Give step-by-step instructions when helpful.
+Focus on legal and authorized cybersecurity.
 """
+
+
+def display_message(content):
+    safe = html.escape(content).replace("\n", "<br>")
+    st.markdown(
+        f'<div dir="auto" style="text-align:start;'
+        f'overflow-wrap:anywhere">{safe}</div>',
+        unsafe_allow_html=True
+    )
 
 
 # -------------------------
 # Session state
 # -------------------------
-if "user" not in st.session_state:
-    st.session_state.user = None
+defaults = {
+    "user": None,
+    "messages": [],
+    "conversations": [],
+    "conversation_id": None,
+    "history_loaded": False,
+    "auth_notice": ""
+}
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "history_loaded" not in st.session_state:
-    st.session_state.history_loaded = False
+for key, value in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 # -------------------------
-# Login and signup
+# Authentication
 # -------------------------
 if st.session_state.user is None:
     st.title("🛡️ CyberGain AI")
@@ -124,11 +101,7 @@ if st.session_state.user is None:
     ])
 
     with login_tab:
-        email = st.text_input(
-            "البريد الإلكتروني",
-            key="login_email"
-        )
-
+        email = st.text_input("البريد الإلكتروني", key="login_email")
         password = st.text_input(
             "كلمة المرور",
             type="password",
@@ -145,10 +118,12 @@ if st.session_state.user is None:
                 if result.user and result.session:
                     st.session_state.user = result.user
                     st.session_state.messages = []
+                    st.session_state.conversations = []
+                    st.session_state.conversation_id = None
                     st.session_state.history_loaded = False
                     st.rerun()
                 else:
-                    st.error("لم ينجح تسجيل الدخول.")
+                    st.error("تعذّر تسجيل الدخول.")
 
             except Exception as e:
                 st.error("خطأ أثناء تسجيل الدخول:")
@@ -159,21 +134,17 @@ if st.session_state.user is None:
             "البريد الإلكتروني الجديد",
             key="signup_email"
         )
-
         new_password = st.text_input(
             "كلمة المرور الجديدة (8 أحرف أو أكثر)",
             type="password",
             key="signup_password"
         )
 
-        if st.button(
-            "إنشاء حساب | Sign up",
-            use_container_width=True
-        ):
-            if len(new_password) < 8:
+        if st.button("إنشاء حساب | Sign up", use_container_width=True):
+            if not new_email.strip():
+                st.warning("اكتب بريدك الإلكتروني.")
+            elif len(new_password) < 8:
                 st.warning("كلمة المرور يجب أن تكون 8 أحرف على الأقل.")
-            elif not new_email.strip():
-                st.warning("اكتب البريد الإلكتروني.")
             else:
                 try:
                     result = supabase.auth.sign_up({
@@ -184,6 +155,8 @@ if st.session_state.user is None:
                     if result.user and result.session:
                         st.session_state.user = result.user
                         st.session_state.messages = []
+                        st.session_state.conversations = []
+                        st.session_state.conversation_id = None
                         st.session_state.history_loaded = False
                         st.rerun()
                     else:
@@ -199,59 +172,116 @@ if st.session_state.user is None:
     st.stop()
 
 
-# -------------------------
-# Load saved chat history
-# -------------------------
 user_id = str(st.session_state.user.id)
 
+
+# -------------------------
+# Conversation helpers
+# -------------------------
+def load_conversations():
+    result = (
+        supabase.table("conversations")
+        .select("id, title, created_at, updated_at")
+        .eq("user_id", user_id)
+        .order("updated_at", desc=True)
+        .execute()
+    )
+    return result.data or []
+
+
+def create_conversation():
+    result = supabase.table("conversations").insert({
+        "user_id": user_id,
+        "title": "محادثة جديدة"
+    }).execute()
+
+    if not result.data:
+        raise RuntimeError("لم يتم إنشاء المحادثة.")
+
+    conversation = result.data[0]
+    st.session_state.conversation_id = str(conversation["id"])
+    st.session_state.messages = []
+    st.session_state.conversations = load_conversations()
+
+
+def open_conversation(conversation_id):
+    result = (
+        supabase.table("chat_history")
+        .select("role, content, created_at")
+        .eq("user_id", user_id)
+        .eq("conversation_id", conversation_id)
+        .order("created_at")
+        .execute()
+    )
+
+    st.session_state.conversation_id = str(conversation_id)
+    st.session_state.messages = [
+        {"role": row["role"], "content": row["content"]}
+        for row in (result.data or [])
+        if row["role"] in ("user", "assistant")
+    ]
+
+
+# -------------------------
+# Load conversation list
+# -------------------------
 if not st.session_state.history_loaded:
     try:
-        result = (
-            supabase.table("chat_history")
-            .select("role, content, created_at")
-            .eq("user_id", user_id)
-            .order("created_at")
-            .execute()
-        )
+        st.session_state.conversations = load_conversations()
 
-        st.session_state.messages = [
-            {
-                "role": row["role"],
-                "content": row["content"]
-            }
-            for row in result.data
-            if row["role"] in ("user", "assistant")
-        ]
+        if st.session_state.conversations:
+            first_id = str(st.session_state.conversations[0]["id"])
+            open_conversation(first_id)
+        else:
+            create_conversation()
 
         st.session_state.history_loaded = True
 
     except Exception as e:
-        st.error("خطأ أثناء تحميل المحادثات:")
+        st.error("تعذّر تحميل المحادثات من Supabase.")
         st.code(f"{type(e).__name__}: {e}")
         st.stop()
 
 
 # -------------------------
-# Main interface
+# Sidebar
 # -------------------------
-st.title("🛡️ CyberGain AI")
-st.caption("IT • Cloud • Networking • Linux • Cybersecurity")
-
 with st.sidebar:
-    st.subheader("الحساب | Account")
-    st.write(st.session_state.user.email)
+    st.title("🛡️ CyberGain AI")
+    st.caption(st.session_state.user.email)
 
-    if st.button(
-        "محادثة جديدة | New chat",
-        use_container_width=True
-    ):
-        st.session_state.messages = []
-        st.rerun()
+    if st.button("＋ محادثة جديدة", use_container_width=True):
+        try:
+            create_conversation()
+            st.rerun()
+        except Exception as e:
+            st.error("تعذّر إنشاء محادثة جديدة.")
+            st.code(f"{type(e).__name__}: {e}")
 
-    if st.button(
-        "تسجيل الخروج | Logout",
-        use_container_width=True
-    ):
+    st.divider()
+    st.subheader("محادثاتي")
+
+    for conversation in st.session_state.conversations:
+        cid = str(conversation["id"])
+        title = conversation.get("title") or "محادثة جديدة"
+        button_label = ("● " if cid == st.session_state.conversation_id
+                        else "") + title
+
+        if st.button(
+            button_label,
+            key=f"conversation_{cid}",
+            use_container_width=True
+        ):
+            try:
+                open_conversation(cid)
+                st.rerun()
+            except Exception as e:
+                st.error("تعذّر فتح المحادثة.")
+                st.code(f"{type(e).__name__}: {e}")
+
+    st.divider()
+
+    if st.button("تسجيل الخروج | Logout", use_container_width=True):
         try:
             supabase.auth.sign_out()
         except Exception:
@@ -259,13 +289,31 @@ with st.sidebar:
 
         st.session_state.user = None
         st.session_state.messages = []
+        st.session_state.conversations = []
+        st.session_state.conversation_id = None
         st.session_state.history_loaded = False
         st.rerun()
 
 
 # -------------------------
-# Display conversation
+# Current conversation
 # -------------------------
+current_conversation = next(
+    (
+        c for c in st.session_state.conversations
+        if str(c["id"]) == str(st.session_state.conversation_id)
+    ),
+    None
+)
+
+current_title = (
+    current_conversation.get("title", "محادثة جديدة")
+    if current_conversation else "محادثة جديدة"
+)
+
+st.title("🛡️ CyberGain AI")
+st.caption(current_title)
+
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         display_message(message["content"])
@@ -277,6 +325,8 @@ for message in st.session_state.messages:
 prompt = st.chat_input("اكتب سؤالك بأي لغة...")
 
 if prompt:
+    conversation_id = st.session_state.conversation_id
+
     st.session_state.messages.append({
         "role": "user",
         "content": prompt
@@ -285,19 +335,13 @@ if prompt:
     with st.chat_message("user"):
         display_message(prompt)
 
-    # -------------------------
-    # Generate AI answer
-    # -------------------------
     try:
         with st.chat_message("assistant"):
-            with st.spinner("CyberGain AI is thinking..."):
+            with st.spinner("CyberGain AI يفكر..."):
                 response = groq.chat.completions.create(
                     model="openai/gpt-oss-120b",
                     messages=[
-                        {
-                            "role": "system",
-                            "content": SYSTEM_PROMPT
-                        },
+                        {"role": "system", "content": SYSTEM_PROMPT},
                         *st.session_state.messages[-20:]
                     ],
                     max_tokens=2048
@@ -306,9 +350,7 @@ if prompt:
                 answer = response.choices[0].message.content
 
                 if not answer:
-                    raise RuntimeError(
-                        "The AI returned an empty answer."
-                    )
+                    raise RuntimeError("عاد النموذج بإجابة فارغة.")
 
                 display_message(answer)
 
@@ -318,25 +360,27 @@ if prompt:
         })
 
     except Exception as e:
-        st.error("فشل الحصول على إجابة من Groq:")
+        st.error("حدث خطأ أثناء الحصول على الإجابة.")
         st.code(f"{type(e).__name__}: {e}")
         st.stop()
 
     # -------------------------
-    # Save conversation
+    # Save messages
     # -------------------------
     try:
+        now = datetime.now(timezone.utc).isoformat()
+
         supabase.table("chat_history").insert([
             {
                 "user_id": user_id,
+                "conversation_id": conversation_id,
                 "role": "user",
                 "content": prompt,
-                "created_at": datetime.now(
-                    timezone.utc
-                ).isoformat()
+                "created_at": now
             },
             {
                 "user_id": user_id,
+                "conversation_id": conversation_id,
                 "role": "assistant",
                 "content": answer,
                 "created_at": datetime.now(
@@ -345,6 +389,33 @@ if prompt:
             }
         ]).execute()
 
+        # Name new conversations after the first question
+        if current_title == "محادثة جديدة":
+            title = " ".join(prompt.strip().split())[:55]
+            if not title:
+                title = "محادثة جديدة"
+
+            supabase.table("conversations").update({
+                "title": title,
+                "updated_at": datetime.now(
+                    timezone.utc
+                ).isoformat()
+            }).eq("id", conversation_id).eq(
+                "user_id", user_id
+            ).execute()
+
+        else:
+            supabase.table("conversations").update({
+                "updated_at": datetime.now(
+                    timezone.utc
+                ).isoformat()
+            }).eq("id", conversation_id).eq(
+                "user_id", user_id
+            ).execute()
+
+        st.session_state.conversations = load_conversations()
+        st.rerun()
+
     except Exception as e:
-        st.error("وصلتك الإجابة، لكن فشل حفظ المحادثة:")
+        st.error("ظهرت الإجابة، لكن تعذّر حفظ المحادثة.")
         st.code(f"{type(e).__name__}: {e}")
