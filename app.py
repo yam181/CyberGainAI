@@ -3,6 +3,7 @@ import streamlit as st
 from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone
+import html
 
 # -------------------------
 # Page settings
@@ -14,7 +15,7 @@ st.set_page_config(
 )
 
 # -------------------------
-# RTL interface styling
+# Interface styling
 # -------------------------
 st.markdown("""
 <style>
@@ -27,19 +28,9 @@ st.markdown("""
     border-radius: 12px;
 }
 
-.rtl {
-    direction: rtl;
-    text-align: right;
-}
-
-[dir="rtl"] {
-    direction: rtl;
-    text-align: right;
-}
-
 [data-testid="stChatInput"] textarea {
-    direction: auto;
-    text-align: start;
+    direction: auto !important;
+    text-align: start !important;
 }
 
 input, textarea {
@@ -47,6 +38,19 @@ input, textarea {
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+# -------------------------
+# Automatic text direction
+# -------------------------
+def display_message(content):
+    safe_content = html.escape(content)
+    st.markdown(
+        f'<div dir="auto" style="text-align: start; '
+        f'white-space: pre-wrap; overflow-wrap: anywhere;">'
+        f'{safe_content}</div>',
+        unsafe_allow_html=True
+    )
 
 
 # -------------------------
@@ -84,13 +88,13 @@ You are CyberGain AI, an assistant specializing in:
 IT, Cloud Computing, Networking, Linux, Windows Server,
 and defensive cybersecurity.
 
-LANGUAGE:
-- Always answer in the same language as the user's latest message.
-- Support Arabic, English, Hebrew, and other languages.
-- If the user changes language, change your response language.
-- Use clear, beginner-friendly explanations.
-- Give step-by-step instructions when helpful.
-- Focus on legal and authorized cybersecurity.
+Always respond in the same language as the user's latest message.
+Support Arabic, English, Hebrew, and other languages.
+When the user changes language, change your response language too.
+
+Keep answers clear and beginner-friendly.
+Give step-by-step instructions when useful.
+Focus on legal, authorized, defensive cybersecurity.
 """
 
 
@@ -111,10 +115,6 @@ if "history_loaded" not in st.session_state:
 # Login and signup
 # -------------------------
 if st.session_state.user is None:
-    st.markdown(
-        '<div class="rtl">',
-        unsafe_allow_html=True
-    )
     st.title("🛡️ CyberGain AI")
     st.caption("مساعدك الذكي في IT وCloud والأمن السيبراني")
 
@@ -196,7 +196,6 @@ if st.session_state.user is None:
                     st.error("خطأ أثناء إنشاء الحساب:")
                     st.code(f"{type(e).__name__}: {e}")
 
-    st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
 
@@ -233,7 +232,7 @@ if not st.session_state.history_loaded:
 
 
 # -------------------------
-# Main chat interface
+# Main interface
 # -------------------------
 st.title("🛡️ CyberGain AI")
 st.caption("IT • Cloud • Networking • Linux • Cybersecurity")
@@ -265,15 +264,15 @@ with st.sidebar:
 
 
 # -------------------------
-# Display messages
+# Display conversation
 # -------------------------
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        display_message(message["content"])
 
 
 # -------------------------
-# Ask AI
+# Chat input
 # -------------------------
 prompt = st.chat_input("اكتب سؤالك بأي لغة...")
 
@@ -284,8 +283,11 @@ if prompt:
     })
 
     with st.chat_message("user"):
-        st.markdown(prompt)
+        display_message(prompt)
 
+    # -------------------------
+    # Generate AI answer
+    # -------------------------
     try:
         with st.chat_message("assistant"):
             with st.spinner("CyberGain AI is thinking..."):
@@ -304,9 +306,11 @@ if prompt:
                 answer = response.choices[0].message.content
 
                 if not answer:
-                    raise RuntimeError("The AI returned an empty answer.")
+                    raise RuntimeError(
+                        "The AI returned an empty answer."
+                    )
 
-                st.markdown(answer)
+                display_message(answer)
 
         st.session_state.messages.append({
             "role": "assistant",
@@ -318,9 +322,8 @@ if prompt:
         st.code(f"{type(e).__name__}: {e}")
         st.stop()
 
-
     # -------------------------
-    # Save messages to Supabase
+    # Save conversation
     # -------------------------
     try:
         supabase.table("chat_history").insert([
