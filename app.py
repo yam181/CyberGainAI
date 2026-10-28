@@ -10,24 +10,27 @@ import uuid
 # Page settings
 # -------------------------
 st.set_page_config(
-    page_title="CyberGain AI",
+    page_title="NEXORA AI",
     page_icon="🛡️",
     layout="wide"
 )
 
 st.markdown("""
 <style>
-.stApp { max-width: 1250px; margin: auto; }
-[data-testid="stChatMessage"] { border-radius: 12px; }
-[data-testid="stChatInput"] textarea {
-    text-align: start !important;
-}
+    .block-container {
+        max-width: 1250px;
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        text-align: start;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-
 # -------------------------
-# Services
+# Connections
 # -------------------------
 @st.cache_resource
 def get_supabase():
@@ -40,36 +43,20 @@ def get_supabase():
 def get_groq():
     return Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-try:
-    supabase = get_supabase()
-    groq = get_groq()
-except Exception as e:
-    st.error("فشل الاتصال بالخدمات.")
-    st.code(f"{type(e).__name__}: {e}")
-    st.stop()
+supabase = get_supabase()
+groq = get_groq()
 
+MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
-You are CyberGain AI, an assistant specializing in IT,
-Cloud Computing, networking, Linux, Windows Server,
-and defensive cybersecurity.
-
-Always respond in the same language as the user's latest message.
-Support Arabic, English, Hebrew, and other languages.
-Be clear, friendly, and beginner-friendly.
-Give step-by-step instructions when helpful.
-Focus on legal and authorized cybersecurity.
+You are NEXORA AI, a helpful multilingual AI assistant.
+Reply in the same language as the user's latest message.
+Support users with IT, cloud computing, networking, Linux,
+programming, and defensive cybersecurity.
+Explain concepts clearly and adapt to the user's skill level.
+Never claim to have performed actions you did not perform.
+Provide safe, authorized cybersecurity guidance.
 """
-
-
-def display_message(content):
-    safe = html.escape(content).replace("\n", "<br>")
-    st.markdown(
-        f'<div dir="auto" style="text-align:start;'
-        f'overflow-wrap:anywhere">{safe}</div>',
-        unsafe_allow_html=True
-    )
-
 
 # -------------------------
 # Session state
@@ -87,159 +74,184 @@ for key, value in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-
 # -------------------------
-# Authentication
+# Display messages safely
 # -------------------------
-if st.session_state.user is None:
-    st.title("🛡️ CyberGain AI")
-    st.caption("مساعدك الذكي في IT وCloud والأمن السيبراني")
-
-    login_tab, signup_tab = st.tabs([
-        "تسجيل الدخول | Login",
-        "إنشاء حساب | Sign up"
-    ])
-
-    with login_tab:
-        email = st.text_input("البريد الإلكتروني", key="login_email")
-        password = st.text_input(
-            "كلمة المرور",
-            type="password",
-            key="login_password"
-        )
-
-        if st.button("دخول | Login", use_container_width=True):
-            try:
-                result = supabase.auth.sign_in_with_password({
-                    "email": email.strip(),
-                    "password": password
-                })
-
-                if result.user and result.session:
-                    st.session_state.user = result.user
-                    st.session_state.messages = []
-                    st.session_state.conversations = []
-                    st.session_state.conversation_id = None
-                    st.session_state.history_loaded = False
-                    st.rerun()
-                else:
-                    st.error("تعذّر تسجيل الدخول.")
-
-            except Exception as e:
-                st.error("خطأ أثناء تسجيل الدخول:")
-                st.code(f"{type(e).__name__}: {e}")
-
-    with signup_tab:
-        new_email = st.text_input(
-            "البريد الإلكتروني الجديد",
-            key="signup_email"
-        )
-        new_password = st.text_input(
-            "كلمة المرور الجديدة (8 أحرف أو أكثر)",
-            type="password",
-            key="signup_password"
-        )
-
-        if st.button("إنشاء حساب | Sign up", use_container_width=True):
-            if not new_email.strip():
-                st.warning("اكتب بريدك الإلكتروني.")
-            elif len(new_password) < 8:
-                st.warning("كلمة المرور يجب أن تكون 8 أحرف على الأقل.")
-            else:
-                try:
-                    result = supabase.auth.sign_up({
-                        "email": new_email.strip(),
-                        "password": new_password
-                    })
-
-                    if result.user and result.session:
-                        st.session_state.user = result.user
-                        st.session_state.messages = []
-                        st.session_state.conversations = []
-                        st.session_state.conversation_id = None
-                        st.session_state.history_loaded = False
-                        st.rerun()
-                    else:
-                        st.success(
-                            "افحص بريدك الإلكتروني لتأكيد الحساب، "
-                            "ثم سجّل الدخول."
-                        )
-
-                except Exception as e:
-                    st.error("خطأ أثناء إنشاء الحساب:")
-                    st.code(f"{type(e).__name__}: {e}")
-
-    st.stop()
-
-
-user_id = str(st.session_state.user.id)
-
+def display_message(content):
+    safe_content = html.escape(str(content)).replace("\n", "<br>")
+    st.markdown(
+        f"""
+        <div dir="auto"
+             style="text-align:start; overflow-wrap:anywhere;">
+            {safe_content}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # -------------------------
 # Conversation helpers
 # -------------------------
 def load_conversations():
+    user_id = st.session_state.user.id
+
     result = (
         supabase.table("conversations")
-        .select("id, title, created_at, updated_at")
+        .select("*")
         .eq("user_id", user_id)
         .order("updated_at", desc=True)
         .execute()
     )
-    return result.data or []
+
+    st.session_state.conversations = result.data or []
 
 
 def create_conversation():
-    result = supabase.table("conversations").insert({
-        "user_id": user_id,
-        "title": "محادثة جديدة"
-    }).execute()
+    user_id = st.session_state.user.id
 
-    if not result.data:
-        raise RuntimeError("لم يتم إنشاء المحادثة.")
-
-    conversation = result.data[0]
-    st.session_state.conversation_id = str(conversation["id"])
-    st.session_state.messages = []
-    st.session_state.conversations = load_conversations()
-
-
-def open_conversation(conversation_id):
     result = (
-        supabase.table("chat_history")
-        .select("role, content, created_at")
-        .eq("user_id", user_id)
-        .eq("conversation_id", conversation_id)
-        .order("created_at")
+        supabase.table("conversations")
+        .insert({
+            "user_id": user_id,
+            "title": "محادثة جديدة"
+        })
         .execute()
     )
 
-    st.session_state.conversation_id = str(conversation_id)
-    st.session_state.messages = [
-        {"role": row["role"], "content": row["content"]}
-        for row in (result.data or [])
-        if row["role"] in ("user", "assistant")
-    ]
+    if not result.data:
+        raise Exception("لم يتم إنشاء المحادثة.")
+
+    conversation = result.data[0]
+
+    st.session_state.conversation_id = conversation["id"]
+    st.session_state.messages = []
+    st.session_state.history_loaded = True
+
+    load_conversations()
+
+
+def open_conversation(conversation_id):
+    st.session_state.conversation_id = conversation_id
+
+    result = (
+        supabase.table("chat_history")
+        .select("role, content")
+        .eq("user_id", st.session_state.user.id)
+        .eq("conversation_id", conversation_id)
+        .order("created_at", desc=False)
+        .execute()
+    )
+
+    st.session_state.messages = result.data or []
+    st.session_state.history_loaded = True
+
+
+def save_message(role, content):
+    supabase.table("chat_history").insert({
+        "user_id": st.session_state.user.id,
+        "conversation_id": st.session_state.conversation_id,
+        "role": role,
+        "content": content
+    }).execute()
+
+
+def update_conversation_title(title):
+    supabase.table("conversations").update({
+        "title": title[:55],
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }).eq(
+        "id", st.session_state.conversation_id
+    ).eq(
+        "user_id", st.session_state.user.id
+    ).execute()
 
 
 # -------------------------
-# Load conversation list
+# Login / Signup
+# -------------------------
+if st.session_state.user is None:
+    st.title("🛡️ NEXORA AI")
+    st.caption("Intelligence. Security. Innovation.")
+
+    login_tab, signup_tab = st.tabs(["تسجيل الدخول", "إنشاء حساب"])
+
+    with login_tab:
+        login_email = st.text_input(
+            "البريد الإلكتروني",
+            key="login_email"
+        )
+        login_password = st.text_input(
+            "كلمة المرور",
+            type="password",
+            key="login_password"
+        )
+
+        if st.button("دخول", use_container_width=True):
+            try:
+                result = supabase.auth.sign_in_with_password({
+                    "email": login_email,
+                    "password": login_password
+                })
+
+                st.session_state.user = result.user
+                st.session_state.auth_notice = "تم تسجيل الدخول بنجاح."
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"تعذّر تسجيل الدخول: {e}")
+
+    with signup_tab:
+        signup_email = st.text_input(
+            "البريد الإلكتروني",
+            key="signup_email"
+        )
+        signup_password = st.text_input(
+            "كلمة المرور (6 أحرف على الأقل)",
+            type="password",
+            key="signup_password"
+        )
+
+        if st.button("إنشاء حساب", use_container_width=True):
+            if len(signup_password) < 6:
+                st.warning("كلمة المرور يجب أن تتكون من 6 أحرف على الأقل.")
+            else:
+                try:
+                    result = supabase.auth.sign_up({
+                        "email": signup_email,
+                        "password": signup_password
+                    })
+
+                    if result.session and result.user:
+                        st.session_state.user = result.user
+                        st.rerun()
+                    else:
+                        st.success(
+                            "تم إنشاء الحساب. افحص بريدك الإلكتروني "
+                            "لتأكيد الحساب، ثم سجّل الدخول."
+                        )
+
+                except Exception as e:
+                    st.error(f"تعذّر إنشاء الحساب: {e}")
+
+    st.stop()
+
+
+# -------------------------
+# Initialize conversations
 # -------------------------
 if not st.session_state.history_loaded:
     try:
-        st.session_state.conversations = load_conversations()
+        load_conversations()
 
         if st.session_state.conversations:
-            first_id = str(st.session_state.conversations[0]["id"])
-            open_conversation(first_id)
+            open_conversation(
+                st.session_state.conversations[0]["id"]
+            )
         else:
             create_conversation()
 
-        st.session_state.history_loaded = True
-
     except Exception as e:
-        st.error("تعذّر تحميل المحادثات من Supabase.")
-        st.code(f"{type(e).__name__}: {e}")
+        st.error(f"تعذّر تحميل المحادثات: {e}")
         st.stop()
 
 
@@ -247,41 +259,42 @@ if not st.session_state.history_loaded:
 # Sidebar
 # -------------------------
 with st.sidebar:
-    st.title("🛡️ CyberGain AI")
-    st.caption(st.session_state.user.email)
+    st.title("🛡️ NEXORA AI")
+    st.caption(st.session_state.user.email or "")
 
     if st.button("＋ محادثة جديدة", use_container_width=True):
         try:
             create_conversation()
             st.rerun()
         except Exception as e:
-            st.error("تعذّر إنشاء محادثة جديدة.")
-            st.code(f"{type(e).__name__}: {e}")
+            st.error(f"تعذّر إنشاء المحادثة: {e}")
 
     st.divider()
     st.subheader("محادثاتي")
 
     for conversation in st.session_state.conversations:
-        cid = str(conversation["id"])
+        conversation_id = conversation["id"]
         title = conversation.get("title") or "محادثة جديدة"
-        button_label = ("● " if cid == st.session_state.conversation_id
-                        else "") + title
 
         if st.button(
-            button_label,
-            key=f"conversation_{cid}",
-            use_container_width=True
+            title,
+            key=f"conversation_{conversation_id}",
+            use_container_width=True,
+            type=(
+                "primary"
+                if conversation_id == st.session_state.conversation_id
+                else "secondary"
+            )
         ):
             try:
-                open_conversation(cid)
+                open_conversation(conversation_id)
                 st.rerun()
             except Exception as e:
-                st.error("تعذّر فتح المحادثة.")
-                st.code(f"{type(e).__name__}: {e}")
+                st.error(f"تعذّر فتح المحادثة: {e}")
 
     st.divider()
 
-    if st.button("تسجيل الخروج | Logout", use_container_width=True):
+    if st.button("تسجيل الخروج", use_container_width=True):
         try:
             supabase.auth.sign_out()
         except Exception:
@@ -296,37 +309,30 @@ with st.sidebar:
 
 
 # -------------------------
-# Current conversation
+# Main chat
 # -------------------------
+st.title("🛡️ NEXORA AI")
+st.caption("مساعدك للذكاء الاصطناعي وتقنيات المعلومات")
+
 current_conversation = next(
     (
         c for c in st.session_state.conversations
-        if str(c["id"]) == str(st.session_state.conversation_id)
+        if c["id"] == st.session_state.conversation_id
     ),
     None
 )
 
-current_title = (
-    current_conversation.get("title", "محادثة جديدة")
-    if current_conversation else "محادثة جديدة"
-)
-
-st.title("🛡️ CyberGain AI")
-st.caption(current_title)
+if current_conversation:
+    st.caption(f"المحادثة: {current_conversation.get('title', 'محادثة جديدة')}")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         display_message(message["content"])
 
 
-# -------------------------
-# Chat input
-# -------------------------
-prompt = st.chat_input("اكتب سؤالك بأي لغة...")
+prompt = st.chat_input("اكتب رسالتك إلى NEXORA AI...")
 
 if prompt:
-    conversation_id = st.session_state.conversation_id
-
     st.session_state.messages.append({
         "role": "user",
         "content": prompt
@@ -336,22 +342,29 @@ if prompt:
         display_message(prompt)
 
     try:
+        save_message("user", prompt)
+
+        # Give the conversation a title based on its first question.
+        if (
+            current_conversation
+            and current_conversation.get("title") == "محادثة جديدة"
+        ):
+            update_conversation_title(prompt)
+
         with st.chat_message("assistant"):
-            with st.spinner("CyberGain AI يفكر..."):
+            with st.spinner("NEXORA AI يفكر..."):
                 response = groq.chat.completions.create(
-                    model="openai/gpt-oss-120b",
+                    model=MODEL,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
-                        *st.session_state.messages[-20:]
-                    ],
-                    max_tokens=2048
+                        *[
+                            {"role": m["role"], "content": m["content"]}
+                            for m in st.session_state.messages
+                        ]
+                    ]
                 )
 
-                answer = response.choices[0].message.content
-
-                if not answer:
-                    raise RuntimeError("عاد النموذج بإجابة فارغة.")
-
+                answer = response.choices[0].message.content or ""
                 display_message(answer)
 
         st.session_state.messages.append({
@@ -359,63 +372,12 @@ if prompt:
             "content": answer
         })
 
-    except Exception as e:
-        st.error("حدث خطأ أثناء الحصول على الإجابة.")
-        st.code(f"{type(e).__name__}: {e}")
-        st.stop()
-
-    # -------------------------
-    # Save messages
-    # -------------------------
-    try:
-        now = datetime.now(timezone.utc).isoformat()
-
-        supabase.table("chat_history").insert([
-            {
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-                "role": "user",
-                "content": prompt,
-                "created_at": now
-            },
-            {
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-                "role": "assistant",
-                "content": answer,
-                "created_at": datetime.now(
-                    timezone.utc
-                ).isoformat()
-            }
-        ]).execute()
-
-        # Name new conversations after the first question
-        if current_title == "محادثة جديدة":
-            title = " ".join(prompt.strip().split())[:55]
-            if not title:
-                title = "محادثة جديدة"
-
-            supabase.table("conversations").update({
-                "title": title,
-                "updated_at": datetime.now(
-                    timezone.utc
-                ).isoformat()
-            }).eq("id", conversation_id).eq(
-                "user_id", user_id
-            ).execute()
-
-        else:
-            supabase.table("conversations").update({
-                "updated_at": datetime.now(
-                    timezone.utc
-                ).isoformat()
-            }).eq("id", conversation_id).eq(
-                "user_id", user_id
-            ).execute()
-
-        st.session_state.conversations = load_conversations()
+        save_message("assistant", answer)
+        load_conversations()
         st.rerun()
 
     except Exception as e:
-        st.error("ظهرت الإجابة، لكن تعذّر حفظ المحادثة.")
-        st.code(f"{type(e).__name__}: {e}")
+        st.error(
+            f"حدث خطأ أثناء معالجة الرسالة: "
+            f"{type(e).__name__}: {e}"
+        )
