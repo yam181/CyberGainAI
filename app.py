@@ -12,14 +12,11 @@ st.set_page_config(
 SYSTEM_PROMPT = """
 أنت CyberGain AI، مساعد متخصص في IT وCloud والشبكات
 وLinux وWindows Server والأمن السيبراني الدفاعي.
-
-- أجب بالعربية البسيطة وباختصار.
-- استخدم كلمات سهلة للمبتدئين.
-- أعط مثالًا بسيطًا عند الحاجة.
-- ركز على الحماية والاستخدام المصرح به.
+أجب بالعربية البسيطة وباختصار، واستخدم كلمات سهلة للمبتدئين.
+ركز على الحماية والاستخدام المصرح به.
 """
 
-st.title("🛡️ CyberGain AI")
+st.title("CyberGain AI")
 st.caption("مساعدك في IT وCloud والشبكات")
 
 try:
@@ -29,12 +26,9 @@ try:
             st.secrets["SUPABASE_KEY"]
         )
     db = st.session_state.supabase
-
-except Exception as e:
-    st.error("فشل الاتصال بـ Supabase")
-    st.error(f"{type(e).__name__}: {e}")
+except Exception:
+    st.error("تعذّر الاتصال بقاعدة البيانات. تحقق من إعدادات Secrets.")
     st.stop()
-
 
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -42,9 +36,8 @@ if "user" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-
 if not st.session_state.user:
-    st.subheader("🔐 حسابك الشخصي")
+    st.subheader("حسابك الشخصي")
 
     action = st.radio(
         "اختر العملية",
@@ -53,10 +46,7 @@ if not st.session_state.user:
     )
 
     email = st.text_input("البريد الإلكتروني")
-    password = st.text_input(
-        "كلمة المرور",
-        type="password"
-    )
+    password = st.text_input("كلمة المرور", type="password")
 
     if st.button("متابعة", use_container_width=True):
         if not email or not password:
@@ -71,15 +61,13 @@ if not st.session_state.user:
 
                     if result.session is None:
                         st.info(
-                            "إذا طُلب تأكيد البريد الإلكتروني، "
-                            "افتح رسالة Supabase وأكّد حسابك، "
+                            "افتح رسالة التأكيد في بريدك الإلكتروني، "
                             "ثم ارجع وسجّل الدخول."
                         )
                     else:
                         st.session_state.user = result.user
                         st.session_state.messages = []
                         st.rerun()
-
                 else:
                     result = db.auth.sign_in_with_password({
                         "email": email,
@@ -97,41 +85,43 @@ if not st.session_state.user:
                     )
 
                     st.session_state.messages = [
-                        {
-                            "role": item["role"],
-                            "content": item["content"]
-                        }
-                        for item in history.data
+                        {"role": m["role"], "content": m["content"]}
+                        for m in history.data
                     ]
-
                     st.rerun()
 
             except Exception as e:
-                st.error("حدث خطأ أثناء تسجيل الدخول أو إنشاء الحساب.")
-                st.error(f"نوع الخطأ: {type(e).__name__}")
-                st.error(str(e))
+                st.error(f"خطأ: {type(e).__name__}: {e}")
 
     st.stop()
 
-
 user = st.session_state.user
-st.caption(f"الحساب: {user.email}")
 
-if st.button("تسجيل الخروج"):
-    try:
-        db.auth.sign_out()
-    except Exception as e:
-        st.error(f"خطأ أثناء تسجيل الخروج: {e}")
-    st.session_state.user = None
-    st.session_state.messages = []
-    st.rerun()
+with st.sidebar:
+    st.write(f"الحساب: {user.email}")
+    if st.button("تسجيل الخروج"):
+        try:
+            db.auth.sign_out()
+        finally:
+            st.session_state.user = None
+            st.session_state.messages = []
+            st.rerun()
 
+    if st.button("محادثة جديدة"):
+        st.session_state.messages = []
+        st.rerun()
 
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+    with st.chat_message(message["role"], avatar=None):
         st.markdown(message["content"])
+        if message["role"] == "assistant":
+            if st.button(
+                "نسخ الإجابة",
+                key=f"copy_{st.session_state.messages.index(message)}"
+            ):
+                st.code(message["content"])
 
-question = st.chat_input("اسأل عن IT أو Cloud...")
+question = st.chat_input("اكتب سؤالك هنا...")
 
 if question:
     st.session_state.messages.append({
@@ -139,7 +129,7 @@ if question:
         "content": question
     })
 
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=None):
         st.markdown(question)
 
     try:
@@ -149,19 +139,14 @@ if question:
             "content": question
         }).execute()
 
-        with st.chat_message("assistant"):
-            with st.spinner("🧠 يفكر..."):
-                client = Groq(
-                    api_key=st.secrets["GROQ_API_KEY"]
-                )
+        with st.chat_message("assistant", avatar=None):
+            with st.spinner("يفكر..."):
+                client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
                 response = client.chat.completions.create(
                     model="openai/gpt-oss-120b",
                     messages=[
-                        {
-                            "role": "system",
-                            "content": SYSTEM_PROMPT
-                        }
+                        {"role": "system", "content": SYSTEM_PROMPT}
                     ] + st.session_state.messages,
                     max_tokens=300,
                     temperature=0.2
@@ -171,7 +156,6 @@ if question:
                     response.choices[0].message.content
                     or "ما وصلني جواب. جرّب مرة ثانية."
                 )
-
                 st.markdown(answer)
 
         db.table("chat_history").insert({
@@ -186,6 +170,4 @@ if question:
         })
 
     except Exception as e:
-        st.error("حدث خطأ أثناء إرسال السؤال أو حفظ المحادثة.")
-        st.error(f"نوع الخطأ: {type(e).__name__}")
-        st.error(str(e))
+        st.error(f"حدث خطأ: {type(e).__name__}: {e}")
