@@ -9,17 +9,17 @@ st.set_page_config(
 )
 
 SYSTEM_PROMPT = """
-أنت CyberGain AI، مساعد متخصص في IT وCloud والشبكات وLinux
-وWindows Server والأمن السيبراني الدفاعي.
+أنت CyberGain AI، مساعد متخصص في IT وCloud والشبكات
+وLinux وWindows Server والأمن السيبراني الدفاعي.
 
 القواعد:
 - أجب بالعربية البسيطة.
-- اجعل الإجابة قصيرة جدًا، جملة أو جملتين.
+- اجعل الإجابة قصيرة، جملة أو جملتين.
 - استخدم كلمات سهلة للمبتدئين.
 - أعط مثالًا بسيطًا عند الحاجة.
 - إذا طلب المستخدم خطوات، أعطه خطوة واحدة كل مرة.
 - لا تخترع معلومات.
-- ركّز على الحماية والاستخدام المصرح به.
+- ركز على الحماية والاستخدام المصرح به.
 """
 
 st.title("🛡️ CyberGain AI")
@@ -50,9 +50,8 @@ if question:
     with st.chat_message("assistant"):
         with st.spinner("🧠 يفكر..."):
             try:
-                client = Groq(
-                    api_key=st.secrets["GROQ_API_KEY"]
-                )
+                api_key = st.secrets["GROQ_API_KEY"]
+                client = Groq(api_key=api_key)
 
                 chat_messages = [
                     {
@@ -70,11 +69,15 @@ if question:
 
                 answer = response.choices[0].message.content
 
-            except Exception:
-                answer = (
-                    "❌ صار خطأ بالاتصال. "
-                    "تأكد من إعدادات Secrets وحاول مرة ثانية."
+                if not answer:
+                    answer = "ما وصلني جواب. جرّب تسأل مرة ثانية."
+
+            except Exception as e:
+                st.error(
+                    f"نوع الخطأ: {type(e).__name__}"
                 )
+                st.error(str(e))
+                answer = "تعذّر الحصول على رد. اقرأ الخطأ أعلاه."
 
             st.markdown(answer)
 
