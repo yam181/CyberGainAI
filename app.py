@@ -61,7 +61,7 @@ if question:
                 ] + st.session_state.messages
 
                 response = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
+                    model="llama-3.3-70b-versatile",
                     messages=chat_messages,
                     max_tokens=120,
                     temperature=0.2
@@ -73,9 +73,7 @@ if question:
                     answer = "ما وصلني جواب. جرّب تسأل مرة ثانية."
 
             except Exception as e:
-                st.error(
-                    f"نوع الخطأ: {type(e).__name__}"
-                )
+                st.error(f"نوع الخطأ: {type(e).__name__}")
                 st.error(str(e))
                 answer = "تعذّر الحصول على رد. اقرأ الخطأ أعلاه."
 
