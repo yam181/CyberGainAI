@@ -9,6 +9,25 @@ st.set_page_config(
     layout="centered"
 )
 
+st.markdown("""
+<style>
+html, body, [data-testid="stApp"] {
+    direction: rtl;
+    text-align: right;
+}
+.stMarkdown, .stText, label, p {
+    text-align: right;
+}
+[data-testid="stChatMessage"] {
+    direction: rtl;
+}
+[data-testid="stChatInput"] textarea {
+    direction: rtl;
+    text-align: right;
+}
+</style>
+""", unsafe_allow_html=True)
+
 SYSTEM_PROMPT = """
 أنت CyberGain AI، مساعد متخصص في IT وCloud والشبكات
 وLinux وWindows Server والأمن السيبراني الدفاعي.
@@ -99,6 +118,7 @@ user = st.session_state.user
 
 with st.sidebar:
     st.write(f"الحساب: {user.email}")
+
     if st.button("تسجيل الخروج"):
         try:
             db.auth.sign_out()
@@ -111,15 +131,9 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-for message in st.session_state.messages:
+for i, message in enumerate(st.session_state.messages):
     with st.chat_message(message["role"], avatar=None):
         st.markdown(message["content"])
-        if message["role"] == "assistant":
-            if st.button(
-                "نسخ الإجابة",
-                key=f"copy_{st.session_state.messages.index(message)}"
-            ):
-                st.code(message["content"])
 
 question = st.chat_input("اكتب سؤالك هنا...")
 
