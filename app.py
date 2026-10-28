@@ -25,6 +25,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
 # -------------------------
 # Connect to services
 # -------------------------
@@ -35,11 +36,13 @@ def get_supabase():
         st.secrets["SUPABASE_KEY"]
     )
 
+
 @st.cache_resource
 def get_groq():
     return Groq(
         api_key=st.secrets["GROQ_API_KEY"]
     )
+
 
 try:
     supabase = get_supabase()
@@ -49,6 +52,7 @@ except Exception as e:
     st.code(f"{type(e).__name__}: {e}")
     st.stop()
 
+
 # -------------------------
 # AI instructions
 # -------------------------
@@ -57,7 +61,7 @@ You are CyberGain AI, an assistant specializing in:
 IT, Cloud Computing, Networking, Linux, Windows Server,
 and defensive cybersecurity.
 
-Always respond in the same language as the user's latest message.
+Always answer in the same language as the user's latest message.
 Support Arabic, English, Hebrew, and other languages.
 If the user changes language, change your response language too.
 
@@ -65,6 +69,7 @@ Be clear, concise, and beginner-friendly.
 Provide step-by-step instructions when useful.
 Focus on legal, authorized, defensive cybersecurity.
 """
+
 
 # -------------------------
 # Session state
@@ -77,6 +82,7 @@ if "messages" not in st.session_state:
 
 if "history_loaded" not in st.session_state:
     st.session_state.history_loaded = False
+
 
 # -------------------------
 # Login and signup
@@ -91,7 +97,11 @@ if st.session_state.user is None:
     ])
 
     with login_tab:
-        email = st.text_input("البريد الإلكتروني", key="login_email")
+        email = st.text_input(
+            "البريد الإلكتروني",
+            key="login_email"
+        )
+
         password = st.text_input(
             "كلمة المرور",
             type="password",
@@ -122,15 +132,21 @@ if st.session_state.user is None:
             "البريد الإلكتروني الجديد",
             key="signup_email"
         )
+
         new_password = st.text_input(
             "كلمة المرور الجديدة (8 أحرف أو أكثر)",
             type="password",
             key="signup_password"
         )
 
-        if st.button("إنشاء حساب | Sign up", use_container_width=True):
+        if st.button(
+            "إنشاء حساب | Sign up",
+            use_container_width=True
+        ):
             if len(new_password) < 8:
-                st.warning("كلمة المرور يجب أن تكون 8 أحرف على الأقل.")
+                st.warning(
+                    "كلمة المرور يجب أن تكون 8 أحرف على الأقل."
+                )
             elif not new_email.strip():
                 st.warning("اكتب البريد الإلكتروني.")
             else:
@@ -157,8 +173,9 @@ if st.session_state.user is None:
 
     st.stop()
 
+
 # -------------------------
-# Load user's saved messages
+# Load saved messages
 # -------------------------
 user_id = str(st.session_state.user.id)
 
@@ -184,9 +201,10 @@ if not st.session_state.history_loaded:
         st.session_state.history_loaded = True
 
     except Exception as e:
-        st.error("خطأ أثناء تحميل المحادثات من Supabase:")
+        st.error("خطأ أثناء تحميل المحادثات:")
         st.code(f"{type(e).__name__}: {e}")
         st.stop()
+
 
 # -------------------------
 # Chat interface
@@ -198,25 +216,33 @@ with st.sidebar:
     st.subheader("الحساب | Account")
     st.write(st.session_state.user.email)
 
-    if st.button("محادثة جديدة | New chat", use_container_width=True):
+    if st.button(
+        "محادثة جديدة | New chat",
+        use_container_width=True
+    ):
         st.session_state.messages = []
         st.rerun()
 
-    if st.button("تسجيل الخروج | Logout", use_container_width=True):
+    if st.button(
+        "تسجيل الخروج | Logout",
+        use_container_width=True
+    ):
         try:
             supabase.auth.sign_out()
-        except Exception:
-            pass
+        except Exception as e:
+            st.warning(f"تعذّر تسجيل الخروج من الخدمة: {e}")
 
         st.session_state.user = None
         st.session_state.messages = []
         st.session_state.history_loaded = False
         st.rerun()
 
-# Display chat
+
+# Display messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
 
 # -------------------------
 # Ask AI
@@ -234,9 +260,9 @@ if prompt:
 
     try:
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
+            with st.spinner("CyberGain AI is thinking..."):
                 response = groq.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="openai/gpt-oss-120b",
                     messages=[
                         {
                             "role": "system",
@@ -244,14 +270,15 @@ if prompt:
                         },
                         *st.session_state.messages[-20:]
                     ],
-                    temperature=0.5,
                     max_tokens=2048
                 )
 
                 answer = response.choices[0].message.content
 
                 if not answer:
-                    raise RuntimeError("Groq returned an empty answer.")
+                    raise RuntimeError(
+                        "The AI returned an empty answer."
+                    )
 
                 st.markdown(answer)
 
@@ -264,6 +291,7 @@ if prompt:
         st.error("فشل الحصول على إجابة من Groq:")
         st.code(f"{type(e).__name__}: {e}")
         st.stop()
+
 
     # -------------------------
     # Save messages to Supabase
@@ -289,5 +317,8 @@ if prompt:
         ]).execute()
 
     except Exception as e:
-        st.error("نجحت إجابة الذكاء الاصطناعي، لكن فشل حفظ المحادثة:")
+        st.error(
+            "وصلتك الإجابة، لكن فشل حفظ المحادثة في Supabase:"
+        )
         st.code(f"{type(e).__name__}: {e}")
+
