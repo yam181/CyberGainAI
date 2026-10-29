@@ -156,15 +156,13 @@ def get_css():
     }
 
     /* إخفاء العناصر المزعجة فقط */
-   #MainMenu,
+#MainMenu,
 footer,
-[data-testid="stToolbar"],
 [data-testid="stDecoration"],
 [data-testid="stStatusWidget"],
 .stDeployButton {
     display: none !important;
 }
-
     /* ===== زر فتح المحادثات ===== */
 [data-testid="stSidebarCollapsedControl"],
 [data-testid="collapsedControl"] {
