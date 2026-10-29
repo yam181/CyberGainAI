@@ -1023,7 +1023,7 @@ with st.sidebar:
         key="sidebar_search",
     )
     
-        try:
+    try:
         conversations = list_conversations()
         st.write("عدد المحادثات المحفوظة:", len(conversations))
     except Exception as error:
