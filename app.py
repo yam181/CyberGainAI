@@ -72,8 +72,10 @@ st.markdown("""
     font-size: 24px;
     font-weight: 700;
     color: #9D4EDD;
-    margin-bottom: 0;
-    letter-spacing: 1px;
+    line-height: 1.5;
+    padding: 4px 0;
+    margin: 0 0 6px 0;
+    overflow: visible;
 }
 
 .nexora-subtitle {
