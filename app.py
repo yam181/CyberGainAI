@@ -243,31 +243,32 @@ def get_css():
 
     /* زر الملف الشخصي المثبت */
     
+
+/* تغطية المنطقة خلف زر الملف الشخصي */
 .st-key-nx_profile_button {
     position: fixed !important;
-    top: 10px !important;
-    right: 12px !important;
-    z-index: 999999 !important;
-    width: 58px !important;
-    height: 58px !important;
-    background: #100D18 !important;
-    border-radius: 50% !important;
-    padding: 5px !important;
+    top: 6px !important;
+    right: 6px !important;
+    z-index: 2147483647 !important;
+    width: 72px !important;
+    height: 72px !important;
+    padding: 8px !important;
+    background: #0B0912 !important;
+    border-radius: 18px !important;
     box-sizing: border-box !important;
 }
 
 .st-key-nx_profile_button button {
-    width: 48px !important;
-    height: 48px !important;
-    min-height: 48px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 50% !important;
+    position: relative !important;
+    width: 54px !important;
+    height: 54px !important;
+    min-height: 54px !important;
     background: #211638 !important;
     border: 3px solid #7546C8 !important;
+    border-radius: 50% !important;
     color: #C4B5FD !important;
-    font-size: 27px !important;
-    box-shadow: 0 0 0 5px #100D18, 0 4px 15px #0008 !important;
+    font-size: 29px !important;
+    box-shadow: none !important;
 }
 
 
