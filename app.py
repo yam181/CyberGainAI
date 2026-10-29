@@ -1,4 +1,4 @@
-            ):
+
                 st.session_state[f"confirm_{cid}"] = True
 
         if st.session_state.get(f"confirm_{cid}", False):
