@@ -236,12 +236,11 @@ def get_css():
     }
 
     [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"] {
-        display: none !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapseButton"] {
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
 
     /* زر الملف الشخصي */
     .st-key-nx_profile_button {
