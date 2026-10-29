@@ -6,6 +6,9 @@ from datetime import datetime, timezone
 import uuid
 import re
 
+# =====================================
+# إعداد التطبيق
+# =====================================
 st.set_page_config(
     page_title="NEXORA AI",
     page_icon="🤖",
@@ -33,7 +36,20 @@ st.markdown("""
     border-right: none !important;
 }
 
-/* جميع الرسائل بدون إطارات افتراضيًا */
+/* إخفاء جميع صور وأيقونات الرسائل */
+[data-testid="stChatMessageAvatar"],
+[data-testid="chatAvatarIcon-user"],
+[data-testid="chatAvatarIcon-assistant"],
+[data-testid*="chatAvatarIcon"] {
+    display: none !important;
+}
+
+/* إخفاء مساحة الأفاتار في الرسائل */
+[data-testid="stChatMessage"] > div:first-child {
+    display: none !important;
+}
+
+/* كل الرسائل بلا إطار افتراضيًا */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border: none !important;
@@ -42,7 +58,7 @@ st.markdown("""
     margin: 8px 0 !important;
 }
 
-/* إطار رمادي شفاف لرسالتك أنت فقط */
+/* رسالة المستخدم فقط: إطار رمادي شفاف */
 [data-testid="stChatMessage"]:has(
     [data-testid="chatAvatarIcon-user"]
 ) {
@@ -50,11 +66,6 @@ st.markdown("""
     border: 1px solid rgba(180, 180, 180, 0.25) !important;
     border-radius: 14px !important;
     padding: 12px 16px !important;
-}
-
-/* إخفاء صور المستخدم والروبوت */
-[data-testid="stChatMessage"] [data-testid*="chatAvatarIcon"] {
-    display: none !important;
 }
 
 /* عنوان التطبيق */
@@ -70,7 +81,7 @@ st.markdown("""
     font-size: 14px;
 }
 
-/* أزرار المحادثات دون إطارات */
+/* أزرار المحادثات */
 div[class*="st-key-open_"] button,
 div[class*="st-key-delete_"] button {
     background: transparent !important;
@@ -133,8 +144,9 @@ for key, value in defaults.items():
 
 
 def apply_token():
-    if st.session_state.access_token:
-        supabase.postgrest.auth(st.session_state.access_token)
+    token = st.session_state.access_token
+    if token:
+        supabase.postgrest.auth(token)
 
 
 def get_user_id():
@@ -151,7 +163,7 @@ def show_error(error):
 
 
 # =====================================
-# تسجيل الدخول
+# تسجيل الخروج
 # =====================================
 def logout():
     try:
@@ -167,9 +179,12 @@ def logout():
     st.rerun()
 
 
+# =====================================
+# تسجيل الدخول وإنشاء حساب
+# =====================================
 if not st.session_state.user:
     st.markdown(
-        '<div class="nexora-title">🤖 NEXORA AI</div>',
+        '<div class="nexora-title">NEXORA AI</div>',
         unsafe_allow_html=True,
     )
     st.caption("مساعدك الذكي")
@@ -181,9 +196,13 @@ if not st.session_state.user:
     with login_tab:
         with st.form("login_form"):
             email = st.text_input("البريد الإلكتروني")
-            password = st.text_input("كلمة المرور", type="password")
+            password = st.text_input(
+                "كلمة المرور",
+                type="password",
+            )
             submitted = st.form_submit_button(
-                "دخول", use_container_width=True
+                "دخول",
+                use_container_width=True,
             )
 
         if submitted:
@@ -205,12 +224,15 @@ if not st.session_state.user:
                 else:
                     st.error("لم يكتمل تسجيل الدخول.")
             except Exception:
-                st.error("فشل تسجيل الدخول. افحص البريد وكلمة المرور.")
+                st.error(
+                    "فشل تسجيل الدخول. افحص البريد وكلمة المرور."
+                )
 
     with signup_tab:
         with st.form("signup_form"):
             new_email = st.text_input(
-                "البريد الإلكتروني", key="signup_email"
+                "البريد الإلكتروني",
+                key="signup_email",
             )
             new_password = st.text_input(
                 "كلمة المرور",
@@ -218,7 +240,8 @@ if not st.session_state.user:
                 key="signup_password",
             )
             signup = st.form_submit_button(
-                "إنشاء حساب", use_container_width=True
+                "إنشاء حساب",
+                use_container_width=True,
             )
 
         if signup:
@@ -247,7 +270,7 @@ if not st.session_state.user:
 apply_token()
 
 # =====================================
-# إدارة المحادثات
+# المحادثات
 # =====================================
 def list_conversations():
     apply_token()
@@ -292,6 +315,7 @@ def load_messages(cid):
         .order("created_at")
         .execute()
     )
+
     return [
         {"role": row["role"], "content": row["content"]}
         for row in (result.data or [])
@@ -315,14 +339,18 @@ def update_title(cid, title):
     supabase.table("conversations").update({
         "title": title,
         "updated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", cid).eq("user_id", get_user_id()).execute()
+    }).eq("id", cid).eq(
+        "user_id", get_user_id()
+    ).execute()
 
 
 def update_activity(cid):
     apply_token()
     supabase.table("conversations").update({
         "updated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", cid).eq("user_id", get_user_id()).execute()
+    }).eq("id", cid).eq(
+        "user_id", get_user_id()
+    ).execute()
 
 
 def delete_conversation(cid):
@@ -359,9 +387,11 @@ def generate_title(question):
             max_tokens=40,
             temperature=0.2,
         )
+
         title = (result.choices[0].message.content or "").strip()
         title = title.strip("\"'`“” ")
         title = re.sub(r"\s+", " ", title)
+
         if title:
             return title[:80]
     except Exception:
@@ -374,7 +404,7 @@ def generate_title(question):
 # القائمة الجانبية
 # =====================================
 with st.sidebar:
-    st.markdown("## 🤖 NEXORA AI")
+    st.markdown("## NEXORA AI")
     st.caption("Your AI assistant")
 
     email = getattr(st.session_state.user, "email", None)
@@ -436,14 +466,18 @@ with st.sidebar:
                 if st.button("نعم", key=f"yes_{cid}"):
                     try:
                         delete_conversation(cid)
-                        st.session_state.pop(f"confirm_{cid}", None)
+                        st.session_state.pop(
+                            f"confirm_{cid}", None
+                        )
                         st.rerun()
                     except Exception as e:
                         show_error(e)
 
             with no_col:
                 if st.button("إلغاء", key=f"no_{cid}"):
-                    st.session_state.pop(f"confirm_{cid}", None)
+                    st.session_state.pop(
+                        f"confirm_{cid}", None
+                    )
                     st.rerun()
 
 
