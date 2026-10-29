@@ -209,9 +209,15 @@ def get_css():
         padding: 1.2rem 1rem !important;
     }
 
-    /* إخفاء رابط GitHub فقط، دون إخفاء شريط الأدوات كله */
-    [data-testid="stToolbar"] a[href*="github.com"] {
+    /* إخفاء شريط أدوات Streamlit العلوي (GitHub والمشاركة والنجمة وغيرها) */
+    [data-testid="stToolbar"],
+    [data-testid="stToolbarActions"],
+    [data-testid="stStatusWidget"],
+    .stDeployButton {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
 
     /* محاولة إخفاء شارة Streamlit السفلية */
@@ -232,30 +238,12 @@ def get_css():
         visibility: hidden !important;
     }
 
-    /* الحفاظ على سهم فتح المحادثات */
+    /* إخفاء سهم طيّ/فتح القائمة؛ القائمة مفتوحة افتراضياً وتبقى المحادثات ظاهرة */
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="collapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: fixed !important;
-        top: 18px !important;
-        left: 18px !important;
-        z-index: 999999 !important;
-        background: #7546C8 !important;
-        border: 1px solid #9B78E8 !important;
-        border-radius: 12px !important;
-        width: 48px !important;
-        height: 48px !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-
-    [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="collapsedControl"] svg {
-        color: white !important;
-        fill: white !important;
-        stroke: white !important;
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
     }
 
     /* زر الملف الشخصي المثبت */
@@ -366,16 +354,66 @@ def get_css():
         background: #16121F !important;
     }
 
-    .stButton > button[kind="primary"] {
+    /* توحيد ألوان الأزرار في التطبيق وشاشة تسجيل الدخول */
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] button,
+    [data-testid="stDownloadButton"] button,
+    button[kind="primary"],
+    button[kind="secondary"] {
         background: #7546C8 !important;
-        border: none !important;
-        color: white !important;
+        border: 1px solid #9B78E8 !important;
+        color: #FFFFFF !important;
         border-radius: 10px !important;
+        transition: background-color .15s ease, border-color .15s ease !important;
+    }
+
+    .stButton > button:hover,
+    [data-testid="stFormSubmitButton"] button:hover,
+    [data-testid="stDownloadButton"] button:hover,
+    button[kind="primary"]:hover,
+    button[kind="secondary"]:hover {
+        background: #6136B1 !important;
+        border-color: #C4B5FD !important;
+        color: #FFFFFF !important;
     }
 
     [data-testid="stSidebar"] .stButton > button {
         border-radius: 10px !important;
         min-height: 40px !important;
+    }
+
+    /* خلفيات وحقول موحّدة بالبنفسجي الداكن، بما فيها تسجيل الدخول */
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input,
+    [data-testid="stSelectbox"] [role="combobox"],
+    [data-testid="stMultiSelect"] [role="combobox"],
+    [data-testid="stChatInput"] textarea,
+    [data-testid="stForm"] {
+        background-color: #16121F !important;
+        color: #EDE6F8 !important;
+        border-color: #7546C8 !important;
+        border-radius: 10px !important;
+    }
+
+    [data-testid="stTextInput"] input:focus,
+    [data-testid="stTextArea"] textarea:focus,
+    [data-testid="stNumberInput"] input:focus,
+    [data-testid="stDateInput"] input:focus,
+    [data-testid="stChatInput"] textarea:focus {
+        border-color: #A78BFA !important;
+        box-shadow: 0 0 0 1px #7546C8 !important;
+    }
+
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"] {
+        color: #EDE6F8 !important;
+    }
+
+    [data-testid="stAlert"] {
+        border-color: #7546C8 !important;
     }
 
     h1, h2, h3 {
