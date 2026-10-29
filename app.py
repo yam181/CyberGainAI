@@ -43,7 +43,9 @@ for key, value in defaults.items():
 # الترجمة
 # =====================================
 TRANSLATIONS = {
-    "ar": {
+    "ar": 
+     {
+        
         "app_title": "NEXORA AI",
         "subtitle": "مساعدك الذكي",
         "login": "تسجيل الدخول",
