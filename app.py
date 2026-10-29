@@ -155,14 +155,23 @@ def get_css():
         --nx-hover: #1F1830;
     }
 
-    /* إخفاء العناصر المزعجة فقط */
+/* إخفاء العناصر غير المطلوبة */
 #MainMenu,
 footer,
 [data-testid="stDecoration"],
 [data-testid="stStatusWidget"],
+[data-testid="stDeployButton"],
 .stDeployButton,
 [data-testid="stAppDeployButton"] {
     display: none !important;
+}
+
+/* الحفاظ على زر فتح القائمة الجانبية */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
     /* ===== زر فتح المحادثات ===== */
 [data-testid="stSidebarCollapsedControl"],
