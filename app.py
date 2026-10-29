@@ -69,15 +69,18 @@ st.markdown("""
 
 /* عنوان التطبيق */
 .nexora-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #9D4EDD;
-    line-height: 1.5;
-    padding: 4px 0;
-    margin: 0 0 6px 0;
-    overflow: visible;
+    display: block !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #9D4EDD !important;
+    line-height: 2 !important;
+    height: auto !important;
+    min-height: 48px !important;
+    padding: 8px 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    white-space: normal !important;
 }
-
 .nexora-subtitle {
     color: #9aa8b6;
     font-size: 14px;
