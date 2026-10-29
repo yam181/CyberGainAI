@@ -176,6 +176,7 @@ def t(key, **kwargs):
     return value.format(**kwargs) if kwargs else value
 
 
+
 # =====================================
 # التصميم
 # =====================================
@@ -203,26 +204,23 @@ def get_css():
     [data-testid="stSidebar"] {
         background: #100D18 !important;
         border-right: 1px solid #352744 !important;
+        min-width: 260px !important;
+        width: 260px !important;
+        flex-shrink: 0 !important;
+        display: block !important;
+        visibility: visible !important;
     }
 
     [data-testid="stSidebar"] > div:first-child {
+        background: #100D18 !important;
         padding: 1.2rem 1rem !important;
     }
 
-    /* إخفاء شريط أدوات Streamlit العلوي (GitHub والمشاركة والنجمة وغيرها) */
     [data-testid="stToolbar"],
     [data-testid="stToolbarActions"],
     [data-testid="stStatusWidget"],
-    .stDeployButton {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-
-    /* محاولة إخفاء شارة Streamlit السفلية */
+    .stDeployButton,
     .viewerBadge_container__1QSob,
-    [data-testid="stStatusWidget"],
     [data-testid="stDecoration"],
     footer,
     #MainMenu {
@@ -230,7 +228,6 @@ def get_css():
         visibility: hidden !important;
     }
 
-    /* إخفاء روابط Streamlit الظاهرة داخل واجهة التطبيق */
     a[href*="streamlit.io/cloud"],
     a[href*="streamlit.app"],
     a[href*="share.streamlit.io"] {
@@ -238,32 +235,20 @@ def get_css():
         visibility: hidden !important;
     }
 
-    /* تثبيت قائمة المحادثات مفتوحة */
-[data-testid="stSidebar"] {
-    display: block !important;
-    visibility: visible !important;
-    transform: none !important;
-    margin-left: 0 !important;
-    min-width: 260px !important;
-    width: 260px !important;
-    flex-shrink: 0 !important;
-}
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
 
-/* إخفاء أزرار طيّ القائمة وفتحها */
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarCollapseButton"] {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-}
-
-    /* زر الملف الشخصي المثبت */
+    /* زر الملف الشخصي */
     .st-key-nx_profile_button {
         position: fixed !important;
         top: 6px !important;
         right: 6px !important;
-        z-index: 2147483647 !important;
+        z-index: 999999 !important;
         width: 72px !important;
         height: 72px !important;
         padding: 8px !important;
@@ -273,7 +258,6 @@ def get_css():
     }
 
     .st-key-nx_profile_button button {
-        position: relative !important;
         width: 54px !important;
         height: 54px !important;
         min-height: 54px !important;
@@ -282,14 +266,11 @@ def get_css():
         border-radius: 50% !important;
         color: #C4B5FD !important;
         font-size: 29px !important;
-        box-shadow: none !important;
     }
 
+    /* إخفاء صور المستخدم والمساعد */
     [data-testid="stChatMessageAvatar"],
-    [data-testid*="chatAvatarIcon"] {
-        display: none !important;
-    }
-
+    [data-testid*="chatAvatarIcon"],
     [data-testid="stChatMessage"] > div:first-child {
         display: none !important;
     }
@@ -319,6 +300,7 @@ def get_css():
         padding: 14px 18px !important;
     }
 
+    /* عنوان التطبيق */
     .nexora-title {
         font-size: 20px !important;
         font-weight: 700 !important;
@@ -332,6 +314,7 @@ def get_css():
         margin-bottom: 18px !important;
     }
 
+    /* شاشة الترحيب */
     .welcome-container {
         display: flex;
         flex-direction: column;
@@ -360,13 +343,14 @@ def get_css():
         color: #A78BFA;
     }
 
+    /* مربع الكتابة */
     [data-testid="stChatInput"] {
         border-radius: 16px !important;
-        border: 1px solid #352744 !important;
+        border: 1px solid #493363 !important;
         background: #16121F !important;
     }
 
-    /* توحيد ألوان الأزرار في التطبيق وشاشة تسجيل الدخول */
+    /* الأزرار */
     .stButton > button,
     [data-testid="stFormSubmitButton"] button,
     [data-testid="stDownloadButton"] button,
@@ -376,7 +360,7 @@ def get_css():
         border: 1px solid #9B78E8 !important;
         color: #FFFFFF !important;
         border-radius: 10px !important;
-        transition: background-color .15s ease, border-color .15s ease !important;
+        transition: all .2s ease !important;
     }
 
     .stButton > button:hover,
@@ -389,12 +373,56 @@ def get_css():
         color: #FFFFFF !important;
     }
 
-    [data-testid="stSidebar"] .stButton > button {
+    /* تحسين قائمة المحادثات */
+    [data-testid="stSidebar"] button {
         border-radius: 10px !important;
-        min-height: 40px !important;
+        transition: all .2s ease !important;
     }
 
-    /* خلفيات وحقول موحّدة بالبنفسجي الداكن، بما فيها تسجيل الدخول */
+    [data-testid="stSidebar"] .stButton > button {
+        min-height: 40px !important;
+        border: 1px solid transparent !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: #251B35 !important;
+        border-color: #493363 !important;
+    }
+
+    .date-group {
+        font-size: 11px !important;
+        color: #A99ABF !important;
+        font-weight: 700 !important;
+        letter-spacing: .3px !important;
+        margin: 20px 0 8px 5px !important;
+    }
+
+    [data-testid="stSidebar"] input {
+        background: #1B1526 !important;
+        color: #F4EEFF !important;
+        border: 1px solid #403052 !important;
+        border-radius: 10px !important;
+    }
+
+    [data-testid="stSidebar"] input:focus {
+        border-color: #9A6CE0 !important;
+        box-shadow: 0 0 0 1px #9A6CE0 !important;
+    }
+
+    [data-testid="stSidebar"] hr {
+        border-color: #352744 !important;
+    }
+
+    [data-testid="stSidebar"] ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
+        background: #493363;
+        border-radius: 10px;
+    }
+
+    /* حقول الإدخال */
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
     [data-testid="stNumberInput"] input,
@@ -432,21 +460,18 @@ def get_css():
         color: #C4B5FD !important;
     }
 
-    .date-group {
-        font-size: 11px !important;
-        color: #A78BFA !important;
-        font-weight: 600 !important;
-        margin: 14px 0 6px 2px !important;
-    }
-
     @media (max-width: 768px) {
         .block-container {
-            padding-left: 0.7rem !important;
-            padding-right: 0.7rem !important;
+            padding-left: .7rem !important;
+            padding-right: .7rem !important;
         }
 
         .welcome-text {
-            font-size: 22px;
+            font-size: 22px !important;
+        }
+
+        [data-testid="stSidebar"] {
+            border-right: none !important;
         }
     }
     </style>
@@ -454,6 +479,7 @@ def get_css():
 
 
 st.markdown(get_css(), unsafe_allow_html=True)
+
 
 
 # =====================================
