@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as stvisibility: hidden
 from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone, timedelta
@@ -167,7 +167,7 @@ footer,
 
 /* إخفاء شريط الأدوات العلوي فقط */
 [data-testid="stToolbar"] {
-    visibility: hidden !important;
+    visibility: visible !important;
 }
 
 /* إخفاء قائمة Streamlit */
