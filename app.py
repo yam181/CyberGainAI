@@ -364,7 +364,31 @@ footer,
     """
 
 st.markdown(get_css(), unsafe_allow_html=True)
-
+# =====================================
+# زر فتح المحادثات والإعدادات
+# =====================================
+st.markdown(
+    """
+    <style>
+    .nx-menu-button {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 999999;
+        background: #7546C8;
+        color: white;
+        border: 1px solid #9B78E8;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 16px;
+        font-weight: bold;
+        text-decoration: none;
+        box-shadow: 0 4px 15px #0005;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 # =====================================
 # الاتصال
 # =====================================
