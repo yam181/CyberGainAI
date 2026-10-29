@@ -1,7 +1,7 @@
 import streamlit as st
 from groq import Groq
 from supabase import create_client
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 import re
 
@@ -30,6 +30,7 @@ defaults = {
     "max_tokens": 700,
     "show_settings": False,
     "profile_image": None,
+    "search_query": "",
 }
 for key, value in defaults.items():
     if key not in st.session_state:
@@ -82,6 +83,15 @@ TRANSLATIONS = {
         "english": "English",
         "welcome_title": "مرحباً بك في NEXORA AI",
         "welcome_subtitle": "كيف يمكنني مساعدتك اليوم؟",
+        "search_placeholder": "ابحث في محادثاتك...",
+        "today": "اليوم",
+        "yesterday": "أمس",
+        "last_7_days": "آخر 7 أيام",
+        "older": "أقدم",
+        "account": "حسابي",
+        "settings_prefs": "الإعدادات والتفضيلات",
+        "rename": "إعادة تسمية",
+        "delete": "حذف",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -126,6 +136,15 @@ TRANSLATIONS = {
         "english": "English",
         "welcome_title": "Welcome to NEXORA AI",
         "welcome_subtitle": "How can I help you today?",
+        "search_placeholder": "Search your chats...",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "last_7_days": "Last 7 days",
+        "older": "Older",
+        "account": "My Account",
+        "settings_prefs": "Settings & Preferences",
+        "rename": "Rename",
+        "delete": "Delete",
     },
 }
 
@@ -135,318 +154,219 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم الجديد (أسلوب ChatGPT + بنفسجي عميق)
+# التصميم الجديد (ألوان الشريط حسب طلبك)
 # =====================================
 def get_css():
-    if st.session_state.theme == "dark":
-        return """
-        <style>
-        /* ===== الأساسيات ===== */
-        .stApp {
-            background: #0f0f0f !important;
-            color: #ececec !important;
-        }
-        .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 6rem !important;
-            max-width: 820px !important;
-        }
+    return f"""
+    <style>
+    :root {{
+        --nx-bg: #100D18;
+        --nx-purple: #7546C8;
+        --nx-selected: #281D38;
+        --nx-text: #EDE6F8;
+        --nx-border: #352744;
+        --nx-hover: #1F1830;
+    }}
 
-        /* ===== الشريط الجانبي ===== */
-        [data-testid="stSidebar"] {
-            background: #171717 !important;
-            border-right: 1px solid #2a2a2a !important;
-        }
-        [data-testid="stSidebar"] .stMarkdown {
-            color: #ececec !important;
-        }
+    /* ===== الأساسيات ===== */
+    .stApp {{
+        background: #0B0912 !important;
+        color: #EDE6F8 !important;
+    }}
+    .block-container {{
+        padding-top: 1rem !important;
+        padding-bottom: 6rem !important;
+        max-width: 820px !important;
+    }}
 
-        /* ===== إخفاء عناصر Streamlit ===== */
-        #MainMenu, footer, header, [data-testid="stToolbar"],
-        [data-testid="stDecoration"], [data-testid="stStatusWidget"],
-        .stDeployButton { display: none !important; }
+    /* ===== الشريط الجانبي ===== */
+    [data-testid="stSidebar"] {{
+        background: var(--nx-bg) !important;
+        border-right: 1px solid var(--nx-border) !important;
+    }}
+    [data-testid="stSidebar"] > div:first-child {{
+        padding: 1.2rem 0.9rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+    }}
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label {{
+        color: var(--nx-text) !important;
+    }}
 
-        /* ===== إخفاء الأفاتار ===== */
-        [data-testid="stChatMessageAvatar"],
-        [data-testid="chatAvatarIcon-user"],
-        [data-testid="chatAvatarIcon-assistant"],
-        [data-testid*="chatAvatarIcon"] { display: none !important; }
-        [data-testid="stChatMessage"] > div:first-child { display: none !important; }
+    /* ===== إخفاء عناصر Streamlit ===== */
+    #MainMenu, footer, header, [data-testid="stToolbar"],
+    [data-testid="stDecoration"], [data-testid="stStatusWidget"],
+    .stDeployButton {{ display: none !important; }}
 
-        /* ===== فقاعات الرسائل ===== */
-        [data-testid="stChatMessage"] {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 12px 0 !important;
-            margin: 4px 0 !important;
-        }
+    /* ===== إخفاء الأفاتار ===== */
+    [data-testid="stChatMessageAvatar"],
+    [data-testid="chatAvatarIcon-user"],
+    [data-testid="chatAvatarIcon-assistant"],
+    [data-testid*="chatAvatarIcon"] {{ display: none !important; }}
+    [data-testid="stChatMessage"] > div:first-child {{ display: none !important; }}
 
-        /* رسالة المستخدم */
-        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-            background: #7C3AED22 !important;
-            border: 1px solid #7C3AED55 !important;
-            border-radius: 18px 18px 4px 18px !important;
-            padding: 14px 18px !important;
-            margin-left: 18% !important;
-        }
+    /* ===== فقاعات الرسائل ===== */
+    [data-testid="stChatMessage"] {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 10px 0 !important;
+        margin: 4px 0 !important;
+    }}
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {{
+        background: #7546C825 !important;
+        border: 1px solid #7546C855 !important;
+        border-radius: 16px 16px 4px 16px !important;
+        padding: 12px 16px !important;
+        margin-left: 15% !important;
+    }}
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {{
+        background: #1A1525 !important;
+        border: 1px solid #352744 !important;
+        border-radius: 16px 16px 16px 4px !important;
+        padding: 12px 16px !important;
+        margin-right: 15% !important;
+    }}
 
-        /* رسالة المساعد */
-        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-            background: #1e1e1e !important;
-            border: 1px solid #2e2e2e !important;
-            border-radius: 18px 18px 18px 4px !important;
-            padding: 14px 18px !important;
-            margin-right: 18% !important;
-        }
+    /* ===== العنوان ===== */
+    .nexora-title {{
+        font-size: 22px !important;
+        font-weight: 700 !important;
+        color: #C4B5FD !important;
+        margin: 0 0 2px 0 !important;
+        padding: 0 !important;
+    }}
+    .nexora-subtitle {{
+        color: #A78BFA !important;
+        font-size: 13px !important;
+        margin-bottom: 14px !important;
+    }}
 
-        /* ===== العنوان ===== */
-        .nexora-title {
-            font-size: 28px !important;
-            font-weight: 700 !important;
-            color: #A78BFA !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        .nexora-subtitle {
-            color: #a1a1aa !important;
-            font-size: 15px !important;
-            margin-top: 2px !important;
-        }
+    /* ===== صفحة الترحيب ===== */
+    .welcome-container {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 52vh;
+        text-align: center;
+        padding: 2rem 1rem;
+    }}
+    .welcome-logo {{
+        font-size: 40px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #C4B5FD, #7546C8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+    }}
+    .welcome-text {{
+        font-size: 20px;
+        color: #EDE6F8;
+        margin-bottom: 6px;
+        font-weight: 500;
+    }}
+    .welcome-sub {{
+        font-size: 14px;
+        color: #A78BFA;
+        max-width: 400px;
+    }}
 
-        /* ===== صفحة الترحيب ===== */
-        .welcome-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 55vh;
-            text-align: center;
-            padding: 2rem 1rem;
-        }
-        .welcome-logo {
-            font-size: 42px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #A78BFA, #7C3AED);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-        }
-        .welcome-text {
-            font-size: 22px;
-            color: #e4e4e7;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        .welcome-sub {
-            font-size: 15px;
-            color: #a1a1aa;
-            max-width: 420px;
-        }
+    /* ===== أزرار الشريط ===== */
+    [data-testid="stSidebar"] .stButton > button {{
+        border-radius: 11px !important;
+        transition: all 0.18s ease !important;
+        font-weight: 500 !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {{
+        background: linear-gradient(135deg, #7546C8, #5B21B6) !important;
+        border: none !important;
+        color: white !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {{
+        background: linear-gradient(135deg, #6D28D9, #4C1D95) !important;
+        transform: translateY(-1px);
+    }}
+    [data-testid="stSidebar"] .stButton > button[kind="secondary"],
+    [data-testid="stSidebar"] .stButton > button[kind="tertiary"] {{
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        color: var(--nx-text) !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover,
+    [data-testid="stSidebar"] .stButton > button[kind="tertiary"]:hover {{
+        background: var(--nx-hover) !important;
+        border-color: var(--nx-border) !important;
+    }}
 
-        /* ===== أزرار الشريط الجانبي ===== */
-        div[class*="st-key-open_"] button,
-        div[class*="st-key-delete_"] button {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            color: #d4d4d8 !important;
-            padding: 6px 4px !important;
-            font-size: 14px !important;
-        }
-        div[class*="st-key-open_"] button:hover {
-            color: #A78BFA !important;
-            background: #7C3AED18 !important;
-        }
-        div[class*="st-key-delete_"] button {
-            color: #f87171 !important;
-        }
-        div[class*="st-key-delete_"] button:hover {
-            color: #ef4444 !important;
-        }
+    /* المحادثة المحددة */
+    .chat-item-active {{
+        background: var(--nx-selected) !important;
+        border-radius: 10px !important;
+    }}
 
-        /* ===== مربع الكتابة ===== */
-        [data-testid="stChatInput"] {
-            border-radius: 16px !important;
-            border: 1px solid #3f3f46 !important;
-            background: #1c1c1c !important;
-        }
-        [data-testid="stChatInput"]:focus-within {
-            border-color: #7C3AED !important;
-            box-shadow: 0 0 0 2px #7C3AED44 !important;
-        }
-        [data-testid="stChatInput"] textarea {
-            color: #ececec !important;
-        }
+    /* ===== مربع الكتابة ===== */
+    [data-testid="stChatInput"] {{
+        border-radius: 14px !important;
+        border: 1px solid #352744 !important;
+        background: #15121F !important;
+    }}
+    [data-testid="stChatInput"]:focus-within {{
+        border-color: #7546C8 !important;
+        box-shadow: 0 0 0 2px #7546C844 !important;
+    }}
+    [data-testid="stChatInput"] textarea {{
+        color: #EDE6F8 !important;
+    }}
 
-        /* ===== الأزرار ===== */
-        .stButton > button {
-            border-radius: 10px !important;
-            font-weight: 500 !important;
-        }
-        .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #7C3AED, #5B21B6) !important;
-            border: none !important;
-            color: white !important;
-        }
-        .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #6D28D9, #4C1D95) !important;
-        }
-        .stButton > button[kind="secondary"] {
-            border: 1px solid #3f3f46 !important;
-            color: #e4e4e7 !important;
-            background: transparent !important;
-        }
+    /* ===== الأزرار العامة ===== */
+    .stButton > button[kind="primary"] {{
+        background: linear-gradient(135deg, #7546C8, #5B21B6) !important;
+        border: none !important;
+        color: white !important;
+        border-radius: 10px !important;
+    }}
+    .stButton > button[kind="primary"]:hover {{
+        background: linear-gradient(135deg, #6D28D9, #4C1D95) !important;
+    }}
 
-        h1, h2, h3 { color: #A78BFA !important; }
+    h1, h2, h3 {{ color: #C4B5FD !important; }}
 
-        /* ===== تسجيل الدخول ===== */
-        .login-card {
-            background: #1a1a1a;
-            border: 1px solid #2e2e2e;
-            border-radius: 20px;
-            padding: 2.5rem 2rem;
-            max-width: 420px;
-            margin: 8vh auto 0;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
+    /* ===== تسجيل الدخول ===== */
+    .login-card {{
+        background: #15121F;
+        border: 1px solid #352744;
+        border-radius: 18px;
+        padding: 2.2rem 1.8rem;
+        max-width: 400px;
+        margin: 7vh auto 0;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }}
 
-        @media (max-width: 768px) {
-            .block-container { padding: 0.5rem !important; }
-            [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-                margin-left: 5% !important;
-            }
-            [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-                margin-right: 5% !important;
-            }
-        }
-        </style>
-        """
-    else:
-        return """
-        <style>
-        .stApp { background: #f8fafc !important; color: #1e1e1e !important; }
-        .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 6rem !important;
-            max-width: 820px !important;
-        }
-        [data-testid="stSidebar"] {
-            background: #ffffff !important;
-            border-right: 1px solid #e2e8f0 !important;
-        }
-        #MainMenu, footer, header, [data-testid="stToolbar"],
-        [data-testid="stDecoration"], [data-testid="stStatusWidget"],
-        .stDeployButton { display: none !important; }
+    /* تجميع التاريخ */
+    .date-group {{
+        font-size: 11px !important;
+        color: #A78BFA !important;
+        font-weight: 600 !important;
+        margin: 14px 0 6px 4px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }}
 
-        [data-testid="stChatMessageAvatar"],
-        [data-testid="chatAvatarIcon-user"],
-        [data-testid="chatAvatarIcon-assistant"],
-        [data-testid*="chatAvatarIcon"] { display: none !important; }
-        [data-testid="stChatMessage"] > div:first-child { display: none !important; }
-
-        [data-testid="stChatMessage"] {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 12px 0 !important;
-            margin: 4px 0 !important;
-        }
-        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-            background: #7C3AED15 !important;
-            border: 1px solid #7C3AED40 !important;
-            border-radius: 18px 18px 4px 18px !important;
-            padding: 14px 18px !important;
-            margin-left: 18% !important;
-        }
-        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-            background: #f1f5f9 !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 18px 18px 18px 4px !important;
-            padding: 14px 18px !important;
-            margin-right: 18% !important;
-        }
-
-        .nexora-title {
-            font-size: 28px !important;
-            font-weight: 700 !important;
-            color: #6D28D9 !important;
-            margin: 0 !important;
-        }
-        .nexora-subtitle { color: #64748b !important; font-size: 15px !important; }
-
-        .welcome-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 55vh;
-            text-align: center;
-            padding: 2rem 1rem;
-        }
-        .welcome-logo {
-            font-size: 42px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #7C3AED, #5B21B6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-        }
-        .welcome-text {
-            font-size: 22px;
-            color: #1e1e1e;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        .welcome-sub {
-            font-size: 15px;
-            color: #64748b;
-            max-width: 420px;
-        }
-
-        div[class*="st-key-open_"] button,
-        div[class*="st-key-delete_"] button {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            color: #334155 !important;
-            padding: 6px 4px !important;
-        }
-        div[class*="st-key-open_"] button:hover { color: #6D28D9 !important; }
-        div[class*="st-key-delete_"] button { color: #dc2626 !important; }
-
-        [data-testid="stChatInput"] {
-            border-radius: 16px !important;
-            border: 1px solid #cbd5e1 !important;
-            background: #ffffff !important;
-        }
-        [data-testid="stChatInput"]:focus-within {
-            border-color: #7C3AED !important;
-            box-shadow: 0 0 0 2px #7C3AED33 !important;
-        }
-
-        .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #7C3AED, #5B21B6) !important;
-            border: none !important;
-            color: white !important;
-        }
-        .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #6D28D9, #4C1D95) !important;
-        }
-
-        h1, h2, h3 { color: #6D28D9 !important; }
-
-        .login-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 20px;
-            padding: 2.5rem 2rem;
-            max-width: 420px;
-            margin: 8vh auto 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
-        </style>
-        """
+    @media (max-width: 768px) {{
+        .block-container {{ padding: 0.5rem !important; }}
+        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {{
+            margin-left: 4% !important;
+        }}
+        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {{
+            margin-right: 4% !important;
+        }}
+    }}
+    </style>
+    """
 
 st.markdown(get_css(), unsafe_allow_html=True)
 
@@ -551,16 +471,16 @@ if st.session_state.access_token and not st.session_state.user:
         st.session_state.user = None
 
 # =====================================
-# صفحة تسجيل الدخول (تصميم جديد)
+# صفحة تسجيل الدخول
 # =====================================
 if not st.session_state.user:
     st.markdown("""
     <div class="login-card">
-        <div style="text-align:center; margin-bottom: 1.5rem;">
-            <div style="font-size:32px; font-weight:800; background:linear-gradient(135deg,#A78BFA,#7C3AED); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+        <div style="text-align:center; margin-bottom: 1.4rem;">
+            <div style="font-size:30px; font-weight:800; background:linear-gradient(135deg,#C4B5FD,#7546C8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
                 NEXORA AI
             </div>
-            <div style="color:#a1a1aa; font-size:14px; margin-top:4px;">مساعدك الذكي</div>
+            <div style="color:#A78BFA; font-size:13px; margin-top:4px;">مساعدك الذكي</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -627,7 +547,7 @@ if not st.session_state.user:
 apply_token()
 
 # =====================================
-# دوال المحادثات (كما هي)
+# دوال المحادثات
 # =====================================
 def list_conversations():
     apply_token()
@@ -747,69 +667,136 @@ def process_uploaded_files(files):
             parts.append(f"[ملف مرفق: {name}]")
     return "\n\n".join(parts)
 
+def group_conversations_by_date(conversations):
+    """تجميع المحادثات حسب التاريخ"""
+    now = datetime.now(timezone.utc)
+    today = now.date()
+    yesterday = today - timedelta(days=1)
+    week_ago = today - timedelta(days=7)
+
+    groups = {
+        "today": [],
+        "yesterday": [],
+        "last_7_days": [],
+        "older": []
+    }
+
+    for conv in conversations:
+        try:
+            updated = datetime.fromisoformat(conv["updated_at"].replace("Z", "+00:00"))
+            d = updated.date()
+            if d == today:
+                groups["today"].append(conv)
+            elif d == yesterday:
+                groups["yesterday"].append(conv)
+            elif d >= week_ago:
+                groups["last_7_days"].append(conv)
+            else:
+                groups["older"].append(conv)
+        except Exception:
+            groups["older"].append(conv)
+
+    return groups
+
 # =====================================
-# الشريط الجانبي
+# الشريط الجانبي الجديد
 # =====================================
 with st.sidebar:
-    st.markdown(f"### {t('app_title')}")
-    st.caption(t("subtitle"))
+    # 1. العنوان
+    st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="nexora-subtitle">{t("subtitle")}</div>', unsafe_allow_html=True)
 
-    email = getattr(st.session_state.user, "email", None)
-    if email:
-        st.caption(email)
-
+    # 2. زر محادثة جديدة
     if st.button(t("new_chat"), use_container_width=True, type="primary"):
         st.session_state.conversation_id = None
         st.session_state.messages = []
         st.rerun()
 
-    st.divider()
-    st.markdown(f"**{t('my_chats')}**")
+    st.markdown("")  # مسافة صغيرة
 
+    # 3. البحث
+    search_query = st.text_input(
+        "🔎",
+        placeholder=t("search_placeholder"),
+        label_visibility="collapsed",
+        key="sidebar_search"
+    )
+
+    st.markdown("")  # مسافة
+
+    # 4. قائمة المحادثات مجمّعة حسب التاريخ
     try:
         conversations = list_conversations()
     except Exception as e:
         show_error(e)
         conversations = []
 
+    # فلترة البحث
+    if search_query.strip():
+        q = search_query.strip().casefold()
+        conversations = [
+            c for c in conversations
+            if q in (c.get("title") or "").casefold()
+        ]
+
     if not conversations:
         st.caption(t("no_conversations"))
+    else:
+        groups = group_conversations_by_date(conversations)
 
-    for conv in conversations:
-        cid = str(conv["id"])
-        title = conv.get("title") or ("محادثة جديدة" if st.session_state.language == "ar" else "New Chat")
-        name_col, trash_col = st.columns([5, 1], gap="small")
-        with name_col:
-            label = title[:28] + ("…" if len(title) > 28 else "")
-            if st.button(label, key=f"open_{cid}", use_container_width=True, type="tertiary"):
-                try:
-                    st.session_state.conversation_id = cid
-                    st.session_state.messages = load_messages(cid)
-                    st.rerun()
-                except Exception as e:
-                    show_error(e)
-        with trash_col:
-            if st.button("🗑️", key=f"delete_{cid}", help="حذف", type="tertiary"):
-                st.session_state[f"confirm_{cid}"] = True
+        def render_group(title_key, items):
+            if not items:
+                return
+            st.markdown(f'<div class="date-group">{t(title_key)}</div>', unsafe_allow_html=True)
+            for conv in items:
+                cid = str(conv["id"])
+                title = conv.get("title") or ("محادثة جديدة" if st.session_state.language == "ar" else "New Chat")
+                is_active = str(st.session_state.conversation_id) == cid
 
-        if st.session_state.get(f"confirm_{cid}", False):
-            st.caption(t("delete_confirm", title=title))
-            yes_col, no_col = st.columns(2)
-            with yes_col:
-                if st.button(t("yes"), key=f"yes_{cid}"):
-                    try:
-                        delete_conversation(cid)
-                        st.session_state.pop(f"confirm_{cid}", None)
-                        st.rerun()
-                    except Exception as e:
-                        show_error(e)
-            with no_col:
-                if st.button(t("cancel"), key=f"no_{cid}"):
-                    st.session_state.pop(f"confirm_{cid}", None)
-                    st.rerun()
+                col1, col2 = st.columns([6, 1], gap="small")
+                with col1:
+                    btn_type = "primary" if is_active else "tertiary"
+                    label = title[:26] + ("…" if len(title) > 26 else "")
+                    if st.button(label, key=f"open_{cid}", use_container_width=True, type=btn_type):
+                        try:
+                            st.session_state.conversation_id = cid
+                            st.session_state.messages = load_messages(cid)
+                            st.rerun()
+                        except Exception as e:
+                            show_error(e)
+                with col2:
+                    if st.button("⋯", key=f"menu_{cid}", help="خيارات", type="tertiary"):
+                        st.session_state[f"show_menu_{cid}"] = not st.session_state.get(f"show_menu_{cid}", False)
 
-    st.divider()
-    if st.button("⚙️ " + t("settings"), use_container_width=True):
+                # قائمة الخيارات (حذف حاليًا)
+                if st.session_state.get(f"show_menu_{cid}", False):
+                    st.caption(t("delete_confirm", title=title))
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button(t("yes"), key=f"yes_{cid}", type="primary"):
+                            try:
+                                delete_conversation(cid)
+                                st.session_state.pop(f"show_menu_{cid}", None)
+                                st.rerun()
+                            except Exception as e:
+                                show_error(e)
+                    with c2:
+                        if st.button(t("cancel"), key=f"no_{cid}"):
+                            st.session_state.pop(f"show_menu_{cid}", None)
+                            st.rerun()
+
+        render_group("today", groups["today"])
+        render_group("yesterday", groups["yesterday"])
+        render_group("last_7_days", groups["last_7_days"])
+        render_group("older", groups["older"])
+
+    # ===== الجزء السفلي الثابت =====
+    st.markdown("---")
+    email = getattr(st.session_state.user, "email", None)
+    if email:
+        st.caption(f"👤 {email}")
+
+    if st.button("⚙️  " + t("settings_prefs"), use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
         st.rerun()
 
@@ -823,7 +810,6 @@ else:
     settings_col = None
 
 with main_col:
-    # ===== حالة الترحيب (مثل ChatGPT) =====
     if not st.session_state.messages:
         st.markdown(f"""
         <div class="welcome-container">
@@ -833,7 +819,6 @@ with main_col:
         </div>
         """, unsafe_allow_html=True)
     else:
-        # عرض الرسائل
         for message in st.session_state.messages:
             with st.chat_message(message["role"], avatar=None):
                 st.markdown(message["content"])
