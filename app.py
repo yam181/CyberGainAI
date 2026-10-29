@@ -142,7 +142,7 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم (قريب من ChatGPT + ألوان بنفسجية)
+# التصميم
 # =====================================
 def get_css():
     return """
@@ -153,50 +153,54 @@ def get_css():
         --nx-text: #EDE6F8;
         --nx-border: #352744;
         --nx-hover: #1F1830;
-        --nx-card: #16121F;
     }
 
-    /* إخفاء عناصر Streamlit المزعجة */
+    /* إخفاء العناصر المزعجة */
     #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"],
     [data-testid="stStatusWidget"], .stDeployButton, button[kind="header"] {
         display: none !important;
-        visibility: hidden !important;
     }
 
     [data-testid="stHeader"] {
         background: transparent !important;
-        height: 0 !important;
+        height: auto !important;
     }
 
-    /* زر فتح القائمة على الموبايل */
+    /* ===== زر فتح القائمة - واضح وكبير ===== */
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         position: fixed !important;
-        top: 12px !important;
-        left: 12px !important;
+        top: 15px !important;
+        left: 15px !important;
         z-index: 999999 !important;
-        background: #1A1525 !important;
-        border: 1px solid #352744 !important;
-        border-radius: 8px !important;
-        width: 36px !important;
-        height: 36px !important;
+        background-color: #7546C8 !important;
+        border: none !important;
+        border-radius: 10px !important;
+        width: 42px !important;
+        height: 42px !important;
+        box-shadow: 0 4px 12px rgba(117, 70, 200, 0.4) !important;
     }
 
+    [data-testid="stSidebarCollapsedControl"] svg,
+    [data-testid="collapsedControl"] svg {
+        fill: white !important;
+        color: white !important;
+    }
+
+    /* باقي التصميم */
     .stApp {
         background: #0B0912 !important;
         color: #EDE6F8 !important;
     }
-
     .block-container {
         padding-top: 1.5rem !important;
         padding-bottom: 6rem !important;
         max-width: 780px !important;
     }
 
-    /* الشريط الجانبي */
     [data-testid="stSidebar"] {
         background: #100D18 !important;
         border-right: 1px solid #352744 !important;
@@ -205,7 +209,6 @@ def get_css():
         padding: 1.2rem 1rem !important;
     }
 
-    /* إخفاء الأفاتار */
     [data-testid="stChatMessageAvatar"],
     [data-testid="chatAvatarIcon-user"],
     [data-testid="chatAvatarIcon-assistant"],
@@ -216,7 +219,6 @@ def get_css():
         display: none !important;
     }
 
-    /* فقاعات الرسائل */
     [data-testid="stChatMessage"] {
         background: transparent !important;
         border: none !important;
@@ -238,7 +240,6 @@ def get_css():
         margin-right: 15% !important;
     }
 
-    /* العناوين */
     .nexora-title {
         font-size: 18px !important;
         font-weight: 600 !important;
@@ -251,7 +252,6 @@ def get_css():
         margin-bottom: 18px !important;
     }
 
-    /* صفحة الترحيب (أسلوب ChatGPT) */
     .welcome-container {
         display: flex;
         flex-direction: column;
@@ -279,7 +279,6 @@ def get_css():
         max-width: 380px;
     }
 
-    /* أزرار الشريط */
     [data-testid="stSidebar"] .stButton > button {
         border-radius: 10px !important;
         font-weight: 500 !important;
@@ -301,7 +300,6 @@ def get_css():
         background: #1F1830 !important;
     }
 
-    /* مربع الكتابة */
     [data-testid="stChatInput"] {
         border-radius: 16px !important;
         border: 1px solid #352744 !important;
@@ -310,9 +308,6 @@ def get_css():
     [data-testid="stChatInput"]:focus-within {
         border-color: #7546C8 !important;
         box-shadow: 0 0 0 2px #7546C833 !important;
-    }
-    [data-testid="stChatInput"] textarea {
-        color: #EDE6F8 !important;
     }
 
     .stButton > button[kind="primary"] {
