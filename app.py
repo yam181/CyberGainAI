@@ -36,20 +36,13 @@ st.markdown("""
     border-right: none !important;
 }
 
-/* إخفاء جميع صور وأيقونات الرسائل */
+/* إخفاء الأفاتار */
 [data-testid="stChatMessageAvatar"],
-[data-testid="chatAvatarIcon-user"],
-[data-testid="chatAvatarIcon-assistant"],
 [data-testid*="chatAvatarIcon"] {
     display: none !important;
 }
 
-/* إخفاء مساحة الأفاتار في الرسائل */
-[data-testid="stChatMessage"] > div:first-child {
-    display: none !important;
-}
-
-/* كل الرسائل بلا إطار افتراضيًا */
+/* الرسائل بلا إطار افتراضيًا */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border: none !important;
@@ -58,7 +51,7 @@ st.markdown("""
     margin: 8px 0 !important;
 }
 
-/* رسالة المستخدم فقط: إطار رمادي شفاف */
+/* إطار رمادي شفاف لرسالة المستخدم */
 [data-testid="stChatMessage"]:has(
     [data-testid="chatAvatarIcon-user"]
 ) {
@@ -81,7 +74,7 @@ st.markdown("""
     font-size: 14px;
 }
 
-/* أزرار المحادثات */
+/* أزرار المحادثات بلا إطارات */
 div[class*="st-key-open_"] button,
 div[class*="st-key-delete_"] button {
     background: transparent !important;
@@ -121,12 +114,33 @@ try:
         st.secrets["SUPABASE_URL"],
         st.secrets["SUPABASE_KEY"],
     )
-    groq = Groq(api_key=st.secrets["GROQ_API_KEY"])
+    groq = Groq(
+        api_key=st.secrets["GROQ_API_KEY"]
+    )
 except Exception:
     st.error("افحص إعدادات Secrets في Streamlit Cloud.")
     st.stop()
 
 MODEL = "openai/gpt-oss-120b"
+
+# =====================================
+# تعليمات NEXORA AI
+# =====================================
+SYSTEM_PROMPT = """
+You are NEXORA AI, an AI assistant.
+
+FOUNDER INFORMATION:
+The founder of NEXORA AI is Yamin Zoabi.
+If anyone asks who founded, created, or is the founder
+of NEXORA AI, answer that the founder is Yamin Zoabi.
+Keep this answer consistent in every language.
+
+RESPONSE RULES:
+- Reply in the user's language.
+- Be helpful, clear, and concise.
+- Explain technical subjects step by step when needed.
+- Do not claim to have performed actions you have not performed.
+"""
 
 # =====================================
 # حالة الجلسة
@@ -223,6 +237,7 @@ if not st.session_state.user:
                     st.rerun()
                 else:
                     st.error("لم يكتمل تسجيل الدخول.")
+
             except Exception:
                 st.error(
                     "فشل تسجيل الدخول. افحص البريد وكلمة المرور."
@@ -262,6 +277,7 @@ if not st.session_state.user:
                     st.success(
                         "افحص بريدك لتأكيد الحساب، ثم سجّل الدخول."
                     )
+
             except Exception:
                 st.error("تعذّر إنشاء الحساب.")
 
@@ -270,7 +286,7 @@ if not st.session_state.user:
 apply_token()
 
 # =====================================
-# المحادثات
+# إدارة المحادثات
 # =====================================
 def list_conversations():
     apply_token()
@@ -300,7 +316,9 @@ def create_conversation():
     if not result.data:
         raise Exception("لم يتم إنشاء المحادثة.")
 
-    st.session_state.conversation_id = str(result.data[0]["id"])
+    st.session_state.conversation_id = str(
+        result.data[0]["id"]
+    )
     st.session_state.messages = []
     return st.session_state.conversation_id
 
@@ -317,7 +335,10 @@ def load_messages(cid):
     )
 
     return [
-        {"role": row["role"], "content": row["content"]}
+        {
+            "role": row["role"],
+            "content": row["content"],
+        }
         for row in (result.data or [])
         if row.get("role") in ("user", "assistant")
     ]
@@ -382,18 +403,24 @@ def generate_title(question):
                         "Return only the title."
                     ),
                 },
-                {"role": "user", "content": question},
+                {
+                    "role": "user",
+                    "content": question,
+                },
             ],
             max_tokens=40,
             temperature=0.2,
         )
 
-        title = (result.choices[0].message.content or "").strip()
+        title = (
+            result.choices[0].message.content or ""
+        ).strip()
         title = title.strip("\"'`“” ")
         title = re.sub(r"\s+", " ", title)
 
         if title:
             return title[:80]
+
     except Exception:
         pass
 
@@ -411,12 +438,18 @@ with st.sidebar:
     if email:
         st.caption(email)
 
-    if st.button("＋ محادثة جديدة", use_container_width=True):
+    if st.button(
+        "＋ محادثة جديدة",
+        use_container_width=True,
+    ):
         st.session_state.conversation_id = None
         st.session_state.messages = []
         st.rerun()
 
-    if st.button("تسجيل الخروج", use_container_width=True):
+    if st.button(
+        "تسجيل الخروج",
+        use_container_width=True,
+    ):
         logout()
 
     st.divider()
@@ -432,10 +465,16 @@ with st.sidebar:
         cid = str(conv["id"])
         title = conv.get("title") or "محادثة جديدة"
 
-        name_col, trash_col = st.columns([5, 1], gap="small")
+        name_col, trash_col = st.columns(
+            [5, 1],
+            gap="small",
+        )
 
         with name_col:
-            label = title[:27] + ("…" if len(title) > 27 else "")
+            label = title[:27] + (
+                "…" if len(title) > 27 else ""
+            )
+
             if st.button(
                 label,
                 key=f"open_{cid}",
@@ -527,11 +566,7 @@ if prompt and prompt.strip():
                     messages=[
                         {
                             "role": "system",
-                            "content": (
-                                "You are NEXORA AI. Be helpful and concise. "
-                                "Reply in the user's language. Explain "
-                                "technical subjects step by step when needed."
-                            ),
+                            "content": SYSTEM_PROMPT,
                         },
                         *st.session_state.messages[-12:],
                     ],
@@ -540,8 +575,8 @@ if prompt and prompt.strip():
                 )
 
                 answer = (
-                    result.choices[0].message.content or
-                    "عذرًا، لم أتمكن من إنشاء رد."
+                    result.choices[0].message.content
+                    or "عذرًا، لم أتمكن من إنشاء رد."
                 ).strip()
 
                 st.markdown(answer)
