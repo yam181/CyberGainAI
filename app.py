@@ -163,9 +163,13 @@ footer,
 [data-testid="stDeployButton"],
 .stDeployButton,
 [data-testid="stAppDeployButton"],
-#GithubIcon {
+/* محاولة إخفاء شريط Streamlit العلوي */
+[data-testid="stToolbar"] {
     display: none !important;
-    visibility: hidden !important;
+}
+
+#MainMenu {
+    display: none !important;
 }
 
 /* الحفاظ على زر فتح القائمة الجانبية */
