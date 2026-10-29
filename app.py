@@ -165,25 +165,32 @@ footer,
     display: none !important;
 }
 
-    /* ===== زر فتح القائمة ===== */
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: fixed !important;
-        top: 18px !important;
-        left: 18px !important;
-        z-index: 999999 !important;
-        background-color: #ffffff !important;
-        border: none !important;
-        border-radius: 12px !important;
-        width: 48px !important;
-        height: 48px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
+    /* ===== زر فتح المحادثات ===== */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 18px !important;
+    left: 18px !important;
+    z-index: 999999 !important;
+    background: #7546C8 !important;
+    border: 1px solid #9B78E8 !important;
+    border-radius: 12px !important;
+    width: 48px !important;
+    height: 48px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+}
+
+[data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="collapsedControl"] svg {
+    color: white !important;
+    fill: white !important;
+    stroke: white !important;
+}
 
     [data-testid="stSidebarCollapsedControl"] svg,
     [data-testid="collapsedControl"] svg {
