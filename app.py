@@ -69,10 +69,11 @@ st.markdown("""
 
 /* عنوان التطبيق */
 .nexora-title {
-    font-size: 30px;
-    font-weight: 800;
-    color: #65efa4;
+    font-size: 24px;
+    font-weight: 700;
+    color: #9D4EDD;
     margin-bottom: 0;
+    letter-spacing: 1px;
 }
 
 .nexora-subtitle {
