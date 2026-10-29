@@ -6,9 +6,6 @@ from datetime import datetime, timezone
 import uuid
 import re
 
-# =====================================
-# 1. إعداد التطبيق
-# =====================================
 st.set_page_config(
     page_title="NEXORA AI",
     page_icon="🤖",
@@ -17,7 +14,7 @@ st.set_page_config(
 )
 
 # =====================================
-# 2. التصميم
+# التصميم
 # =====================================
 st.markdown("""
 <style>
@@ -36,31 +33,31 @@ st.markdown("""
     border-right: none !important;
 }
 
-/* رسائل الدردشة افتراضيًا بدون إطار */
+/* جميع الرسائل بدون إطارات افتراضيًا */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding: 0.6rem 0 !important;
-}
-
-/* رسالة المستخدم: إطار أخضر شفاف */
-[data-testid="stChatMessage"]:has(
-    [data-testid="chatAvatarIcon-user"]
-) {
-    border: 1px solid rgba(101, 239, 164, 0.28) !important;
-    border-radius: 14px !important;
-    padding: 12px 16px !important;
-    background: rgba(101, 239, 164, 0.035) !important;
+    padding: 8px 0 !important;
     margin: 8px 0 !important;
 }
 
-/* لا نضيف إطارًا حول محتوى الرسائل */
-[data-testid="stChatMessage"] > div {
-    box-shadow: none !important;
+/* إطار رمادي شفاف لرسالتك أنت فقط */
+[data-testid="stChatMessage"]:has(
+    [data-testid="chatAvatarIcon-user"]
+) {
+    background: rgba(160, 160, 160, 0.08) !important;
+    border: 1px solid rgba(180, 180, 180, 0.25) !important;
+    border-radius: 14px !important;
+    padding: 12px 16px !important;
 }
 
-/* اسم التطبيق */
+/* إخفاء صور المستخدم والروبوت */
+[data-testid="stChatMessage"] [data-testid*="chatAvatarIcon"] {
+    display: none !important;
+}
+
+/* عنوان التطبيق */
 .nexora-title {
     font-size: 30px;
     font-weight: 800;
@@ -73,7 +70,7 @@ st.markdown("""
     font-size: 14px;
 }
 
-/* أزرار أسماء المحادثات والحذف بلا إطار */
+/* أزرار المحادثات دون إطارات */
 div[class*="st-key-open_"] button,
 div[class*="st-key-delete_"] button {
     background: transparent !important;
@@ -81,12 +78,10 @@ div[class*="st-key-delete_"] button {
     box-shadow: none !important;
     color: #e8edf2 !important;
     padding: 5px 3px !important;
-    min-height: 35px !important;
 }
 
 div[class*="st-key-open_"] button:hover {
     color: #65efa4 !important;
-    background: transparent !important;
 }
 
 div[class*="st-key-delete_"] button {
@@ -95,10 +90,8 @@ div[class*="st-key-delete_"] button {
 
 div[class*="st-key-delete_"] button:hover {
     color: #ff4444 !important;
-    background: transparent !important;
 }
 
-/* حقل كتابة الرسالة */
 [data-testid="stChatInput"] {
     border-radius: 14px;
 }
@@ -110,7 +103,7 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # =====================================
-# 3. الاتصال بالخدمات
+# الاتصال بالخدمات
 # =====================================
 try:
     supabase = create_client(
@@ -125,7 +118,7 @@ except Exception:
 MODEL = "openai/gpt-oss-120b"
 
 # =====================================
-# 4. بيانات الجلسة
+# حالة الجلسة
 # =====================================
 defaults = {
     "user": None,
@@ -140,9 +133,8 @@ for key, value in defaults.items():
 
 
 def apply_token():
-    token = st.session_state.access_token
-    if token:
-        supabase.postgrest.auth(token)
+    if st.session_state.access_token:
+        supabase.postgrest.auth(st.session_state.access_token)
 
 
 def get_user_id():
@@ -159,7 +151,7 @@ def show_error(error):
 
 
 # =====================================
-# 5. تسجيل الدخول وإنشاء الحساب
+# تسجيل الدخول
 # =====================================
 def logout():
     try:
@@ -180,7 +172,7 @@ if not st.session_state.user:
         '<div class="nexora-title">🤖 NEXORA AI</div>',
         unsafe_allow_html=True,
     )
-    st.markdown("مساعدك الذكي")
+    st.caption("مساعدك الذكي")
 
     login_tab, signup_tab = st.tabs(
         ["تسجيل الدخول", "إنشاء حساب"]
@@ -212,7 +204,6 @@ if not st.session_state.user:
                     st.rerun()
                 else:
                     st.error("لم يكتمل تسجيل الدخول.")
-
             except Exception:
                 st.error("فشل تسجيل الدخول. افحص البريد وكلمة المرور.")
 
@@ -243,13 +234,11 @@ if not st.session_state.user:
                         result.session.access_token
                     )
                     apply_token()
-                    st.success("تم إنشاء الحساب.")
                     st.rerun()
                 else:
                     st.success(
                         "افحص بريدك لتأكيد الحساب، ثم سجّل الدخول."
                     )
-
             except Exception:
                 st.error("تعذّر إنشاء الحساب.")
 
@@ -258,7 +247,7 @@ if not st.session_state.user:
 apply_token()
 
 # =====================================
-# 6. إدارة المحادثات
+# إدارة المحادثات
 # =====================================
 def list_conversations():
     apply_token()
@@ -352,9 +341,6 @@ def delete_conversation(cid):
         st.session_state.messages = []
 
 
-# =====================================
-# 7. توليد عنوان المحادثة
-# =====================================
 def generate_title(question):
     try:
         result = groq.chat.completions.create(
@@ -363,9 +349,9 @@ def generate_title(question):
                 {
                     "role": "system",
                     "content": (
-                        "Write a short title of 3 to 6 words "
-                        "summarizing the user's question. Use the "
-                        "same language as the user. Return only the title."
+                        "Create a short title of 3 to 6 words "
+                        "in the same language as the user's question. "
+                        "Return only the title."
                     ),
                 },
                 {"role": "user", "content": question},
@@ -373,13 +359,11 @@ def generate_title(question):
             max_tokens=40,
             temperature=0.2,
         )
-
         title = (result.choices[0].message.content or "").strip()
         title = title.strip("\"'`“” ")
         title = re.sub(r"\s+", " ", title)
         if title:
             return title[:80]
-
     except Exception:
         pass
 
@@ -387,7 +371,7 @@ def generate_title(question):
 
 
 # =====================================
-# 8. القائمة الجانبية
+# القائمة الجانبية
 # =====================================
 with st.sidebar:
     st.markdown("## 🤖 NEXORA AI")
@@ -464,7 +448,7 @@ with st.sidebar:
 
 
 # =====================================
-# 9. واجهة المحادثة
+# واجهة المحادثة
 # =====================================
 st.markdown(
     '<div class="nexora-title">NEXORA AI</div>',
@@ -490,15 +474,17 @@ if prompt and prompt.strip():
             create_conversation()
 
         cid = str(st.session_state.conversation_id)
-        is_first_message = len(st.session_state.messages) == 0
+        first_message = len(st.session_state.messages) == 0
 
-        user_message = {"role": "user", "content": prompt}
-        st.session_state.messages.append(user_message)
+        st.session_state.messages.append({
+            "role": "user",
+            "content": prompt,
+        })
+
+        save_message(cid, "user", prompt)
 
         with st.chat_message("user", avatar=None):
             st.markdown(prompt)
-
-        save_message(cid, "user", prompt)
 
         with st.chat_message("assistant", avatar=None):
             with st.spinner("NEXORA يفكّر..."):
@@ -533,9 +519,8 @@ if prompt and prompt.strip():
 
         save_message(cid, "assistant", answer)
 
-        if is_first_message:
-            title = generate_title(prompt)
-            update_title(cid, title)
+        if first_message:
+            update_title(cid, generate_title(prompt))
 
         update_activity(cid)
         st.rerun()
