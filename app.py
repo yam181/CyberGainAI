@@ -242,24 +242,34 @@ def get_css():
     }
 
     /* زر الملف الشخصي المثبت */
-    .st-key-nx_profile_button {
-        position: fixed !important;
-        top: 12px !important;
-        right: 18px !important;
-        z-index: 999990 !important;
-        width: 48px !important;
-    }
+    
+.st-key-nx_profile_button {
+    position: fixed !important;
+    top: 10px !important;
+    right: 12px !important;
+    z-index: 999999 !important;
+    width: 58px !important;
+    height: 58px !important;
+    background: #100D18 !important;
+    border-radius: 50% !important;
+    padding: 5px !important;
+    box-sizing: border-box !important;
+}
 
-    .st-key-nx_profile_button button {
-        width: 44px !important;
-        height: 44px !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-        background: #211638 !important;
-        border: 2px solid #7546C8 !important;
-        color: #C4B5FD !important;
-        font-size: 23px !important;
-    }
+.st-key-nx_profile_button button {
+    width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    background: #211638 !important;
+    border: 3px solid #7546C8 !important;
+    color: #C4B5FD !important;
+    font-size: 27px !important;
+    box-shadow: 0 0 0 5px #100D18, 0 4px 15px #0008 !important;
+}
+
 
     [data-testid="stChatMessageAvatar"],
     [data-testid*="chatAvatarIcon"] {
