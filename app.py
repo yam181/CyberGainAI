@@ -108,7 +108,7 @@ div[class*="st-key-delete_"] button:hover {
 }
 
 h1, h2, h3 {
-    color: #65efa4;
+    color: #9D4EDD;
 }
 </style>
 """, unsafe_allow_html=True)
