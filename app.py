@@ -30,7 +30,6 @@ defaults = {
     "max_tokens": 700,
     "show_settings": False,
     "profile_image": None,
-    "search_query": "",
 }
 for key, value in defaults.items():
     if key not in st.session_state:
@@ -88,10 +87,7 @@ TRANSLATIONS = {
         "yesterday": "أمس",
         "last_7_days": "آخر 7 أيام",
         "older": "أقدم",
-        "account": "حسابي",
         "settings_prefs": "الإعدادات والتفضيلات",
-        "rename": "إعادة تسمية",
-        "delete": "حذف",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -141,10 +137,7 @@ TRANSLATIONS = {
         "yesterday": "Yesterday",
         "last_7_days": "Last 7 days",
         "older": "Older",
-        "account": "My Account",
         "settings_prefs": "Settings & Preferences",
-        "rename": "Rename",
-        "delete": "Delete",
     },
 }
 
@@ -154,7 +147,7 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم (محسّن للهاتف)
+# التصميم (مع إصلاح زر الهامبرغر على الموبايل)
 # =====================================
 def get_css():
     return """
@@ -168,43 +161,48 @@ def get_css():
         --nx-hover: #1F1830;
     }
 
-    /* ===== إخفاء عناصر Streamlit ===== */
-    #MainMenu, footer, header,
-    [data-testid="stHeader"],
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    [data-testid="stStatusWidget"],
-    .stDeployButton,
-    button[kind="header"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0 !important;
-    }
-    .stApp > header {
-        display: none !important;
+    /* إخفاء العناصر غير المرغوبة فقط */
+    #MainMenu {visibility: hidden !important; display: none !important;}
+    footer {visibility: hidden !important; display: none !important;}
+    [data-testid="stToolbar"] {display: none !important;}
+    [data-testid="stDecoration"] {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
+    .stDeployButton {display: none !important;}
+    button[kind="header"] {display: none !important;}
+
+    [data-testid="stHeader"] {
+        background: transparent !important;
         height: 0 !important;
     }
 
-    /* ===== الأساسيات ===== */
+    /* ===== مهم: إبقاء زر فتح الشريط الجانبي ظاهر على الموبايل ===== */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"],
+    button[kind="headerNoPadding"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
+    }
+
     .stApp {
         background: #0B0912 !important;
         color: #EDE6F8 !important;
     }
     .block-container {
-        padding-top: 0.8rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 5.5rem !important;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
         max-width: 820px !important;
     }
 
-    /* ===== الشريط الجانبي ===== */
     [data-testid="stSidebar"] {
         background: var(--nx-bg) !important;
         border-right: 1px solid var(--nx-border) !important;
     }
     [data-testid="stSidebar"] > div:first-child {
-        padding: 1rem 0.8rem !important;
+        padding: 1.1rem 0.9rem !important;
     }
     [data-testid="stSidebar"] p,
     [data-testid="stSidebar"] span,
@@ -212,7 +210,6 @@ def get_css():
         color: var(--nx-text) !important;
     }
 
-    /* ===== إخفاء الأفاتار ===== */
     [data-testid="stChatMessageAvatar"],
     [data-testid="chatAvatarIcon-user"],
     [data-testid="chatAvatarIcon-assistant"],
@@ -223,7 +220,6 @@ def get_css():
         display: none !important;
     }
 
-    /* ===== فقاعات الرسائل ===== */
     [data-testid="stChatMessage"] {
         background: transparent !important;
         border: none !important;
@@ -246,7 +242,6 @@ def get_css():
         margin-right: 12% !important;
     }
 
-    /* ===== العناوين ===== */
     .nexora-title {
         font-size: 20px !important;
         font-weight: 700 !important;
@@ -256,10 +251,9 @@ def get_css():
     .nexora-subtitle {
         color: #A78BFA !important;
         font-size: 12.5px !important;
-        margin-bottom: 12px !important;
+        margin-bottom: 14px !important;
     }
 
-    /* ===== صفحة الترحيب ===== */
     .welcome-container {
         display: flex;
         flex-direction: column;
@@ -287,13 +281,10 @@ def get_css():
         font-size: 13.5px;
         color: #A78BFA;
         max-width: 320px;
-        line-height: 1.4;
     }
 
-    /* ===== أزرار الشريط ===== */
     [data-testid="stSidebar"] .stButton > button {
         border-radius: 10px !important;
-        transition: all 0.15s ease !important;
         font-weight: 500 !important;
         min-height: 42px !important;
     }
@@ -301,9 +292,6 @@ def get_css():
         background: linear-gradient(135deg, #7546C8, #5B21B6) !important;
         border: none !important;
         color: white !important;
-    }
-    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #6D28D9, #4C1D95) !important;
     }
     [data-testid="stSidebar"] .stButton > button[kind="secondary"],
     [data-testid="stSidebar"] .stButton > button[kind="tertiary"] {
@@ -317,7 +305,6 @@ def get_css():
         border-color: var(--nx-border) !important;
     }
 
-    /* ===== مربع الكتابة ===== */
     [data-testid="stChatInput"] {
         border-radius: 14px !important;
         border: 1px solid #352744 !important;
@@ -329,10 +316,8 @@ def get_css():
     }
     [data-testid="stChatInput"] textarea {
         color: #EDE6F8 !important;
-        font-size: 15px !important;
     }
 
-    /* ===== الأزرار العامة ===== */
     .stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #7546C8, #5B21B6) !important;
         border: none !important;
@@ -340,13 +325,9 @@ def get_css():
         border-radius: 10px !important;
         min-height: 42px !important;
     }
-    .stButton > button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #6D28D9, #4C1D95) !important;
-    }
 
     h1, h2, h3 { color: #C4B5FD !important; }
 
-    /* ===== تسجيل الدخول ===== */
     .login-card {
         background: #15121F;
         border: 1px solid #352744;
@@ -354,7 +335,6 @@ def get_css():
         padding: 1.8rem 1.4rem;
         max-width: 400px;
         margin: 5vh auto 0;
-        box-shadow: 0 12px 32px rgba(0,0,0,0.4);
     }
 
     .date-group {
@@ -363,87 +343,28 @@ def get_css():
         font-weight: 600 !important;
         margin: 12px 0 5px 2px !important;
         text-transform: uppercase;
-        letter-spacing: 0.4px;
     }
 
-    /* =========================================
-       تحسينات خاصة بالهاتف (Mobile)
-       ========================================= */
     @media (max-width: 768px) {
         .block-container {
-            padding-top: 0.6rem !important;
             padding-left: 0.6rem !important;
             padding-right: 0.6rem !important;
-            padding-bottom: 5rem !important;
         }
-
-        /* فقاعات الرسائل تأخذ عرض أكبر */
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-            margin-left: 4% !important;
-            padding: 11px 13px !important;
-            border-radius: 14px 14px 4px 14px !important;
+            margin-left: 3% !important;
         }
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-            margin-right: 4% !important;
-            padding: 11px 13px !important;
-            border-radius: 14px 14px 14px 4px !important;
+            margin-right: 3% !important;
         }
+        .welcome-logo { font-size: 28px; }
+        .welcome-text { font-size: 16px; }
 
-        /* صفحة الترحيب */
-        .welcome-container {
-            min-height: 42vh;
-            padding: 1.2rem 0.5rem;
-        }
-        .welcome-logo {
-            font-size: 30px;
-        }
-        .welcome-text {
-            font-size: 17px;
-        }
-        .welcome-sub {
-            font-size: 13px;
-            max-width: 280px;
-        }
-
-        /* أزرار أكبر للمس */
-        .stButton > button {
-            min-height: 44px !important;
-            font-size: 15px !important;
-        }
-
-        /* الشريط الجانبي */
-        [data-testid="stSidebar"] > div:first-child {
-            padding: 0.9rem 0.7rem !important;
-        }
-
-        .nexora-title {
-            font-size: 18px !important;
-        }
-
-        .login-card {
-            margin: 3vh 0.8rem 0;
-            padding: 1.5rem 1.2rem;
-        }
-    }
-
-    /* شاشات صغيرة جدًا */
-    @media (max-width: 480px) {
-        .block-container {
-            padding-left: 0.45rem !important;
-            padding-right: 0.45rem !important;
-        }
-
-        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]),
-        [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-            margin-left: 2% !important;
-            margin-right: 2% !important;
-        }
-
-        .welcome-logo {
-            font-size: 26px;
-        }
-        .welcome-text {
-            font-size: 16px;
+        [data-testid="stSidebarCollapsedControl"],
+        [data-testid="collapsedControl"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 999999 !important;
         }
     }
     </style>
