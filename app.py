@@ -155,18 +155,13 @@ def get_css():
         --nx-hover: #1F1830;
     }
 
-    /* إخفاء العناصر المزعجة */
+    /* إخفاء العناصر المزعجة فقط */
     #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"],
     [data-testid="stStatusWidget"], .stDeployButton, button[kind="header"] {
         display: none !important;
     }
 
-    [data-testid="stHeader"] {
-        background: transparent !important;
-        height: auto !important;
-    }
-
-    /* ===== زر فتح القائمة - أبيض وكبير ===== */
+    /* ===== زر فتح القائمة ===== */
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="collapsedControl"] {
         display: flex !important;
