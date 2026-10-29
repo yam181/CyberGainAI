@@ -7,7 +7,7 @@ import uuid
 import re
 
 # =====================================
-# إعداد الصفحة
+# 1. إعداد التطبيق
 # =====================================
 st.set_page_config(
     page_title="NEXORA AI",
@@ -16,9 +16,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# =====================================
+# 2. التصميم
+# =====================================
 st.markdown("""
 <style>
-/* الخلفية */
 .stApp {
     background: #0b0f14;
     color: #e8edf2;
@@ -29,13 +31,12 @@ st.markdown("""
     max-width: 1100px;
 }
 
-/* القائمة الجانبية */
 [data-testid="stSidebar"] {
     background: #10161e;
     border-right: none !important;
 }
 
-/* إخفاء الخلفيات والإطارات عن رسائل الدردشة */
+/* رسائل الدردشة افتراضيًا بدون إطار */
 [data-testid="stChatMessage"] {
     background: transparent !important;
     border: none !important;
@@ -43,14 +44,23 @@ st.markdown("""
     padding: 0.6rem 0 !important;
 }
 
-/* إزالة الإطار عن الحاويات الداخلية للرسائل */
+/* رسالة المستخدم: إطار أخضر شفاف */
+[data-testid="stChatMessage"]:has(
+    [data-testid="chatAvatarIcon-user"]
+) {
+    border: 1px solid rgba(101, 239, 164, 0.28) !important;
+    border-radius: 14px !important;
+    padding: 12px 16px !important;
+    background: rgba(101, 239, 164, 0.035) !important;
+    margin: 8px 0 !important;
+}
+
+/* لا نضيف إطارًا حول محتوى الرسائل */
 [data-testid="stChatMessage"] > div {
-    background: transparent !important;
-    border: none !important;
     box-shadow: none !important;
 }
 
-/* عنوان التطبيق */
+/* اسم التطبيق */
 .nexora-title {
     font-size: 30px;
     font-weight: 800;
@@ -63,7 +73,7 @@ st.markdown("""
     font-size: 14px;
 }
 
-/* أزرار المحادثات: بدون إطار */
+/* أزرار أسماء المحادثات والحذف بلا إطار */
 div[class*="st-key-open_"] button,
 div[class*="st-key-delete_"] button {
     background: transparent !important;
@@ -88,12 +98,11 @@ div[class*="st-key-delete_"] button:hover {
     background: transparent !important;
 }
 
-/* إزالة الإطار عن حقل الكتابة */
+/* حقل كتابة الرسالة */
 [data-testid="stChatInput"] {
     border-radius: 14px;
 }
 
-/* ألوان العناوين */
 h1, h2, h3 {
     color: #65efa4;
 }
@@ -101,7 +110,7 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 # =====================================
-# الاتصال بالخدمات
+# 3. الاتصال بالخدمات
 # =====================================
 try:
     supabase = create_client(
@@ -110,13 +119,13 @@ try:
     )
     groq = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except Exception:
-    st.error("تأكد من إعداد Secrets في Streamlit Cloud.")
+    st.error("افحص إعدادات Secrets في Streamlit Cloud.")
     st.stop()
 
 MODEL = "openai/gpt-oss-120b"
 
 # =====================================
-# حالة التطبيق
+# 4. بيانات الجلسة
 # =====================================
 defaults = {
     "user": None,
@@ -141,15 +150,16 @@ def get_user_id():
     return str(user.id) if user else None
 
 
-def error_message(error):
-    text = str(error)
-    if "42501" in text or "row-level security" in text.lower():
-        return "رفضت Supabase العملية بسبب صلاحيات قاعدة البيانات (RLS)."
-    return text
+def show_error(error):
+    message = str(error)
+    if "42501" in message or "row-level security" in message.lower():
+        st.error("رفضت Supabase العملية بسبب صلاحيات RLS.")
+    else:
+        st.error(message)
 
 
 # =====================================
-# تسجيل الدخول
+# 5. تسجيل الدخول وإنشاء الحساب
 # =====================================
 def logout():
     try:
@@ -170,7 +180,7 @@ if not st.session_state.user:
         '<div class="nexora-title">🤖 NEXORA AI</div>',
         unsafe_allow_html=True,
     )
-    st.markdown("مساعدك الذكي", unsafe_allow_html=True)
+    st.markdown("مساعدك الذكي")
 
     login_tab, signup_tab = st.tabs(
         ["تسجيل الدخول", "إنشاء حساب"]
@@ -179,9 +189,7 @@ if not st.session_state.user:
     with login_tab:
         with st.form("login_form"):
             email = st.text_input("البريد الإلكتروني")
-            password = st.text_input(
-                "كلمة المرور", type="password"
-            )
+            password = st.text_input("كلمة المرور", type="password")
             submitted = st.form_submit_button(
                 "دخول", use_container_width=True
             )
@@ -206,7 +214,7 @@ if not st.session_state.user:
                     st.error("لم يكتمل تسجيل الدخول.")
 
             except Exception:
-                st.error("فشل تسجيل الدخول. افحص بياناتك.")
+                st.error("فشل تسجيل الدخول. افحص البريد وكلمة المرور.")
 
     with signup_tab:
         with st.form("signup_form"):
@@ -218,11 +226,11 @@ if not st.session_state.user:
                 type="password",
                 key="signup_password",
             )
-            submitted_signup = st.form_submit_button(
+            signup = st.form_submit_button(
                 "إنشاء حساب", use_container_width=True
             )
 
-        if submitted_signup:
+        if signup:
             try:
                 result = supabase.auth.sign_up({
                     "email": new_email.strip(),
@@ -239,18 +247,18 @@ if not st.session_state.user:
                     st.rerun()
                 else:
                     st.success(
-                        "افحص بريدك الإلكتروني لتأكيد الحساب، ثم سجّل الدخول."
+                        "افحص بريدك لتأكيد الحساب، ثم سجّل الدخول."
                     )
 
             except Exception:
-                st.error("تعذّر إنشاء الحساب. افحص البيانات.")
+                st.error("تعذّر إنشاء الحساب.")
 
     st.stop()
 
 apply_token()
 
 # =====================================
-# قاعدة بيانات المحادثات
+# 6. إدارة المحادثات
 # =====================================
 def list_conversations():
     apply_token()
@@ -277,6 +285,9 @@ def create_conversation():
         "updated_at": now,
     }).execute()
 
+    if not result.data:
+        raise Exception("لم يتم إنشاء المحادثة.")
+
     st.session_state.conversation_id = str(result.data[0]["id"])
     st.session_state.messages = []
     return st.session_state.conversation_id
@@ -292,11 +303,10 @@ def load_messages(cid):
         .order("created_at")
         .execute()
     )
-
     return [
         {"role": row["role"], "content": row["content"]}
         for row in (result.data or [])
-        if row.get("role") in ["user", "assistant"]
+        if row.get("role") in ("user", "assistant")
     ]
 
 
@@ -334,8 +344,8 @@ def delete_conversation(cid):
     ).eq("conversation_id", cid).execute()
 
     supabase.table("conversations").delete().eq(
-        "user_id", get_user_id()
-    ).eq("id", cid).execute()
+        "id", cid
+    ).eq("user_id", get_user_id()).execute()
 
     if str(st.session_state.conversation_id) == str(cid):
         st.session_state.conversation_id = None
@@ -343,7 +353,7 @@ def delete_conversation(cid):
 
 
 # =====================================
-# عنوان تلقائي للمحادثة
+# 7. توليد عنوان المحادثة
 # =====================================
 def generate_title(question):
     try:
@@ -353,7 +363,7 @@ def generate_title(question):
                 {
                     "role": "system",
                     "content": (
-                        "Create a short title of 3 to 6 words "
+                        "Write a short title of 3 to 6 words "
                         "summarizing the user's question. Use the "
                         "same language as the user. Return only the title."
                     ),
@@ -367,7 +377,6 @@ def generate_title(question):
         title = (result.choices[0].message.content or "").strip()
         title = title.strip("\"'`“” ")
         title = re.sub(r"\s+", " ", title)
-
         if title:
             return title[:80]
 
@@ -378,7 +387,7 @@ def generate_title(question):
 
 
 # =====================================
-# القائمة الجانبية بدون إطارات
+# 8. القائمة الجانبية
 # =====================================
 with st.sidebar:
     st.markdown("## 🤖 NEXORA AI")
@@ -402,17 +411,14 @@ with st.sidebar:
     try:
         conversations = list_conversations()
     except Exception as e:
-        st.error("تعذّر تحميل المحادثات.")
-        st.caption(error_message(e))
+        show_error(e)
         conversations = []
 
     for conv in conversations:
         cid = str(conv["id"])
         title = conv.get("title") or "محادثة جديدة"
 
-        name_col, trash_col = st.columns(
-            [5, 1], gap="small"
-        )
+        name_col, trash_col = st.columns([5, 1], gap="small")
 
         with name_col:
             label = title[:27] + ("…" if len(title) > 27 else "")
@@ -427,7 +433,7 @@ with st.sidebar:
                     st.session_state.messages = load_messages(cid)
                     st.rerun()
                 except Exception as e:
-                    st.error(error_message(e))
+                    show_error(e)
 
         with trash_col:
             if st.button(
@@ -449,7 +455,7 @@ with st.sidebar:
                         st.session_state.pop(f"confirm_{cid}", None)
                         st.rerun()
                     except Exception as e:
-                        st.error(error_message(e))
+                        show_error(e)
 
             with no_col:
                 if st.button("إلغاء", key=f"no_{cid}"):
@@ -458,7 +464,7 @@ with st.sidebar:
 
 
 # =====================================
-# شاشة المحادثة: رسائل بلا إطارات
+# 9. واجهة المحادثة
 # =====================================
 st.markdown(
     '<div class="nexora-title">NEXORA AI</div>',
@@ -484,7 +490,7 @@ if prompt and prompt.strip():
             create_conversation()
 
         cid = str(st.session_state.conversation_id)
-        first_message = len(st.session_state.messages) == 0
+        is_first_message = len(st.session_state.messages) == 0
 
         user_message = {"role": "user", "content": prompt}
         st.session_state.messages.append(user_message)
@@ -517,6 +523,7 @@ if prompt and prompt.strip():
                     result.choices[0].message.content or
                     "عذرًا، لم أتمكن من إنشاء رد."
                 ).strip()
+
                 st.markdown(answer)
 
         st.session_state.messages.append({
@@ -526,7 +533,7 @@ if prompt and prompt.strip():
 
         save_message(cid, "assistant", answer)
 
-        if first_message:
+        if is_first_message:
             title = generate_title(prompt)
             update_title(cid, title)
 
@@ -535,4 +542,4 @@ if prompt and prompt.strip():
 
     except Exception as e:
         st.error("حدث خطأ أثناء إرسال الرسالة أو حفظها.")
-        st.caption(error_message(e))
+        show_error(e)
