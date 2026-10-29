@@ -156,10 +156,14 @@ def get_css():
     }
 
     /* إخفاء العناصر المزعجة فقط */
-    #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"],
-    [data-testid="stStatusWidget"], .stDeployButton, button[kind="header"] {
-        display: none !important;
-    }
+   #MainMenu,
+footer,
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+.stDeployButton {
+    display: none !important;
+}
 
     /* ===== زر فتح القائمة ===== */
     [data-testid="stSidebarCollapsedControl"],
