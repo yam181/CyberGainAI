@@ -167,7 +167,12 @@ footer,
 
 /* إخفاء شريط الأدوات العلوي فقط */
 [data-testid="stToolbar"] {
-    visibility: visible !important;
+    visibility: hidden !important;
+    height: 0 !important;
+}
+
+[data-testid="stToolbar"] * {
+    visibility: hidden !important;
 }
 
 /* إخفاء قائمة Streamlit */
