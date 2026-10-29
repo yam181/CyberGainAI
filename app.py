@@ -166,14 +166,7 @@ footer,
 /* محاولة إخفاء شريط Streamlit العلوي */
 
 /* إخفاء شريط الأدوات العلوي فقط */
-[data-testid="stToolbar"] {
-    visibility: hidden !important;
-    height: 0 !important;
-}
 
-[data-testid="stToolbar"] * {
-    visibility: hidden !important;
-}
 
 /* إخفاء قائمة Streamlit */
 #MainMenu,
