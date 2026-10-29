@@ -238,13 +238,25 @@ def get_css():
         visibility: hidden !important;
     }
 
-    /* إخفاء سهم طيّ/فتح القائمة؛ القائمة مفتوحة افتراضياً وتبقى المحادثات ظاهرة */
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"] {
-        display: none !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
+    /* تثبيت قائمة المحادثات مفتوحة */
+[data-testid="stSidebar"] {
+    display: block !important;
+    visibility: visible !important;
+    transform: none !important;
+    margin-left: 0 !important;
+    min-width: 260px !important;
+    width: 260px !important;
+    flex-shrink: 0 !important;
+}
+
+/* إخفاء أزرار طيّ القائمة وفتحها */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapseButton"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
 
     /* زر الملف الشخصي المثبت */
     .st-key-nx_profile_button {
