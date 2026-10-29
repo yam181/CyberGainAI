@@ -1,4 +1,4 @@
-import streamlit as
+import streamlit as st
 from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone, timedelta
