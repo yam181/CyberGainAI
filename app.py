@@ -202,15 +202,24 @@ def get_css():
     }
 
     [data-testid="stSidebar"] {
-        background: #100D18 !important;
-        border-right: 1px solid #352744 !important;
-        min-width: 260px !important;
-        width: 260px !important;
-        flex-shrink: 0 !important;
-        display: block !important;
-        visibility: visible !important;
-    }
+    background: #100D18 !important;
+    border-right: 1px solid #352744 !important;
+    min-width: 260px !important;
+    width: 260px !important;
+    flex-shrink: 0 !important;
+    display: block !important;
+    visibility: visible !important;
+    transform: none !important;
+}
 
+[data-testid="stSidebar"] > div:first-child {
+    background: #100D18 !important;
+    padding: 1.2rem 1rem !important;
+}
+
+[data-testid="stSidebar"] button[kind="header"] {
+    display: none !important;
+}
     [data-testid="stSidebar"] > div:first-child {
         background: #100D18 !important;
         padding: 1.2rem 1rem !important;
