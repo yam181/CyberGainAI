@@ -147,7 +147,7 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم (مع إصلاح زر الهامبرغر على الموبايل)
+# التصميم (مع إخفاء الزر الأحمر + إصلاح زر القائمة)
 # =====================================
 def get_css():
     return """
@@ -161,39 +161,54 @@ def get_css():
         --nx-hover: #1F1830;
     }
 
-    /* إخفاء العناصر غير المرغوبة فقط */
-    #MainMenu {visibility: hidden !important; display: none !important;}
-    footer {visibility: hidden !important; display: none !important;}
-    [data-testid="stToolbar"] {display: none !important;}
-    [data-testid="stDecoration"] {display: none !important;}
-    [data-testid="stStatusWidget"] {display: none !important;}
-    .stDeployButton {display: none !important;}
-    button[kind="header"] {display: none !important;}
+    /* ===== إخفاء الزر الأحمر والدائرة التركوازية بقوة ===== */
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    .stDeployButton,
+    button[kind="header"],
+    header button,
+    [data-testid="stHeader"] button {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 
     [data-testid="stHeader"] {
         background: transparent !important;
         height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    /* ===== مهم: إبقاء زر فتح الشريط الجانبي ظاهر على الموبايل ===== */
+    /* ===== إبقاء زر فتح القائمة ظاهر وقابل للضغط ===== */
     [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"],
-    button[kind="headerNoPadding"] {
+    [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
+        pointer-events: auto !important;
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
         z-index: 999999 !important;
+        background-color: #1A1525 !important;
+        border: 1px solid #352744 !important;
+        border-radius: 8px !important;
+        width: 38px !important;
+        height: 38px !important;
     }
 
+    /* ===== باقي التصميم ===== */
     .stApp {
         background: #0B0912 !important;
         color: #EDE6F8 !important;
     }
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 1.2rem !important;
         padding-bottom: 5.5rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
         max-width: 820px !important;
     }
 
@@ -358,14 +373,6 @@ def get_css():
         }
         .welcome-logo { font-size: 28px; }
         .welcome-text { font-size: 16px; }
-
-        [data-testid="stSidebarCollapsedControl"],
-        [data-testid="collapsedControl"] {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            z-index: 999999 !important;
-        }
     }
     </style>
     """
@@ -700,7 +707,7 @@ def group_conversations_by_date(conversations):
     return groups
 
 # =====================================
-# الشريط الجانبي
+# الشريط الجانبي (مع قائمة المحادثات)
 # =====================================
 with st.sidebar:
     st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
