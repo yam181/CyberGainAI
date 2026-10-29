@@ -4,8 +4,6 @@ from supabase import create_client
 from datetime import datetime, timezone
 import uuid
 import re
-import base64
-from io import BytesIO
 
 # =====================================
 # إعداد التطبيق
@@ -67,16 +65,12 @@ TRANSLATIONS = {
         "chat_settings": "إعدادات المحادثة",
         "language": "اللغة",
         "theme": "الوضع",
-        "dark": "داكن",
-        "light": "فاتح",
         "temperature": "درجة الإبداع",
         "max_tokens": "أقصى طول للرد",
         "save_settings": "حفظ الإعدادات",
-        "attach": "إرفاق ملفات / صور",
-        "camera": "التقاط صورة",
+        "attach": "إرفاق",
+        "camera": "كاميرا",
         "delete_account_confirm": "هل أنت متأكد من حذف حسابك نهائياً؟ سيتم حذف جميع محادثاتك.",
-        "account_deleted": "تم حذف الحساب والبيانات.",
-        "profile_title": "الملف الشخصي",
         "about_text": "NEXORA AI هو مساعد ذكي تم تطويره بواسطة Yamin Zoabi. يوفر محادثات ذكية مع حفظ السجل بشكل آمن.",
         "privacy_text": "نحن نحترم خصوصيتك. يتم تخزين المحادثات بشكل آمن في قاعدة بيانات محمية، ولا يتم مشاركة بياناتك مع أي طرف ثالث.",
         "no_conversations": "لا توجد محادثات بعد",
@@ -85,8 +79,9 @@ TRANSLATIONS = {
         "check_email": "افحص بريدك لتأكيد الحساب، ثم سجّل الدخول.",
         "secrets_error": "افحص إعدادات Secrets في Streamlit Cloud.",
         "close": "إغلاق",
-        "change_photo": "تغيير الصورة الشخصية",
         "upload_photo": "رفع صورة شخصية",
+        "no_photo": "لا توجد صورة بعد",
+        "attached_files": "الملفات المرفقة:",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -113,16 +108,12 @@ TRANSLATIONS = {
         "chat_settings": "Chat Settings",
         "language": "Language",
         "theme": "Theme",
-        "dark": "Dark",
-        "light": "Light",
         "temperature": "Creativity",
         "max_tokens": "Max response length",
         "save_settings": "Save Settings",
-        "attach": "Attach files / images",
-        "camera": "Take photo",
+        "attach": "Attach",
+        "camera": "Camera",
         "delete_account_confirm": "Are you sure you want to permanently delete your account? All conversations will be deleted.",
-        "account_deleted": "Account and data deleted.",
-        "profile_title": "Profile",
         "about_text": "NEXORA AI is a smart assistant developed by Yamin Zoabi. It provides intelligent conversations with secure history storage.",
         "privacy_text": "We respect your privacy. Conversations are stored securely in a protected database and your data is never shared with third parties.",
         "no_conversations": "No conversations yet",
@@ -131,8 +122,9 @@ TRANSLATIONS = {
         "check_email": "Check your email to confirm the account, then log in.",
         "secrets_error": "Check Secrets settings in Streamlit Cloud.",
         "close": "Close",
-        "change_photo": "Change profile photo",
         "upload_photo": "Upload profile photo",
+        "no_photo": "No photo yet",
+        "attached_files": "Attached files:",
     },
 }
 
@@ -204,16 +196,6 @@ def get_css():
         [data-testid="stChatInput"] { border-radius: 14px; }
         h1, h2, h3 { color: #9D4EDD; }
 
-        /* لوحة الإعدادات */
-        .settings-panel {
-            background: #121820;
-            border-left: 1px solid #2a3441;
-            padding: 16px;
-            border-radius: 12px;
-            height: 100%;
-        }
-
-        /* إخفاء عناصر Streamlit و GitHub */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
@@ -281,14 +263,6 @@ def get_css():
 
         [data-testid="stChatInput"] { border-radius: 14px; }
         h1, h2, h3 { color: #7B2CBF; }
-
-        .settings-panel {
-            background: #ffffff;
-            border-left: 1px solid #e0e0e0;
-            padding: 16px;
-            border-radius: 12px;
-            height: 100%;
-        }
 
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
@@ -635,7 +609,7 @@ with st.sidebar:
                     st.rerun()
 
 # =====================================
-# التخطيط الرئيسي + لوحة الإعدادات (ربع الشاشة)
+# التخطيط الرئيسي + لوحة الإعدادات
 # =====================================
 if st.session_state.show_settings:
     main_col, settings_col = st.columns([3, 1], gap="medium")
@@ -644,8 +618,8 @@ else:
     settings_col = None
 
 with main_col:
-    # شريط العنوان + الأزرار
-    top_col1, top_col2, top_col3, top_col4 = st.columns([6, 1, 1, 1.2])
+    # شريط العنوان
+    top_col1, top_col2, top_col3, top_col4 = st.columns([6, 1, 1, 1.3])
 
     with top_col1:
         st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
@@ -673,21 +647,39 @@ with main_col:
         with st.chat_message(message["role"], avatar=None):
             st.markdown(message["content"])
 
-    # الإرفاق
-    with st.expander(t("attach"), expanded=False):
+    # ---- منطقة الإرفاق المدمجة (زي ChatGPT / واتساب) ----
+    attach_col1, attach_col2, attach_col3 = st.columns([1, 1, 6])
+
+    with attach_col1:
         uploaded = st.file_uploader(
-            t("attach"),
+            "📎",
             type=["png", "jpg", "jpeg", "webp", "txt", "md", "pdf", "csv", "py", "json"],
             accept_multiple_files=True,
             key="file_uploader",
+            label_visibility="collapsed",
         )
-        camera_photo = st.camera_input(t("camera"))
 
-        if uploaded:
-            st.session_state.uploaded_files = uploaded
-        if camera_photo:
-            st.session_state.uploaded_files = list(st.session_state.uploaded_files) + [camera_photo]
+    with attach_col2:
+        camera_photo = st.camera_input(
+            "📷",
+            key="camera_input",
+            label_visibility="collapsed",
+        )
 
+    # عرض الملفات المرفقة
+    files_to_show = []
+    if uploaded:
+        files_to_show.extend(uploaded)
+    if camera_photo:
+        files_to_show.append(camera_photo)
+
+    if files_to_show:
+        st.session_state.uploaded_files = files_to_show
+        st.caption(t("attached_files"))
+        for f in files_to_show:
+            st.write(f"• {f.name}")
+
+    # خانة الكتابة
     prompt = st.chat_input(t("chat_placeholder"))
 
     if prompt and prompt.strip():
@@ -747,7 +739,6 @@ if st.session_state.show_settings and settings_col is not None:
     with settings_col:
         st.markdown(f"### {t('settings')}")
 
-        # زر الإغلاق
         if st.button("✕ " + t("close"), use_container_width=True):
             st.session_state.show_settings = False
             st.rerun()
@@ -759,7 +750,7 @@ if st.session_state.show_settings and settings_col is not None:
         if st.session_state.profile_image:
             st.image(st.session_state.profile_image, width=120)
         else:
-            st.caption("لا توجد صورة بعد")
+            st.caption(t("no_photo"))
 
         photo = st.file_uploader(t("upload_photo"), type=["png", "jpg", "jpeg", "webp"], key="profile_uploader")
         if photo:
@@ -807,6 +798,6 @@ if st.session_state.show_settings and settings_col is not None:
 
         st.divider()
 
-        # تسجيل الخروج (موجود فقط هنا)
+        # تسجيل الخروج (فقط هنا)
         if st.button(t("logout"), use_container_width=True):
             logout()
