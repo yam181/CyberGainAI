@@ -164,9 +164,42 @@ footer,
 .stDeployButton,
 [data-testid="stAppDeployButton"],
 /* محاولة إخفاء شريط Streamlit العلوي */
+
+/* إخفاء شريط الأدوات العلوي فقط */
 [data-testid="stToolbar"] {
+    visibility: hidden !important;
+}
+
+/* إخفاء قائمة Streamlit */
+#MainMenu,
+footer,
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+[data-testid="stDeployButton"],
+.stDeployButton,
+[data-testid="stAppDeployButton"] {
     display: none !important;
 }
+
+/* إظهار زر فتح قائمة المحادثات */
+[data-testid="stSidebarCollapsedControl"],
+[data-testid="collapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 18px !important;
+    left: 18px !important;
+    z-index: 999999 !important;
+    background: #7546C8 !important;
+    border: 1px solid #9B78E8 !important;
+    border-radius: 12px !important;
+    width: 48px !important;
+    height: 48px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 
 #MainMenu {
     display: none !important;
