@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # =====================================
-# حالة الجلسة الافتراضية
+# حالة الجلسة
 # =====================================
 defaults = {
     "user": None,
@@ -30,6 +30,8 @@ defaults = {
     "temperature": 0.5,
     "max_tokens": 700,
     "uploaded_files": [],
+    "show_settings": False,
+    "profile_image": None,
 }
 
 for key, value in defaults.items():
@@ -67,8 +69,6 @@ TRANSLATIONS = {
         "theme": "الوضع",
         "dark": "داكن",
         "light": "فاتح",
-        "arabic": "العربية",
-        "english": "English",
         "temperature": "درجة الإبداع",
         "max_tokens": "أقصى طول للرد",
         "save_settings": "حفظ الإعدادات",
@@ -84,6 +84,9 @@ TRANSLATIONS = {
         "error_signup": "تعذّر إنشاء الحساب.",
         "check_email": "افحص بريدك لتأكيد الحساب، ثم سجّل الدخول.",
         "secrets_error": "افحص إعدادات Secrets في Streamlit Cloud.",
+        "close": "إغلاق",
+        "change_photo": "تغيير الصورة الشخصية",
+        "upload_photo": "رفع صورة شخصية",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -112,8 +115,6 @@ TRANSLATIONS = {
         "theme": "Theme",
         "dark": "Dark",
         "light": "Light",
-        "arabic": "العربية",
-        "english": "English",
         "temperature": "Creativity",
         "max_tokens": "Max response length",
         "save_settings": "Save Settings",
@@ -129,6 +130,9 @@ TRANSLATIONS = {
         "error_signup": "Could not create account.",
         "check_email": "Check your email to confirm the account, then log in.",
         "secrets_error": "Check Secrets settings in Streamlit Cloud.",
+        "close": "Close",
+        "change_photo": "Change profile photo",
+        "upload_photo": "Upload profile photo",
     },
 }
 
@@ -138,7 +142,7 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم (داكن / فاتح)
+# التصميم
 # =====================================
 def get_css():
     if st.session_state.theme == "dark":
@@ -199,6 +203,15 @@ def get_css():
 
         [data-testid="stChatInput"] { border-radius: 14px; }
         h1, h2, h3 { color: #9D4EDD; }
+
+        /* لوحة الإعدادات */
+        .settings-panel {
+            background: #121820;
+            border-left: 1px solid #2a3441;
+            padding: 16px;
+            border-radius: 12px;
+            height: 100%;
+        }
 
         /* إخفاء عناصر Streamlit و GitHub */
         #MainMenu {visibility: hidden;}
@@ -269,6 +282,14 @@ def get_css():
         [data-testid="stChatInput"] { border-radius: 14px; }
         h1, h2, h3 { color: #7B2CBF; }
 
+        .settings-panel {
+            background: #ffffff;
+            border-left: 1px solid #e0e0e0;
+            padding: 16px;
+            border-radius: 12px;
+            height: 100%;
+        }
+
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
@@ -296,9 +317,6 @@ except Exception:
 
 MODEL = "openai/gpt-oss-120b"
 
-# =====================================
-# هوية NEXORA AI
-# =====================================
 SYSTEM_PROMPT = """
 You are NEXORA AI, a helpful AI assistant.
 
@@ -319,9 +337,6 @@ GENERAL RULES:
 - Do not claim to have personal experiences.
 """
 
-# =====================================
-# دوال مساعدة
-# =====================================
 def apply_token():
     token = st.session_state.access_token
     if token:
@@ -349,30 +364,27 @@ def logout():
     st.session_state.conversation_id = None
     st.session_state.messages = []
     st.session_state.uploaded_files = []
+    st.session_state.show_settings = False
     st.rerun()
 
 def delete_account():
-    """حذف جميع بيانات المستخدم ثم تسجيل الخروج"""
     try:
         apply_token()
         uid = get_user_id()
         if uid:
-            # حذف كل الرسائل
             supabase.table("chat_history").delete().eq("user_id", uid).execute()
-            # حذف كل المحادثات
             supabase.table("conversations").delete().eq("user_id", uid).execute()
         logout()
     except Exception as e:
         show_error(e)
 
 # =====================================
-# تسجيل الدخول / إنشاء حساب
+# تسجيل الدخول
 # =====================================
 if not st.session_state.user:
     st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
     st.caption(t("subtitle"))
 
-    # أزرار اللغة والثيم في صفحة الدخول
     col1, col2, col3 = st.columns([1, 1, 4])
     with col1:
         if st.button("🌐 " + ("EN" if st.session_state.language == "ar" else "ع"), use_container_width=True):
@@ -541,7 +553,6 @@ def generate_title(question):
     return question[:45] + ("…" if len(question) > 45 else "")
 
 def process_uploaded_files(files):
-    """استخراج نص من الملفات النصية أو وصف الصور"""
     parts = []
     for f in files:
         name = f.name
@@ -558,7 +569,7 @@ def process_uploaded_files(files):
     return "\n\n".join(parts)
 
 # =====================================
-# القائمة الجانبية
+# القائمة الجانبية (بدون تسجيل خروج)
 # =====================================
 with st.sidebar:
     st.markdown(f"## {t('app_title')}")
@@ -573,9 +584,6 @@ with st.sidebar:
         st.session_state.messages = []
         st.session_state.uploaded_files = []
         st.rerun()
-
-    if st.button(t("logout"), use_container_width=True):
-        logout()
 
     st.divider()
     st.markdown(f"### {t('my_chats')}")
@@ -627,32 +635,140 @@ with st.sidebar:
                     st.rerun()
 
 # =====================================
-# شريط الإعدادات أعلى الصفحة
+# التخطيط الرئيسي + لوحة الإعدادات (ربع الشاشة)
 # =====================================
-top_col1, top_col2, top_col3, top_col4 = st.columns([6, 1, 1, 1.5])
+if st.session_state.show_settings:
+    main_col, settings_col = st.columns([3, 1], gap="medium")
+else:
+    main_col = st.container()
+    settings_col = None
 
-with top_col1:
-    st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="nexora-subtitle">{t("subtitle")}</div>', unsafe_allow_html=True)
+with main_col:
+    # شريط العنوان + الأزرار
+    top_col1, top_col2, top_col3, top_col4 = st.columns([6, 1, 1, 1.2])
 
-with top_col2:
-    if st.button("🌐", help=t("language"), use_container_width=True):
-        st.session_state.language = "en" if st.session_state.language == "ar" else "ar"
-        st.rerun()
+    with top_col1:
+        st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="nexora-subtitle">{t("subtitle")}</div>', unsafe_allow_html=True)
 
-with top_col3:
-    if st.button("🌙" if st.session_state.theme == "light" else "☀️", help=t("theme"), use_container_width=True):
-        st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
-        st.rerun()
+    with top_col2:
+        if st.button("🌐", help=t("language"), use_container_width=True):
+            st.session_state.language = "en" if st.session_state.language == "ar" else "ar"
+            st.rerun()
 
-with top_col4:
-    with st.popover("⚙️ " + t("settings"), use_container_width=True):
+    with top_col3:
+        if st.button("🌙" if st.session_state.theme == "light" else "☀️", help=t("theme"), use_container_width=True):
+            st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
+            st.rerun()
+
+    with top_col4:
+        if st.button("⚙️ " + t("settings"), use_container_width=True):
+            st.session_state.show_settings = not st.session_state.show_settings
+            st.rerun()
+
+    st.divider()
+
+    # الرسائل
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"], avatar=None):
+            st.markdown(message["content"])
+
+    # الإرفاق
+    with st.expander(t("attach"), expanded=False):
+        uploaded = st.file_uploader(
+            t("attach"),
+            type=["png", "jpg", "jpeg", "webp", "txt", "md", "pdf", "csv", "py", "json"],
+            accept_multiple_files=True,
+            key="file_uploader",
+        )
+        camera_photo = st.camera_input(t("camera"))
+
+        if uploaded:
+            st.session_state.uploaded_files = uploaded
+        if camera_photo:
+            st.session_state.uploaded_files = list(st.session_state.uploaded_files) + [camera_photo]
+
+    prompt = st.chat_input(t("chat_placeholder"))
+
+    if prompt and prompt.strip():
+        prompt = prompt.strip()
+
+        extra = ""
+        if st.session_state.uploaded_files:
+            extra = process_uploaded_files(st.session_state.uploaded_files)
+            if extra:
+                prompt = f"{prompt}\n\n---\n{extra}"
+
+        try:
+            if not st.session_state.conversation_id:
+                create_conversation()
+
+            cid = str(st.session_state.conversation_id)
+            first_message = len(st.session_state.messages) == 0
+
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            save_message(cid, "user", prompt)
+
+            with st.chat_message("user", avatar=None):
+                st.markdown(prompt)
+
+            with st.chat_message("assistant", avatar=None):
+                with st.spinner(t("thinking")):
+                    result = groq.chat.completions.create(
+                        model=MODEL,
+                        messages=[
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            *st.session_state.messages[-12:],
+                        ],
+                        temperature=st.session_state.temperature,
+                        max_tokens=st.session_state.max_tokens,
+                    )
+                    answer = (result.choices[0].message.content or "عذرًا، لم أتمكن من إنشاء رد.").strip()
+                    st.markdown(answer)
+
+            st.session_state.messages.append({"role": "assistant", "content": answer})
+            save_message(cid, "assistant", answer)
+
+            if first_message:
+                update_title(cid, generate_title(prompt))
+
+            update_activity(cid)
+            st.session_state.uploaded_files = []
+            st.rerun()
+
+        except Exception as e:
+            st.error("حدث خطأ أثناء إرسال الرسالة أو حفظها.")
+            show_error(e)
+
+# =====================================
+# لوحة الإعدادات (ربع الشاشة)
+# =====================================
+if st.session_state.show_settings and settings_col is not None:
+    with settings_col:
         st.markdown(f"### {t('settings')}")
 
-        # الملف الشخصي
-        with st.expander(t("profile"), expanded=False):
-            st.write(f"**{t('email')}:** {email}")
-            st.caption(f"User ID: {get_user_id()}")
+        # زر الإغلاق
+        if st.button("✕ " + t("close"), use_container_width=True):
+            st.session_state.show_settings = False
+            st.rerun()
+
+        st.divider()
+
+        # الصورة الشخصية
+        st.markdown(f"**{t('profile')}**")
+        if st.session_state.profile_image:
+            st.image(st.session_state.profile_image, width=120)
+        else:
+            st.caption("لا توجد صورة بعد")
+
+        photo = st.file_uploader(t("upload_photo"), type=["png", "jpg", "jpeg", "webp"], key="profile_uploader")
+        if photo:
+            st.session_state.profile_image = photo
+            st.rerun()
+
+        st.caption(email)
+
+        st.divider()
 
         # إعدادات المحادثة
         with st.expander(t("chat_settings"), expanded=False):
@@ -690,84 +806,7 @@ with top_col4:
                     st.rerun()
 
         st.divider()
+
+        # تسجيل الخروج (موجود فقط هنا)
         if st.button(t("logout"), use_container_width=True):
             logout()
-
-st.divider()
-
-# =====================================
-# واجهة المحادثة + الإرفاق
-# =====================================
-for message in st.session_state.messages:
-    with st.chat_message(message["role"], avatar=None):
-        st.markdown(message["content"])
-
-# منطقة الإرفاق
-with st.expander(t("attach"), expanded=False):
-    uploaded = st.file_uploader(
-        t("attach"),
-        type=["png", "jpg", "jpeg", "webp", "txt", "md", "pdf", "csv", "py", "json"],
-        accept_multiple_files=True,
-        key="file_uploader",
-    )
-    camera_photo = st.camera_input(t("camera"))
-
-    if uploaded:
-        st.session_state.uploaded_files = uploaded
-    if camera_photo:
-        st.session_state.uploaded_files = list(st.session_state.uploaded_files) + [camera_photo]
-
-prompt = st.chat_input(t("chat_placeholder"))
-
-if prompt and prompt.strip():
-    prompt = prompt.strip()
-
-    # إضافة محتوى الملفات المرفقة إن وجدت
-    extra = ""
-    if st.session_state.uploaded_files:
-        extra = process_uploaded_files(st.session_state.uploaded_files)
-        if extra:
-            prompt = f"{prompt}\n\n---\n{extra}"
-
-    try:
-        if not st.session_state.conversation_id:
-            create_conversation()
-
-        cid = str(st.session_state.conversation_id)
-        first_message = len(st.session_state.messages) == 0
-
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        save_message(cid, "user", prompt)
-
-        with st.chat_message("user", avatar=None):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant", avatar=None):
-            with st.spinner(t("thinking")):
-                result = groq.chat.completions.create(
-                    model=MODEL,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        *st.session_state.messages[-12:],
-                    ],
-                    temperature=st.session_state.temperature,
-                    max_tokens=st.session_state.max_tokens,
-                )
-                answer = (result.choices[0].message.content or "عذرًا، لم أتمكن من إنشاء رد.").strip()
-                st.markdown(answer)
-
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-        save_message(cid, "assistant", answer)
-
-        if first_message:
-            update_title(cid, generate_title(prompt))
-
-        update_activity(cid)
-
-        # مسح الملفات بعد الإرسال
-        st.session_state.uploaded_files = []
-        st.rerun()
-
-    except Exception as e:
-        st.error("حدث خطأ أثناء إرسال الرسالة أو حفظها.")
-        show_error(e)
