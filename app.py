@@ -190,15 +190,9 @@ footer,
     color: white !important;
     fill: white !important;
     stroke: white !important;
+    width: 24px !important;
+    height: 24px !important;
 }
-
-    [data-testid="stSidebarCollapsedControl"] svg,
-    [data-testid="collapsedControl"] svg {
-        fill: #000000 !important;
-        color: #000000 !important;
-        width: 24px !important;
-        height: 24px !important;
-    }
 
     /* باقي التصميم */
     .stApp {
