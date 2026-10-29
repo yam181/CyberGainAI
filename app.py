@@ -13,9 +13,8 @@ st.set_page_config(
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
-)st.markdown(
-    "NEXORA AI is an AI assistant created by Yamin Zoabi.",
 )
+
 
 # =====================================
 # التصميم
