@@ -162,8 +162,11 @@ footer,
 [data-testid="stStatusWidget"],
 [data-testid="stDeployButton"],
 .stDeployButton,
-[data-testid="stAppDeployButton"] {
+[data-testid="stAppDeployButton"],
+[data-testid="stToolbar"] button[aria-label*="GitHub"],
+[data-testid="stToolbar"] a[aria-label*="GitHub"] {
     display: none !important;
+}
 }
 
 /* الحفاظ على زر فتح القائمة الجانبية */
