@@ -166,13 +166,9 @@ footer,
 /* محاولة إخفاء شريط Streamlit العلوي */
 
 /* إخفاء شريط الأدوات العلوي فقط */
-[data-testid="stToolbar"] {
-    visibility: hidden !important;
-    height: 0 !important;
-}
-
-[data-testid="stToolbar"] * {
-    visibility: visible !important;
+/* إخفاء رابط GitHub فقط */
+[data-testid="stToolbar"] a[href*="github.com"] {
+    display: none !important;
 }
 
 /* إخفاء قائمة Streamlit */
@@ -413,6 +409,38 @@ st.markdown(get_css(), unsafe_allow_html=True)
 # =====================================
 # زر فتح المحادثات والإعدادات
 # =====================================
+# =====================================
+# أيقونة الملف الشخصي
+# =====================================
+st.markdown(
+    """
+    <style>
+    .nx-profile-icon {
+        position: fixed;
+        top: 12px;
+        right: 18px;
+        z-index: 999990;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #211638;
+        border: 2px solid #7546C8;
+        color: #C4B5FD;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        text-decoration: none;
+        box-shadow: 0 3px 12px #0005;
+    }
+    </style>
+
+    <div class="nx-profile-icon" title="Profile">
+        &#128100;
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 st.markdown(
     """
     <style>
