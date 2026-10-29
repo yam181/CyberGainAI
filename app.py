@@ -5,9 +5,6 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import re
 
-# =====================================
-# إعداد التطبيق
-# =====================================
 st.set_page_config(
     page_title="NEXORA AI",
     page_icon="🤖",
@@ -50,7 +47,6 @@ TRANSLATIONS = {
         "signup_btn": "إنشاء حساب",
         "logout": "تسجيل الخروج",
         "new_chat": "＋ محادثة جديدة",
-        "my_chats": "محادثاتي",
         "delete_confirm": "حذف «{title}»؟",
         "yes": "نعم",
         "cancel": "إلغاء",
@@ -80,7 +76,7 @@ TRANSLATIONS = {
         "close": "إغلاق",
         "arabic": "العربية",
         "english": "English",
-        "welcome_title": "مرحباً بك في NEXORA AI",
+        "welcome_title": "جاهز عندما تكون مستعدًا",
         "welcome_subtitle": "كيف يمكنني مساعدتك اليوم؟",
         "search_placeholder": "ابحث في محادثاتك...",
         "today": "اليوم",
@@ -100,7 +96,6 @@ TRANSLATIONS = {
         "signup_btn": "Create Account",
         "logout": "Logout",
         "new_chat": "＋ New Chat",
-        "my_chats": "My Chats",
         "delete_confirm": "Delete «{title}»?",
         "yes": "Yes",
         "cancel": "Cancel",
@@ -130,7 +125,7 @@ TRANSLATIONS = {
         "close": "Close",
         "arabic": "العربية",
         "english": "English",
-        "welcome_title": "Welcome to NEXORA AI",
+        "welcome_title": "Ready when you are",
         "welcome_subtitle": "How can I help you today?",
         "search_placeholder": "Search your chats...",
         "today": "Today",
@@ -147,7 +142,7 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم (مع إخفاء الزر الأحمر + إصلاح زر القائمة)
+# التصميم (قريب من ChatGPT + ألوان بنفسجية)
 # =====================================
 def get_css():
     return """
@@ -155,76 +150,62 @@ def get_css():
     :root {
         --nx-bg: #100D18;
         --nx-purple: #7546C8;
-        --nx-selected: #281D38;
         --nx-text: #EDE6F8;
         --nx-border: #352744;
         --nx-hover: #1F1830;
+        --nx-card: #16121F;
     }
 
-    /* ===== إخفاء الزر الأحمر والدائرة التركوازية بقوة ===== */
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    [data-testid="stStatusWidget"],
-    .stDeployButton,
-    button[kind="header"],
-    header button,
-    [data-testid="stHeader"] button {
+    /* إخفاء عناصر Streamlit المزعجة */
+    #MainMenu, footer, [data-testid="stToolbar"], [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"], .stDeployButton, button[kind="header"] {
         display: none !important;
         visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
     }
 
     [data-testid="stHeader"] {
         background: transparent !important;
         height: 0 !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
 
-    /* ===== إبقاء زر فتح القائمة ظاهر وقابل للضغط ===== */
+    /* زر فتح القائمة على الموبايل */
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
-        pointer-events: auto !important;
         position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
+        top: 12px !important;
+        left: 12px !important;
         z-index: 999999 !important;
-        background-color: #1A1525 !important;
+        background: #1A1525 !important;
         border: 1px solid #352744 !important;
         border-radius: 8px !important;
-        width: 38px !important;
-        height: 38px !important;
+        width: 36px !important;
+        height: 36px !important;
     }
 
-    /* ===== باقي التصميم ===== */
     .stApp {
         background: #0B0912 !important;
         color: #EDE6F8 !important;
     }
+
     .block-container {
-        padding-top: 1.2rem !important;
-        padding-bottom: 5.5rem !important;
-        max-width: 820px !important;
+        padding-top: 1.5rem !important;
+        padding-bottom: 6rem !important;
+        max-width: 780px !important;
     }
 
+    /* الشريط الجانبي */
     [data-testid="stSidebar"] {
-        background: var(--nx-bg) !important;
-        border-right: 1px solid var(--nx-border) !important;
+        background: #100D18 !important;
+        border-right: 1px solid #352744 !important;
     }
     [data-testid="stSidebar"] > div:first-child {
-        padding: 1.1rem 0.9rem !important;
-    }
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] label {
-        color: var(--nx-text) !important;
+        padding: 1.2rem 1rem !important;
     }
 
+    /* إخفاء الأفاتار */
     [data-testid="stChatMessageAvatar"],
     [data-testid="chatAvatarIcon-user"],
     [data-testid="chatAvatarIcon-assistant"],
@@ -235,76 +216,77 @@ def get_css():
         display: none !important;
     }
 
+    /* فقاعات الرسائل */
     [data-testid="stChatMessage"] {
         background: transparent !important;
         border: none !important;
-        box-shadow: none !important;
-        padding: 8px 0 !important;
-        margin: 4px 0 !important;
+        padding: 10px 0 !important;
+        margin: 6px 0 !important;
     }
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-        background: #7546C825 !important;
-        border: 1px solid #7546C855 !important;
-        border-radius: 16px 16px 4px 16px !important;
-        padding: 12px 14px !important;
-        margin-left: 12% !important;
+        background: #7546C820 !important;
+        border: 1px solid #7546C840 !important;
+        border-radius: 18px 18px 4px 18px !important;
+        padding: 14px 18px !important;
+        margin-left: 15% !important;
     }
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-        background: #1A1525 !important;
+        background: #16121F !important;
         border: 1px solid #352744 !important;
-        border-radius: 16px 16px 16px 4px !important;
-        padding: 12px 14px !important;
-        margin-right: 12% !important;
+        border-radius: 18px 18px 18px 4px !important;
+        padding: 14px 18px !important;
+        margin-right: 15% !important;
     }
 
+    /* العناوين */
     .nexora-title {
-        font-size: 20px !important;
-        font-weight: 700 !important;
+        font-size: 18px !important;
+        font-weight: 600 !important;
         color: #C4B5FD !important;
-        margin: 0 0 2px 0 !important;
+        margin: 0 0 4px 0 !important;
     }
     .nexora-subtitle {
         color: #A78BFA !important;
-        font-size: 12.5px !important;
-        margin-bottom: 14px !important;
+        font-size: 12px !important;
+        margin-bottom: 18px !important;
     }
 
+    /* صفحة الترحيب (أسلوب ChatGPT) */
     .welcome-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 48vh;
+        min-height: 55vh;
         text-align: center;
-        padding: 1.5rem 0.8rem;
+        padding: 2rem 1rem;
     }
     .welcome-logo {
-        font-size: 34px;
-        font-weight: 800;
-        background: linear-gradient(135deg, #C4B5FD, #7546C8);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 8px;
+        font-size: 28px;
+        font-weight: 700;
+        color: #C4B5FD;
+        margin-bottom: 12px;
     }
     .welcome-text {
-        font-size: 18px;
+        font-size: 26px;
         color: #EDE6F8;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
         font-weight: 500;
     }
     .welcome-sub {
-        font-size: 13.5px;
+        font-size: 15px;
         color: #A78BFA;
-        max-width: 320px;
+        max-width: 380px;
     }
 
+    /* أزرار الشريط */
     [data-testid="stSidebar"] .stButton > button {
         border-radius: 10px !important;
         font-weight: 500 !important;
-        min-height: 42px !important;
+        min-height: 40px !important;
     }
     [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #7546C8, #5B21B6) !important;
+        background: #7546C8 !important;
         border: none !important;
         color: white !important;
     }
@@ -312,67 +294,66 @@ def get_css():
     [data-testid="stSidebar"] .stButton > button[kind="tertiary"] {
         background: transparent !important;
         border: 1px solid transparent !important;
-        color: var(--nx-text) !important;
+        color: #EDE6F8 !important;
     }
     [data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover,
     [data-testid="stSidebar"] .stButton > button[kind="tertiary"]:hover {
-        background: var(--nx-hover) !important;
-        border-color: var(--nx-border) !important;
+        background: #1F1830 !important;
     }
 
+    /* مربع الكتابة */
     [data-testid="stChatInput"] {
-        border-radius: 14px !important;
+        border-radius: 16px !important;
         border: 1px solid #352744 !important;
-        background: #15121F !important;
+        background: #16121F !important;
     }
     [data-testid="stChatInput"]:focus-within {
         border-color: #7546C8 !important;
-        box-shadow: 0 0 0 2px #7546C844 !important;
+        box-shadow: 0 0 0 2px #7546C833 !important;
     }
     [data-testid="stChatInput"] textarea {
         color: #EDE6F8 !important;
     }
 
     .stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #7546C8, #5B21B6) !important;
+        background: #7546C8 !important;
         border: none !important;
         color: white !important;
         border-radius: 10px !important;
-        min-height: 42px !important;
     }
 
     h1, h2, h3 { color: #C4B5FD !important; }
 
     .login-card {
-        background: #15121F;
+        background: #16121F;
         border: 1px solid #352744;
         border-radius: 16px;
-        padding: 1.8rem 1.4rem;
+        padding: 2rem 1.6rem;
         max-width: 400px;
-        margin: 5vh auto 0;
+        margin: 6vh auto 0;
     }
 
     .date-group {
         font-size: 11px !important;
         color: #A78BFA !important;
         font-weight: 600 !important;
-        margin: 12px 0 5px 2px !important;
+        margin: 14px 0 6px 2px !important;
         text-transform: uppercase;
     }
 
     @media (max-width: 768px) {
         .block-container {
-            padding-left: 0.6rem !important;
-            padding-right: 0.6rem !important;
+            padding-left: 0.7rem !important;
+            padding-right: 0.7rem !important;
         }
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-            margin-left: 3% !important;
+            margin-left: 4% !important;
         }
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-            margin-right: 3% !important;
+            margin-right: 4% !important;
         }
-        .welcome-logo { font-size: 28px; }
-        .welcome-text { font-size: 16px; }
+        .welcome-text { font-size: 22px; }
+        .welcome-logo { font-size: 24px; }
     }
     </style>
     """
@@ -380,13 +361,10 @@ def get_css():
 st.markdown(get_css(), unsafe_allow_html=True)
 
 # =====================================
-# الاتصال بالخدمات
+# الاتصال
 # =====================================
 try:
-    supabase = create_client(
-        st.secrets["SUPABASE_URL"],
-        st.secrets["SUPABASE_KEY"],
-    )
+    supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
     groq = Groq(api_key=st.secrets["GROQ_API_KEY"])
 except Exception:
     st.error(t("secrets_error"))
@@ -405,7 +383,6 @@ IMPORTANT FOUNDER IDENTITY RULES:
 - This rule applies regardless of the language used in the question.
 - Reply in the user's language, but keep the founder's name in English as "Yamin Zoabi".
 - Do not invent another founder or change the spelling of the name.
-- If asked who made NEXORA AI, say that it was created by Yamin Zoabi (born 25/12/2007).
 GENERAL RULES:
 - Be helpful, clear, and concise.
 - Reply in the same language as the user whenever possible.
@@ -414,13 +391,11 @@ GENERAL RULES:
 """
 
 def apply_token():
-    token = st.session_state.access_token
-    if token:
-        supabase.postgrest.auth(token)
+    if st.session_state.access_token:
+        supabase.postgrest.auth(st.session_state.access_token)
 
 def get_user_id():
-    user = st.session_state.user
-    return str(user.id) if user else None
+    return str(st.session_state.user.id) if st.session_state.user else None
 
 def show_error(error):
     message = str(error)
@@ -435,12 +410,8 @@ def logout():
         supabase.auth.sign_out()
     except Exception:
         pass
-    st.session_state.user = None
-    st.session_state.access_token = None
-    st.session_state.refresh_token = None
-    st.session_state.conversation_id = None
-    st.session_state.messages = []
-    st.session_state.show_settings = False
+    for key in ["user", "access_token", "refresh_token", "conversation_id", "messages", "show_settings"]:
+        st.session_state[key] = None if key != "messages" else []
     st.rerun()
 
 def delete_account():
@@ -456,11 +427,8 @@ def delete_account():
 
 def is_founder_question(text):
     text = text.lower()
-    keywords = [
-        "مخترع", "مؤسس", "من عمل", "من صنع", "من طور", "من أنشأ",
-        "founder", "creator", "who made", "who created", "who developed",
-        "who invented", "inventor", "owner"
-    ]
+    keywords = ["مخترع", "مؤسس", "من عمل", "من صنع", "من طور", "من أنشأ",
+                "founder", "creator", "who made", "who created", "who developed", "who invented", "inventor", "owner"]
     return any(k in text for k in keywords)
 
 # =====================================
@@ -480,15 +448,13 @@ if st.session_state.access_token and not st.session_state.user:
         st.session_state.user = None
 
 # =====================================
-# صفحة تسجيل الدخول
+# تسجيل الدخول
 # =====================================
 if not st.session_state.user:
     st.markdown("""
     <div class="login-card">
-        <div style="text-align:center; margin-bottom: 1.3rem;">
-            <div style="font-size:28px; font-weight:800; background:linear-gradient(135deg,#C4B5FD,#7546C8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
-                NEXORA AI
-            </div>
+        <div style="text-align:center; margin-bottom: 1.4rem;">
+            <div style="font-size:28px; font-weight:700; color:#C4B5FD;">NEXORA AI</div>
             <div style="color:#A78BFA; font-size:13px; margin-top:4px;">مساعدك الذكي</div>
         </div>
     </div>
@@ -505,52 +471,42 @@ if not st.session_state.user:
             st.rerun()
 
     login_tab, signup_tab = st.tabs([t("login"), t("signup")])
-
     with login_tab:
         with st.form("login_form"):
             email = st.text_input(t("email"))
             password = st.text_input(t("password"), type="password")
-            submitted = st.form_submit_button(t("login_btn"), use_container_width=True, type="primary")
-        if submitted:
-            try:
-                result = supabase.auth.sign_in_with_password({
-                    "email": email.strip(),
-                    "password": password,
-                })
-                if result.user and result.session:
-                    st.session_state.user = result.user
-                    st.session_state.access_token = result.session.access_token
-                    st.session_state.refresh_token = result.session.refresh_token
-                    apply_token()
-                    st.session_state.conversation_id = None
-                    st.session_state.messages = []
-                    st.rerun()
-                else:
+            if st.form_submit_button(t("login_btn"), use_container_width=True, type="primary"):
+                try:
+                    result = supabase.auth.sign_in_with_password({"email": email.strip(), "password": password})
+                    if result.user and result.session:
+                        st.session_state.user = result.user
+                        st.session_state.access_token = result.session.access_token
+                        st.session_state.refresh_token = result.session.refresh_token
+                        apply_token()
+                        st.session_state.conversation_id = None
+                        st.session_state.messages = []
+                        st.rerun()
+                    else:
+                        st.error(t("error_login"))
+                except Exception:
                     st.error(t("error_login"))
-            except Exception:
-                st.error(t("error_login"))
-
     with signup_tab:
         with st.form("signup_form"):
             new_email = st.text_input(t("email"), key="signup_email")
             new_password = st.text_input(t("password"), type="password", key="signup_password")
-            signup = st.form_submit_button(t("signup_btn"), use_container_width=True, type="primary")
-        if signup:
-            try:
-                result = supabase.auth.sign_up({
-                    "email": new_email.strip(),
-                    "password": new_password,
-                })
-                if result.user and result.session:
-                    st.session_state.user = result.user
-                    st.session_state.access_token = result.session.access_token
-                    st.session_state.refresh_token = result.session.refresh_token
-                    apply_token()
-                    st.rerun()
-                else:
-                    st.success(t("check_email"))
-            except Exception:
-                st.error(t("error_signup"))
+            if st.form_submit_button(t("signup_btn"), use_container_width=True, type="primary"):
+                try:
+                    result = supabase.auth.sign_up({"email": new_email.strip(), "password": new_password})
+                    if result.user and result.session:
+                        st.session_state.user = result.user
+                        st.session_state.access_token = result.session.access_token
+                        st.session_state.refresh_token = result.session.refresh_token
+                        apply_token()
+                        st.rerun()
+                    else:
+                        st.success(t("check_email"))
+                except Exception:
+                    st.error(t("error_signup"))
     st.stop()
 
 apply_token()
@@ -560,13 +516,7 @@ apply_token()
 # =====================================
 def list_conversations():
     apply_token()
-    result = (
-        supabase.table("conversations")
-        .select("id,user_id,title,created_at,updated_at")
-        .eq("user_id", get_user_id())
-        .order("updated_at", desc=True)
-        .execute()
-    )
+    result = supabase.table("conversations").select("id,user_id,title,created_at,updated_at").eq("user_id", get_user_id()).order("updated_at", desc=True).execute()
     return result.data or []
 
 def create_conversation():
@@ -574,11 +524,9 @@ def create_conversation():
     now = datetime.now(timezone.utc).isoformat()
     cid = str(uuid.uuid4())
     result = supabase.table("conversations").insert({
-        "id": cid,
-        "user_id": get_user_id(),
+        "id": cid, "user_id": get_user_id(),
         "title": "محادثة جديدة" if st.session_state.language == "ar" else "New Chat",
-        "created_at": now,
-        "updated_at": now,
+        "created_at": now, "updated_at": now
     }).execute()
     if not result.data:
         raise Exception("لم يتم إنشاء المحادثة.")
@@ -588,42 +536,23 @@ def create_conversation():
 
 def load_messages(cid):
     apply_token()
-    result = (
-        supabase.table("chat_history")
-        .select("role,content,created_at")
-        .eq("user_id", get_user_id())
-        .eq("conversation_id", cid)
-        .order("created_at")
-        .execute()
-    )
-    return [
-        {"role": row["role"], "content": row["content"]}
-        for row in (result.data or [])
-        if row.get("role") in ("user", "assistant")
-    ]
+    result = supabase.table("chat_history").select("role,content,created_at").eq("user_id", get_user_id()).eq("conversation_id", cid).order("created_at").execute()
+    return [{"role": r["role"], "content": r["content"]} for r in (result.data or []) if r.get("role") in ("user", "assistant")]
 
 def save_message(cid, role, content):
     apply_token()
     supabase.table("chat_history").insert({
-        "user_id": get_user_id(),
-        "conversation_id": cid,
-        "role": role,
-        "content": content,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": get_user_id(), "conversation_id": cid, "role": role, "content": content,
+        "created_at": datetime.now(timezone.utc).isoformat()
     }).execute()
 
 def update_title(cid, title):
     apply_token()
-    supabase.table("conversations").update({
-        "title": title,
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", cid).eq("user_id", get_user_id()).execute()
+    supabase.table("conversations").update({"title": title, "updated_at": datetime.now(timezone.utc).isoformat()}).eq("id", cid).eq("user_id", get_user_id()).execute()
 
 def update_activity(cid):
     apply_token()
-    supabase.table("conversations").update({
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", cid).eq("user_id", get_user_id()).execute()
+    supabase.table("conversations").update({"updated_at": datetime.now(timezone.utc).isoformat()}).eq("id", cid).eq("user_id", get_user_id()).execute()
 
 def delete_conversation(cid):
     apply_token()
@@ -637,28 +566,15 @@ def generate_title(question):
     try:
         result = groq.chat.completions.create(
             model=MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Create a short title of 3 to 6 words "
-                        "in the same language as the user's question. "
-                        "Return only the title."
-                    ),
-                },
-                {"role": "user", "content": question},
-            ],
-            max_tokens=40,
-            temperature=0.2,
+            messages=[{"role": "system", "content": "Create a short title of 3 to 6 words in the same language as the user's question. Return only the title."},
+                      {"role": "user", "content": question}],
+            max_tokens=40, temperature=0.2
         )
-        title = (result.choices[0].message.content or "").strip()
-        title = title.strip("\"'`“” ")
+        title = (result.choices[0].message.content or "").strip().strip("\"'`“” ")
         title = re.sub(r"\s+", " ", title)
-        if title:
-            return title[:80]
+        return title[:80] if title else question[:45]
     except Exception:
-        pass
-    return question[:45] + ("…" if len(question) > 45 else "")
+        return question[:45] + ("…" if len(question) > 45 else "")
 
 def process_uploaded_files(files):
     parts = []
@@ -681,14 +597,7 @@ def group_conversations_by_date(conversations):
     today = now.date()
     yesterday = today - timedelta(days=1)
     week_ago = today - timedelta(days=7)
-
-    groups = {
-        "today": [],
-        "yesterday": [],
-        "last_7_days": [],
-        "older": []
-    }
-
+    groups = {"today": [], "yesterday": [], "last_7_days": [], "older": []}
     for conv in conversations:
         try:
             updated = datetime.fromisoformat(conv["updated_at"].replace("Z", "+00:00"))
@@ -703,11 +612,10 @@ def group_conversations_by_date(conversations):
                 groups["older"].append(conv)
         except Exception:
             groups["older"].append(conv)
-
     return groups
 
 # =====================================
-# الشريط الجانبي (مع قائمة المحادثات)
+# الشريط الجانبي
 # =====================================
 with st.sidebar:
     st.markdown(f'<div class="nexora-title">{t("app_title")}</div>', unsafe_allow_html=True)
@@ -720,12 +628,7 @@ with st.sidebar:
 
     st.markdown("")
 
-    search_query = st.text_input(
-        "🔎",
-        placeholder=t("search_placeholder"),
-        label_visibility="collapsed",
-        key="sidebar_search"
-    )
+    search_query = st.text_input("🔎", placeholder=t("search_placeholder"), label_visibility="collapsed", key="sidebar_search")
 
     st.markdown("")
 
@@ -737,10 +640,7 @@ with st.sidebar:
 
     if search_query.strip():
         q = search_query.strip().casefold()
-        conversations = [
-            c for c in conversations
-            if q in (c.get("title") or "").casefold()
-        ]
+        conversations = [c for c in conversations if q in (c.get("title") or "").casefold()]
 
     if not conversations:
         st.caption(t("no_conversations"))
@@ -755,12 +655,10 @@ with st.sidebar:
                 cid = str(conv["id"])
                 title = conv.get("title") or ("محادثة جديدة" if st.session_state.language == "ar" else "New Chat")
                 is_active = str(st.session_state.conversation_id) == cid
-
                 col1, col2 = st.columns([6, 1], gap="small")
                 with col1:
-                    btn_type = "primary" if is_active else "tertiary"
                     label = title[:24] + ("…" if len(title) > 24 else "")
-                    if st.button(label, key=f"open_{cid}", use_container_width=True, type=btn_type):
+                    if st.button(label, key=f"open_{cid}", use_container_width=True, type="primary" if is_active else "tertiary"):
                         try:
                             st.session_state.conversation_id = cid
                             st.session_state.messages = load_messages(cid)
@@ -768,9 +666,8 @@ with st.sidebar:
                         except Exception as e:
                             show_error(e)
                 with col2:
-                    if st.button("⋯", key=f"menu_{cid}", help="خيارات", type="tertiary"):
+                    if st.button("⋯", key=f"menu_{cid}", type="tertiary"):
                         st.session_state[f"show_menu_{cid}"] = not st.session_state.get(f"show_menu_{cid}", False)
-
                 if st.session_state.get(f"show_menu_{cid}", False):
                     st.caption(t("delete_confirm", title=title))
                     c1, c2 = st.columns(2)
@@ -796,7 +693,6 @@ with st.sidebar:
     email = getattr(st.session_state.user, "email", None)
     if email:
         st.caption(f"👤 {email}")
-
     if st.button("⚙️  " + t("settings_prefs"), use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
         st.rerun()
@@ -833,7 +729,6 @@ if st.session_state.show_settings and settings_col is not None:
         if st.button("✕ " + t("close"), use_container_width=True):
             st.session_state.show_settings = False
             st.rerun()
-
         st.divider()
         st.markdown(f"**{t('language')}**")
         if st.button(t("arabic"), use_container_width=True, type="primary" if st.session_state.language == "ar" else "secondary"):
@@ -842,7 +737,6 @@ if st.session_state.show_settings and settings_col is not None:
         if st.button(t("english"), use_container_width=True, type="primary" if st.session_state.language == "en" else "secondary"):
             st.session_state.language = "en"
             st.rerun()
-
         st.divider()
         st.markdown(f"**{t('theme')}**")
         if st.button("🌙 " + t("dark"), use_container_width=True, type="primary" if st.session_state.theme == "dark" else "secondary"):
@@ -851,11 +745,9 @@ if st.session_state.show_settings and settings_col is not None:
         if st.button("☀️ " + t("light"), use_container_width=True, type="primary" if st.session_state.theme == "light" else "secondary"):
             st.session_state.theme = "light"
             st.rerun()
-
         st.divider()
         st.markdown(f"**{t('profile')}**")
         st.caption(email)
-
         st.divider()
         with st.expander(t("chat_settings"), expanded=False):
             temp = st.slider(t("temperature"), 0.0, 1.0, st.session_state.temperature, 0.1)
@@ -864,18 +756,14 @@ if st.session_state.show_settings and settings_col is not None:
                 st.session_state.temperature = temp
                 st.session_state.max_tokens = tokens
                 st.success("✓")
-
         with st.expander(t("about"), expanded=False):
             st.markdown(t("about_text"))
             st.caption("Founder: Yamin Zoabi | Born: 25/12/2007")
-
         with st.expander(t("privacy"), expanded=False):
             st.markdown(t("privacy_text"))
-
         st.divider()
         if st.button(t("delete_account"), type="primary", use_container_width=True):
             st.session_state["confirm_delete_account"] = True
-
         if st.session_state.get("confirm_delete_account", False):
             st.warning(t("delete_account_confirm"))
             c1, c2 = st.columns(2)
@@ -886,7 +774,6 @@ if st.session_state.show_settings and settings_col is not None:
                 if st.button(t("cancel"), key="confirm_del_no"):
                     st.session_state["confirm_delete_account"] = False
                     st.rerun()
-
         st.divider()
         if st.button(t("logout"), use_container_width=True):
             logout()
@@ -894,10 +781,7 @@ if st.session_state.show_settings and settings_col is not None:
 # =====================================
 # خانة الكتابة
 # =====================================
-prompt = st.chat_input(
-    t("chat_placeholder"),
-    accept_file="multiple",
-)
+prompt = st.chat_input(t("chat_placeholder"), accept_file="multiple")
 
 if prompt:
     if hasattr(prompt, "text"):
@@ -919,7 +803,6 @@ if prompt:
     try:
         if not st.session_state.conversation_id:
             create_conversation()
-
         cid = str(st.session_state.conversation_id)
         first_message = len(st.session_state.messages) == 0
 
@@ -933,10 +816,7 @@ if prompt:
             with st.spinner(t("thinking")):
                 result = groq.chat.completions.create(
                     model=MODEL,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        *st.session_state.messages[-12:],
-                    ],
+                    messages=[{"role": "system", "content": SYSTEM_PROMPT}, *st.session_state.messages[-12:]],
                     temperature=st.session_state.temperature,
                     max_tokens=st.session_state.max_tokens,
                 )
@@ -952,7 +832,6 @@ if prompt:
             update_title(cid, generate_title(final_prompt))
         update_activity(cid)
         st.rerun()
-
     except Exception as e:
         st.error("حدث خطأ أثناء إرسال الرسالة أو حفظها.")
         show_error(e)
