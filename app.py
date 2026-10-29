@@ -292,18 +292,22 @@ except Exception:
 
 MODEL = "openai/gpt-oss-120b"
 
+# =====================================
+# هوية المؤسس (محدّثة)
+# =====================================
 SYSTEM_PROMPT = """
 You are NEXORA AI, a helpful AI assistant.
 
 IMPORTANT FOUNDER IDENTITY RULES:
 - The founder and creator of NEXORA AI is Yamin Zoabi.
 - The name must ALWAYS be written exactly as "Yamin Zoabi" in English.
-- Whenever anyone asks who founded, created, developed, or owns NEXORA AI,
-  clearly identify the founder as Yamin Zoabi.
+- Birth date of the founder is 25/12/2007.
+- Whenever anyone asks who founded, created, developed, invented, or owns NEXORA AI,
+  clearly identify the founder as Yamin Zoabi and mention his birth date 25/12/2007.
 - This rule applies regardless of the language used in the question.
 - Reply in the user's language, but keep the founder's name in English as "Yamin Zoabi".
 - Do not invent another founder or change the spelling of the name.
-- If asked who made NEXORA AI, say that it was created by Yamin Zoabi.
+- If asked who made NEXORA AI, say that it was created by Yamin Zoabi (born 25/12/2007).
 
 GENERAL RULES:
 - Be helpful, clear, and concise.
@@ -351,6 +355,15 @@ def delete_account():
         logout()
     except Exception as e:
         show_error(e)
+
+def is_founder_question(text):
+    text = text.lower()
+    keywords = [
+        "مخترع", "مؤسس", "من عمل", "من صنع", "من طور", "من أنشأ",
+        "founder", "creator", "who made", "who created", "who developed",
+        "who invented", "inventor", "owner"
+    ]
+    return any(k in text for k in keywords)
 
 # =====================================
 # تسجيل الدخول
@@ -607,7 +620,7 @@ with st.sidebar:
                     st.rerun()
 
 # =====================================
-# شريط العنوان (فقط العنوان + زر الإعدادات)
+# شريط العنوان
 # =====================================
 top_col1, top_col2 = st.columns([8, 1.5])
 
@@ -635,6 +648,10 @@ with main_col:
     for message in st.session_state.messages:
         with st.chat_message(message["role"], avatar=None):
             st.markdown(message["content"])
+            # لو الرسالة عن المؤسس وفي صورة شخصية → اعرضها
+            if message["role"] == "assistant" and st.session_state.profile_image:
+                if any(k in message["content"].lower() for k in ["yamin zoabi", "25/12/2007", "مؤسس", "مخترع"]):
+                    st.image(st.session_state.profile_image, width=280)
 
 # لوحة الإعدادات
 if st.session_state.show_settings and settings_col is not None:
@@ -647,7 +664,7 @@ if st.session_state.show_settings and settings_col is not None:
 
         st.divider()
 
-        # ===== اللغة =====
+        # اللغة
         st.markdown(f"**{t('language')}**")
         lang_col1, lang_col2 = st.columns(2)
         with lang_col1:
@@ -661,7 +678,7 @@ if st.session_state.show_settings and settings_col is not None:
 
         st.divider()
 
-        # ===== الوضع (داكن / فاتح) =====
+        # الوضع
         st.markdown(f"**{t('theme')}**")
         theme_col1, theme_col2 = st.columns(2)
         with theme_col1:
@@ -691,7 +708,6 @@ if st.session_state.show_settings and settings_col is not None:
 
         st.divider()
 
-        # إعدادات المحادثة
         with st.expander(t("chat_settings"), expanded=False):
             temp = st.slider(t("temperature"), 0.0, 1.0, st.session_state.temperature, 0.1)
             tokens = st.slider(t("max_tokens"), 200, 2000, st.session_state.max_tokens, 50)
@@ -702,7 +718,7 @@ if st.session_state.show_settings and settings_col is not None:
 
         with st.expander(t("about"), expanded=False):
             st.markdown(t("about_text"))
-            st.caption("Founder: Yamin Zoabi")
+            st.caption("Founder: Yamin Zoabi | Born: 25/12/2007")
 
         with st.expander(t("privacy"), expanded=False):
             st.markdown(t("privacy_text"))
@@ -729,7 +745,7 @@ if st.session_state.show_settings and settings_col is not None:
             logout()
 
 # =====================================
-# خانة الكتابة دائماً في الأسفل
+# خانة الكتابة في الأسفل
 # =====================================
 prompt = st.chat_input(
     t("chat_placeholder"),
@@ -779,6 +795,10 @@ if prompt:
                 )
                 answer = (result.choices[0].message.content or "عذرًا، لم أتمكن من إنشاء رد.").strip()
                 st.markdown(answer)
+
+                # لو السؤال عن المؤسس وفي صورة → اعرضها
+                if is_founder_question(final_prompt) and st.session_state.profile_image:
+                    st.image(st.session_state.profile_image, width=280)
 
         st.session_state.messages.append({"role": "assistant", "content": answer})
         save_message(cid, "assistant", answer)
