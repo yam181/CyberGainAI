@@ -155,7 +155,7 @@ def get_css():
         --nx-hover: #1F1830;
     }
 
-/* إخفاء العناصر غير المطلوبة */
+/* إخفاء عناصر القائمة غير المطلوبة */
 #MainMenu,
 footer,
 [data-testid="stDecoration"],
@@ -163,10 +163,9 @@ footer,
 [data-testid="stDeployButton"],
 .stDeployButton,
 [data-testid="stAppDeployButton"],
-[data-testid="stToolbar"] button[aria-label*="GitHub"],
-[data-testid="stToolbar"] a[aria-label*="GitHub"] {
+#GithubIcon {
     display: none !important;
-}
+    visibility: hidden !important;
 }
 
 /* الحفاظ على زر فتح القائمة الجانبية */
