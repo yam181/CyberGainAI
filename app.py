@@ -1022,16 +1022,14 @@ with st.sidebar:
         label_visibility="collapsed",
         key="sidebar_search",
     )
-
-   try:
-    conversations = list_conversations()
-
-    st.write("عدد المحادثات المحفوظة:", len(conversations))
-
-except Exception as error:
-    st.error("حدث خطأ أثناء تحميل المحادثات:")
-    st.exception(error)
-    conversations = []
+    
+        try:
+        conversations = list_conversations()
+        st.write("عدد المحادثات المحفوظة:", len(conversations))
+    except Exception as error:
+        st.error("حدث خطأ أثناء تحميل المحادثات:")
+        st.exception(error)
+        conversations = []
 
     if search_query.strip():
         query = search_query.strip().casefold()
