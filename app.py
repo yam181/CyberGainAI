@@ -166,28 +166,32 @@ def get_css():
         height: auto !important;
     }
 
-    /* ===== زر فتح القائمة - واضح وكبير ===== */
+    /* ===== زر فتح القائمة - أبيض وكبير ===== */
     [data-testid="stSidebarCollapsedControl"],
     [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
+        top: 18px !important;
+        left: 18px !important;
         z-index: 999999 !important;
-        background-color: #7546C8 !important;
+        background-color: #ffffff !important;
         border: none !important;
-        border-radius: 10px !important;
-        width: 42px !important;
-        height: 42px !important;
-        box-shadow: 0 4px 12px rgba(117, 70, 200, 0.4) !important;
+        border-radius: 12px !important;
+        width: 48px !important;
+        height: 48px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
     [data-testid="stSidebarCollapsedControl"] svg,
     [data-testid="collapsedControl"] svg {
-        fill: white !important;
-        color: white !important;
+        fill: #000000 !important;
+        color: #000000 !important;
+        width: 24px !important;
+        height: 24px !important;
     }
 
     /* باقي التصميم */
