@@ -160,7 +160,8 @@ def get_css():
 footer,
 [data-testid="stDecoration"],
 [data-testid="stStatusWidget"],
-.stDeployButton {
+.stDeployButton,
+[data-testid="stAppDeployButton"] {
     display: none !important;
 }
     /* ===== زر فتح المحادثات ===== */
