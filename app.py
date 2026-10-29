@@ -82,86 +82,103 @@ def display_message(content):
 # CONVERSATION TITLES
 # =========================
 def generate_conversation_title(messages_text):
-    try:
-        response = groq.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You create short conversation titles. "
-                        "Read the conversation and identify its main "
-                        "topic. Return a meaningful title in the same "
-                        "language as the user, using 2 to 5 words. "
-                        "Do not return a question, explanation, quotes, "
-                        "or the generic title 'New conversation'."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": messages_text,
-                },
-            ],
-            max_tokens=30,
-            temperature=0.2,
-        )
+    response = groq.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "Create a short, descriptive title for this "
+                    "conversation. Use 2-5 words in the same language "
+                    "as the user. Describe the main topic. Return only "
+                    "the title, without quotes or explanation."
+                ),
+            },
+            {
+                "role": "user",
+                "content": messages_text,
+            },
+        ],
+        max_tokens=40,
+        temperature=0.2,
+    )
 
-        title = (
-            response.choices[0].message.content or ""
-        ).strip().strip("\"'“”")
+    title = (response.choices[0].message.content or "").strip()
+    title = title.strip("\"'“”")
+    title = " ".join(title.split())
 
-        title = " ".join(title.split())
+    if not title or title.lower() in (
+        "new conversation",
+        "محادثة جديدة",
+        "محادثة",
+    ):
+        raise ValueError("AI returned an empty or generic title.")
 
-        if not title:
-            return None
-
-        if title.lower() in (
-            "new conversation",
-            "محادثة جديدة",
-            "محادثة",
-        ):
-            return None
-
-        return title[:55]
-
-    except Exception:
-        return None
+    return title[:55]
 
 
 def update_conversation_title(title):
     conversation_id = st.session_state.conversation_id
     user_id = st.session_state.user["id"]
 
-    if not title or not conversation_id:
-        return
+    result = (
+        supabase.table("conversations")
+        .update({
+            "title": title[:55],
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        .eq("id", conversation_id)
+        .eq("user_id", user_id)
+        .execute()
+    )
 
-    supabase.table("conversations").update({
-        "title": title[:55],
-        "updated_at": datetime.now(timezone.utc).isoformat(),
-    }).eq(
-        "id", conversation_id
-    ).eq(
-        "user_id", user_id
-    ).execute()
+    if not result.data:
+        raise Exception("Supabase did not update the conversation title.")
 
 
 def refresh_conversation_title():
-    # Consider recent messages to capture the current topic.
-    recent_messages = st.session_state.messages[-10:]
+    messages = st.session_state.messages[-10:]
 
-    messages_text = "\n".join(
-        f'{m["role"]}: {m["content"]}'
-        for m in recent_messages
-        if m.get("content")
-    )
-
-    if not messages_text.strip():
+    if not messages:
         return
 
-    title = generate_conversation_title(messages_text)
+    conversation_text = "\n".join(
+        f'{message["role"]}: {message["content"]}'
+        for message in messages
+        if message.get("content")
+    )
 
-    if title:
+    try:
+        title = generate_conversation_title(conversation_text)
         update_conversation_title(title)
+        st.session_state.title_error = ""
+    except Exception as e:
+        # Keep a meaningful fallback title if title generation fails.
+        first_user_message = next(
+            (
+                message["content"]
+                for message in st.session_state.messages
+                if message.get("role") == "user"
+                and message.get("content")
+            ),
+            "محادثة جديدة",
+        )
+
+        fallback_title = " ".join(first_user_message.split())[:55]
+
+        try:
+            update_conversation_title(fallback_title)
+        except Exception as db_error:
+            st.session_state.title_error = (
+                f"تعذّر حفظ العنوان: {type(db_error).__name__}: "
+                f"{db_error}"
+            )
+            return
+
+        st.session_state.title_error = (
+            f"تعذّر توليد عنوان ذكي؛ استُخدم أول سؤال بدلًا منه. "
+            f"السبب: {type(e).__name__}: {e}"
+        )
 
 
 # =========================
@@ -184,19 +201,24 @@ def create_conversation():
     conversation_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
 
-    result = supabase.table("conversations").insert({
-        "id": conversation_id,
-        "user_id": user_id,
-        "title": "محادثة جديدة",
-        "created_at": now,
-        "updated_at": now,
-    }).execute()
+    result = (
+        supabase.table("conversations")
+        .insert({
+            "id": conversation_id,
+            "user_id": user_id,
+            "title": "محادثة جديدة",
+            "created_at": now,
+            "updated_at": now,
+        })
+        .execute()
+    )
 
     if not result.data:
         raise Exception("Could not create conversation.")
 
     st.session_state.conversation_id = conversation_id
     st.session_state.messages = []
+    st.session_state.title_error = ""
 
     load_conversations()
 
@@ -213,6 +235,7 @@ def open_conversation(conversation_id):
 
     st.session_state.conversation_id = conversation_id
     st.session_state.messages = result.data or []
+    st.session_state.title_error = ""
 
 
 def save_message(role, content):
@@ -246,6 +269,7 @@ defaults = {
     "messages": [],
     "conversations": [],
     "conversation_id": None,
+    "title_error": "",
 }
 
 for key, value in defaults.items():
@@ -304,7 +328,9 @@ if not st.session_state.user:
                 st.rerun()
 
             except Exception as e:
-                st.error(f"فشل تسجيل الدخول: {e}")
+                st.error(
+                    f"فشل تسجيل الدخول: {type(e).__name__}: {e}"
+                )
 
     with signup_tab:
         with st.form("signup_form"):
@@ -320,7 +346,9 @@ if not st.session_state.user:
 
         if signup:
             if len(new_password) < 6:
-                st.warning("كلمة المرور يجب أن تكون 6 أحرف على الأقل.")
+                st.warning(
+                    "كلمة المرور يجب أن تكون 6 أحرف على الأقل."
+                )
             else:
                 try:
                     result = supabase.auth.sign_up({
@@ -350,7 +378,9 @@ if not st.session_state.user:
                         )
 
                 except Exception as e:
-                    st.error(f"فشل إنشاء الحساب: {e}")
+                    st.error(
+                        f"فشل إنشاء الحساب: {type(e).__name__}: {e}"
+                    )
 
     st.stop()
 
@@ -421,13 +451,15 @@ with st.sidebar:
 st.title("🛡️ NEXORA AI")
 st.caption("اسأل، تعلّم، وطوّر مهاراتك.")
 
+if st.session_state.title_error:
+    st.warning(st.session_state.title_error)
+
 if not st.session_state.conversation_id:
     try:
         create_conversation()
     except Exception as e:
         st.error(f"تعذّر بدء المحادثة: {e}")
         st.stop()
-
 
 for message in st.session_state.messages:
     role = message.get("role", "assistant")
@@ -467,10 +499,10 @@ if prompt and prompt.strip():
                         },
                         *[
                             {
-                                "role": m["role"],
-                                "content": m["content"],
+                                "role": message["role"],
+                                "content": message["content"],
                             }
-                            for m in st.session_state.messages
+                            for message in st.session_state.messages
                         ],
                     ],
                     max_tokens=500,
@@ -490,13 +522,13 @@ if prompt and prompt.strip():
 
         save_message("assistant", answer)
 
-        # Update the title based on recent questions and answers.
+        # Update the title and reload the sidebar.
         refresh_conversation_title()
-
-        # Reload the sidebar so the saved title appears.
         load_conversations()
 
         st.rerun()
 
     except Exception as e:
-        st.error(f"حدث خطأ: {type(e).__name__}: {e}")
+        st.error(
+            f"حدث خطأ: {type(e).__name__}: {e}"
+        )
