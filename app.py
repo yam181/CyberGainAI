@@ -21,6 +21,7 @@ st.set_page_config(
 defaults = {
     "user": None,
     "access_token": None,
+    "refresh_token": None,
     "conversation_id": None,
     "messages": [],
     "language": "ar",
@@ -78,8 +79,6 @@ TRANSLATIONS = {
         "check_email": "افحص بريدك لتأكيد الحساب، ثم سجّل الدخول.",
         "secrets_error": "افحص إعدادات Secrets في Streamlit Cloud.",
         "close": "إغلاق",
-        "upload_photo": "رفع صورة شخصية",
-        "no_photo": "لا توجد صورة بعد",
         "arabic": "العربية",
         "english": "English",
     },
@@ -122,8 +121,6 @@ TRANSLATIONS = {
         "check_email": "Check your email to confirm the account, then log in.",
         "secrets_error": "Check Secrets settings in Streamlit Cloud.",
         "close": "Close",
-        "upload_photo": "Upload profile photo",
-        "no_photo": "No photo yet",
         "arabic": "العربية",
         "english": "English",
     },
@@ -135,7 +132,7 @@ def t(key, **kwargs):
     return text.format(**kwargs) if kwargs else text
 
 # =====================================
-# التصميم (بنفسجي + داكن فقط)
+# التصميم
 # =====================================
 def get_css():
     if st.session_state.theme == "dark":
@@ -227,6 +224,11 @@ def get_css():
         }
 
         h1, h2, h3 { color: #9D4EDD; }
+
+        /* جعل لوحة الإعدادات أصغر على الموبايل */
+        @media (max-width: 768px) {
+            .block-container { padding: 0.5rem !important; }
+        }
 
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
@@ -341,9 +343,6 @@ except Exception:
 
 MODEL = "openai/gpt-oss-120b"
 
-# =====================================
-# هوية المؤسس
-# =====================================
 SYSTEM_PROMPT = """
 You are NEXORA AI, a helpful AI assistant.
 
@@ -389,6 +388,7 @@ def logout():
         pass
     st.session_state.user = None
     st.session_state.access_token = None
+    st.session_state.refresh_token = None
     st.session_state.conversation_id = None
     st.session_state.messages = []
     st.session_state.show_settings = False
@@ -413,6 +413,23 @@ def is_founder_question(text):
         "who invented", "inventor", "owner"
     ]
     return any(k in text for k in keywords)
+
+# =====================================
+# محاولة استعادة الجلسة (تسجيل دخول محفوظ)
+# =====================================
+if st.session_state.access_token and not st.session_state.user:
+    try:
+        # محاولة استعادة الجلسة
+        if st.session_state.refresh_token:
+            supabase.auth.set_session(st.session_state.access_token, st.session_state.refresh_token)
+        user = supabase.auth.get_user()
+        if user and user.user:
+            st.session_state.user = user.user
+            apply_token()
+    except Exception:
+        st.session_state.access_token = None
+        st.session_state.refresh_token = None
+        st.session_state.user = None
 
 # =====================================
 # تسجيل الدخول
@@ -448,6 +465,7 @@ if not st.session_state.user:
                 if result.user and result.session:
                     st.session_state.user = result.user
                     st.session_state.access_token = result.session.access_token
+                    st.session_state.refresh_token = result.session.refresh_token
                     apply_token()
                     st.session_state.conversation_id = None
                     st.session_state.messages = []
@@ -472,6 +490,7 @@ if not st.session_state.user:
                 if result.user and result.session:
                     st.session_state.user = result.user
                     st.session_state.access_token = result.session.access_token
+                    st.session_state.refresh_token = result.session.refresh_token
                     apply_token()
                     st.rerun()
                 else:
@@ -685,10 +704,10 @@ with top_col2:
 st.divider()
 
 # =====================================
-# المحتوى + لوحة الإعدادات
+# المحتوى + لوحة الإعدادات (صغيرة على اليمين)
 # =====================================
 if st.session_state.show_settings:
-    main_col, settings_col = st.columns([3, 1], gap="medium")
+    main_col, settings_col = st.columns([4, 1], gap="small")   # أصغر من قبل
 else:
     main_col = st.container()
     settings_col = None
@@ -701,7 +720,7 @@ with main_col:
                 if any(k in message["content"].lower() for k in ["yamin zoabi", "25/12/2007", "مؤسس", "مخترع"]):
                     st.image(st.session_state.profile_image, width=280)
 
-# لوحة الإعدادات
+# لوحة الإعدادات (صغيرة)
 if st.session_state.show_settings and settings_col is not None:
     with settings_col:
         st.markdown(f"### {t('settings')}")
@@ -714,44 +733,28 @@ if st.session_state.show_settings and settings_col is not None:
 
         # اللغة
         st.markdown(f"**{t('language')}**")
-        lang_col1, lang_col2 = st.columns(2)
-        with lang_col1:
-            if st.button(t("arabic"), use_container_width=True, type="primary" if st.session_state.language == "ar" else "secondary"):
-                st.session_state.language = "ar"
-                st.rerun()
-        with lang_col2:
-            if st.button(t("english"), use_container_width=True, type="primary" if st.session_state.language == "en" else "secondary"):
-                st.session_state.language = "en"
-                st.rerun()
+        if st.button(t("arabic"), use_container_width=True, type="primary" if st.session_state.language == "ar" else "secondary"):
+            st.session_state.language = "ar"
+            st.rerun()
+        if st.button(t("english"), use_container_width=True, type="primary" if st.session_state.language == "en" else "secondary"):
+            st.session_state.language = "en"
+            st.rerun()
 
         st.divider()
 
         # الوضع
         st.markdown(f"**{t('theme')}**")
-        theme_col1, theme_col2 = st.columns(2)
-        with theme_col1:
-            if st.button("🌙 " + t("dark"), use_container_width=True, type="primary" if st.session_state.theme == "dark" else "secondary"):
-                st.session_state.theme = "dark"
-                st.rerun()
-        with theme_col2:
-            if st.button("☀️ " + t("light"), use_container_width=True, type="primary" if st.session_state.theme == "light" else "secondary"):
-                st.session_state.theme = "light"
-                st.rerun()
+        if st.button("🌙 " + t("dark"), use_container_width=True, type="primary" if st.session_state.theme == "dark" else "secondary"):
+            st.session_state.theme = "dark"
+            st.rerun()
+        if st.button("☀️ " + t("light"), use_container_width=True, type="primary" if st.session_state.theme == "light" else "secondary"):
+            st.session_state.theme = "light"
+            st.rerun()
 
         st.divider()
 
-        # الصورة الشخصية
+        # الملف الشخصي (بدون رفع صور)
         st.markdown(f"**{t('profile')}**")
-        if st.session_state.profile_image:
-            st.image(st.session_state.profile_image, width=120)
-        else:
-            st.caption(t("no_photo"))
-
-        photo = st.file_uploader(t("upload_photo"), type=["png", "jpg", "jpeg", "webp"], key="profile_uploader")
-        if photo:
-            st.session_state.profile_image = photo
-            st.rerun()
-
         st.caption(email)
 
         st.divider()
