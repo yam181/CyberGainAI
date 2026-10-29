@@ -388,9 +388,19 @@ def get_css():
     }
 
     [data-testid="stSidebar"] .stButton > button {
-        min-height: 40px !important;
-        border: 1px solid transparent !important;
-    }
+    min-height: 40px !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:focus,
+[data-testid="stSidebar"] .stButton > button:focus-visible {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
 
     [data-testid="stSidebar"] .stButton > button:hover {
         background: #251B35 !important;
