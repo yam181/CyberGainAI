@@ -27,7 +27,6 @@ defaults = {
     "theme": "dark",
     "temperature": 0.5,
     "max_tokens": 700,
-    "uploaded_files": [],
     "show_settings": False,
     "profile_image": None,
 }
@@ -68,8 +67,6 @@ TRANSLATIONS = {
         "temperature": "درجة الإبداع",
         "max_tokens": "أقصى طول للرد",
         "save_settings": "حفظ الإعدادات",
-        "attach": "إرفاق",
-        "camera": "كاميرا",
         "delete_account_confirm": "هل أنت متأكد من حذف حسابك نهائياً؟ سيتم حذف جميع محادثاتك.",
         "about_text": "NEXORA AI هو مساعد ذكي تم تطويره بواسطة Yamin Zoabi. يوفر محادثات ذكية مع حفظ السجل بشكل آمن.",
         "privacy_text": "نحن نحترم خصوصيتك. يتم تخزين المحادثات بشكل آمن في قاعدة بيانات محمية، ولا يتم مشاركة بياناتك مع أي طرف ثالث.",
@@ -81,7 +78,6 @@ TRANSLATIONS = {
         "close": "إغلاق",
         "upload_photo": "رفع صورة شخصية",
         "no_photo": "لا توجد صورة بعد",
-        "attached_files": "الملفات المرفقة:",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -111,8 +107,6 @@ TRANSLATIONS = {
         "temperature": "Creativity",
         "max_tokens": "Max response length",
         "save_settings": "Save Settings",
-        "attach": "Attach",
-        "camera": "Camera",
         "delete_account_confirm": "Are you sure you want to permanently delete your account? All conversations will be deleted.",
         "about_text": "NEXORA AI is a smart assistant developed by Yamin Zoabi. It provides intelligent conversations with secure history storage.",
         "privacy_text": "We respect your privacy. Conversations are stored securely in a protected database and your data is never shared with third parties.",
@@ -124,7 +118,6 @@ TRANSLATIONS = {
         "close": "Close",
         "upload_photo": "Upload profile photo",
         "no_photo": "No photo yet",
-        "attached_files": "Attached files:",
     },
 }
 
@@ -337,7 +330,6 @@ def logout():
     st.session_state.access_token = None
     st.session_state.conversation_id = None
     st.session_state.messages = []
-    st.session_state.uploaded_files = []
     st.session_state.show_settings = False
     st.rerun()
 
@@ -556,7 +548,6 @@ with st.sidebar:
     if st.button(t("new_chat"), use_container_width=True):
         st.session_state.conversation_id = None
         st.session_state.messages = []
-        st.session_state.uploaded_files = []
         st.rerun()
 
     st.divider()
@@ -583,7 +574,6 @@ with st.sidebar:
                 try:
                     st.session_state.conversation_id = cid
                     st.session_state.messages = load_messages(cid)
-                    st.session_state.uploaded_files = []
                     st.rerun()
                 except Exception as e:
                     show_error(e)
@@ -647,49 +637,29 @@ with main_col:
         with st.chat_message(message["role"], avatar=None):
             st.markdown(message["content"])
 
-    # ---- منطقة الإرفاق المدمجة (زي ChatGPT / واتساب) ----
-    attach_col1, attach_col2, attach_col3 = st.columns([1, 1, 6])
+    # ---- خانة الكتابة مع زر + داخلها ----
+    prompt = st.chat_input(
+        t("chat_placeholder"),
+        accept_file="multiple",
+    )
 
-    with attach_col1:
-        uploaded = st.file_uploader(
-            "📎",
-            type=["png", "jpg", "jpeg", "webp", "txt", "md", "pdf", "csv", "py", "json"],
-            accept_multiple_files=True,
-            key="file_uploader",
-            label_visibility="collapsed",
-        )
+    if prompt:
+        # التعامل مع النص والملفات
+        if hasattr(prompt, "text"):
+            user_text = prompt.text.strip() if prompt.text else ""
+            files = prompt.files if prompt.files else []
+        else:
+            user_text = str(prompt).strip()
+            files = []
 
-    with attach_col2:
-        camera_photo = st.camera_input(
-            "📷",
-            key="camera_input",
-            label_visibility="collapsed",
-        )
+        if not user_text and not files:
+            st.stop()
 
-    # عرض الملفات المرفقة
-    files_to_show = []
-    if uploaded:
-        files_to_show.extend(uploaded)
-    if camera_photo:
-        files_to_show.append(camera_photo)
-
-    if files_to_show:
-        st.session_state.uploaded_files = files_to_show
-        st.caption(t("attached_files"))
-        for f in files_to_show:
-            st.write(f"• {f.name}")
-
-    # خانة الكتابة
-    prompt = st.chat_input(t("chat_placeholder"))
-
-    if prompt and prompt.strip():
-        prompt = prompt.strip()
-
-        extra = ""
-        if st.session_state.uploaded_files:
-            extra = process_uploaded_files(st.session_state.uploaded_files)
+        final_prompt = user_text
+        if files:
+            extra = process_uploaded_files(files)
             if extra:
-                prompt = f"{prompt}\n\n---\n{extra}"
+                final_prompt = f"{user_text}\n\n---\n{extra}" if user_text else extra
 
         try:
             if not st.session_state.conversation_id:
@@ -698,11 +668,11 @@ with main_col:
             cid = str(st.session_state.conversation_id)
             first_message = len(st.session_state.messages) == 0
 
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            save_message(cid, "user", prompt)
+            st.session_state.messages.append({"role": "user", "content": final_prompt})
+            save_message(cid, "user", final_prompt)
 
             with st.chat_message("user", avatar=None):
-                st.markdown(prompt)
+                st.markdown(final_prompt)
 
             with st.chat_message("assistant", avatar=None):
                 with st.spinner(t("thinking")):
@@ -722,10 +692,9 @@ with main_col:
             save_message(cid, "assistant", answer)
 
             if first_message:
-                update_title(cid, generate_title(prompt))
+                update_title(cid, generate_title(final_prompt))
 
             update_activity(cid)
-            st.session_state.uploaded_files = []
             st.rerun()
 
         except Exception as e:
