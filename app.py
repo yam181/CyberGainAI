@@ -36,6 +36,7 @@ defaults = {
     "profile_image": None,
     "profile_name": "",
     "confirm_delete_account": False,
+    "auth_pending": None,
 }
 
 for key, value in defaults.items():
@@ -79,7 +80,7 @@ TRANSLATIONS = {
         "delete_account_confirm":
             "هل أنت متأكد من حذف حسابك نهائياً؟ سيتم حذف محادثاتك.",
         "about_text":
-            "NEXORA AI هو مساعد ذكي تم تطويره بواسطة Yamin Zoabi.",
+            "NEXORA AI هو مساعد ذكي أسسه Yamin Zoabi، وتاريخ ميلاده 25/12/2007.",
         "privacy_text":
             "تُحفظ المحادثات في قاعدة بيانات Supabase وفق إعدادات الوصول الخاصة بها.",
         "no_conversations": "لا توجد محادثات بعد",
@@ -108,6 +109,23 @@ TRANSLATIONS = {
         "remove_photo": "إزالة الصورة",
         "account_info": "معلومات الحساب",
         "account_settings": "إعدادات الحساب",
+        "contact_method": "طريقة التسجيل",
+        "email_option": "البريد الإلكتروني",
+        "phone_option": "رقم الهاتف",
+        "contact_value": "البريد الإلكتروني أو رقم الهاتف",
+        "full_name": "الاسم الكامل",
+        "age": "العمر",
+        "send_code": "إرسال رمز التحقق",
+        "verify_code": "تأكيد الرمز",
+        "otp_code": "رمز التحقق المكوّن من 6 أرقام",
+        "otp_sent_email": "أرسلنا رمز التحقق إلى بريدك الإلكتروني.",
+        "otp_sent_phone": "أرسلنا رمز التحقق إلى هاتفك.",
+        "otp_pending": "أدخل رمز التحقق الذي وصلك.",
+        "otp_error": "تعذّر التحقق من الرمز. تأكد منه وحاول مجددًا.",
+        "otp_cancel": "إلغاء التحقق",
+        "phone_format": "اكتب رقم الهاتف بالصيغة الدولية، مثل +972501234567.",
+        "auth_send_error": "تعذّر إرسال رمز التحقق. افحص البيانات وإعدادات Supabase.",
+        "founder_birth": "تاريخ ميلاد المؤسس: 25/12/2007.",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -141,7 +159,7 @@ TRANSLATIONS = {
         "delete_account_confirm":
             "Are you sure you want to delete your account and conversations?",
         "about_text":
-            "NEXORA AI is a smart assistant developed by Yamin Zoabi.",
+            "NEXORA AI is a smart assistant founded by Yamin Zoabi, born on 25 December 2007.",
         "privacy_text":
             "Conversations are stored in Supabase according to its access policies.",
         "no_conversations": "No conversations yet",
@@ -170,6 +188,23 @@ TRANSLATIONS = {
         "remove_photo": "Remove photo",
         "account_info": "Account Information",
         "account_settings": "Account Settings",
+        "contact_method": "Sign-in method",
+        "email_option": "Email",
+        "phone_option": "Phone number",
+        "contact_value": "Email address or phone number",
+        "full_name": "Full name",
+        "age": "Age",
+        "send_code": "Send verification code",
+        "verify_code": "Verify code",
+        "otp_code": "6-digit verification code",
+        "otp_sent_email": "A verification code was sent to your email.",
+        "otp_sent_phone": "A verification code was sent to your phone.",
+        "otp_pending": "Enter the verification code you received.",
+        "otp_error": "Could not verify the code. Check it and try again.",
+        "otp_cancel": "Cancel verification",
+        "phone_format": "Enter your phone in international format, e.g. +972501234567.",
+        "auth_send_error": "Could not send the verification code. Check your details and Supabase settings.",
+        "founder_birth": "Founder date of birth: 25 December 2007.",
     },
 }
 
@@ -535,6 +570,9 @@ FOUNDER:
 The founder of NEXORA AI is Yamin Zoabi.
 Always spell the name exactly as "Yamin Zoabi".
 When asked who founded or created NEXORA AI, identify Yamin Zoabi.
+Always write the founder name exactly in English as "Yamin Zoabi", even in Arabic replies.
+The founder date of birth is 25/12/2007 (25 December 2007).
+When asked about the founder, include the date of birth when relevant.
 Do not invent another founder.
 
 GENERAL RULES:
@@ -610,6 +648,7 @@ def restore_session_cookie():
             st.session_state.access_token = result.session.access_token
             st.session_state.refresh_token = result.session.refresh_token
             apply_token()
+            save_session_cookie()
 
     except Exception:
         st.session_state.access_token = None
@@ -628,7 +667,13 @@ def get_user_id():
 
 def get_user_email():
     return getattr(st.session_state.user, "email", "") or ""
-    return getattr(st.session_state.user, "email", "") or ""
+
+
+def get_user_contact():
+    user = st.session_state.user
+    if not user:
+        return ""
+    return get_user_email() or (getattr(user, "phone", "") or "")
 
 
 def show_error(error):
@@ -663,22 +708,7 @@ def logout():
             False if key in ("show_settings", "show_profile") else None
         )
 
-    st.rerun()
-    try:
-        apply_token()
-        supabase.auth.sign_out()
-    except Exception:
-        pass
-
-    for key in [
-        "user", "access_token", "refresh_token",
-        "conversation_id", "messages", "show_settings",
-        "show_profile", "profile_image", "profile_name",
-    ]:
-        st.session_state[key] = [] if key == "messages" else (
-            False if key in ("show_settings", "show_profile") else None
-        )
-
+    st.session_state.auth_pending = None
     st.rerun()
 
 
@@ -734,7 +764,7 @@ if st.session_state.access_token and not st.session_state.user:
 
 
 # =====================================
-# تسجيل الدخول وإنشاء الحساب
+# تسجيل الدخول وإنشاء الحساب باستخدام OTP
 # =====================================
 if not st.session_state.user:
     st.markdown(
@@ -763,70 +793,159 @@ if not st.session_state.user:
             )
             st.rerun()
 
-    login_tab, signup_tab = st.tabs([t("login"), t("signup")])
+    pending = st.session_state.auth_pending
 
-    with login_tab:
-        with st.form("login_form"):
-            email = st.text_input(t("email"))
-            password = st.text_input(t("password"), type="password")
+    if pending:
+        st.subheader(t("verify_code"))
+        st.info(t("otp_pending"))
+        destination = pending["identifier"]
+        st.caption(destination)
 
-            if st.form_submit_button(
-                t("login_btn"), use_container_width=True, type="primary"
-            ):
+        with st.form("verify_otp_form"):
+            otp_value = st.text_input(
+                t("otp_code"),
+                max_chars=6,
+                placeholder="123456",
+            )
+            verify_clicked = st.form_submit_button(
+                t("verify_code"), use_container_width=True, type="primary"
+            )
+
+        if verify_clicked:
+            token = otp_value.strip()
+            if not token.isdigit() or len(token) != 6:
+                st.error(t("otp_error"))
+            else:
                 try:
-                    result = supabase.auth.sign_in_with_password({
-                        "email": email.strip(),
-                        "password": password,
-                    })
+                    verify_payload = {
+                        "token": token,
+                        "type": "email" if pending["method"] == "email" else "sms",
+                    }
+                    verify_payload[pending["method"]] = pending["identifier"]
+                    result = supabase.auth.verify_otp(verify_payload)
 
-                    if result.user and result.session:
-                        st.session_state.user = result.user
-                        st.session_state.access_token = (
-                            result.session.access_token
-                        )
-                        st.session_state.refresh_token = (
-                            result.session.refresh_token
+                    if result and result.user and result.session:
+                        verified_user = result.user
+                        if pending["flow"] == "signup":
+                            updated = supabase.auth.update_user({
+                                "data": {
+                                    "full_name": pending["full_name"],
+                                    "age": int(pending["age"]),
+                                }
+                            })
+                            if getattr(updated, "user", None):
+                                verified_user = updated.user
+
+                        st.session_state.user = verified_user
+                        st.session_state.access_token = result.session.access_token
+                        st.session_state.refresh_token = result.session.refresh_token
+                        st.session_state.profile_name = (
+                            pending.get("full_name")
+                            or (getattr(verified_user, "user_metadata", {}) or {}).get("full_name", "")
+                            or pending["identifier"].split("@")[0]
                         )
                         st.session_state.conversation_id = None
                         st.session_state.messages = []
+                        st.session_state.auth_pending = None
                         apply_token()
                         save_session_cookie()
                         st.rerun()
                     else:
-                        st.error(t("error_login"))
+                        st.error(t("otp_error"))
                 except Exception:
-                    st.error(t("error_login"))
+                    st.error(t("otp_error"))
 
-    with signup_tab:
-        with st.form("signup_form"):
-            new_email = st.text_input(t("email"), key="signup_email")
-            new_password = st.text_input(
-                t("password"), type="password", key="signup_password"
-            )
+        if st.button(t("otp_cancel"), key="cancel_otp"):
+            st.session_state.auth_pending = None
+            st.rerun()
 
-            if st.form_submit_button(
-                t("signup_btn"), use_container_width=True, type="primary"
-            ):
-                try:
-                    result = supabase.auth.sign_up({
-                        "email": new_email.strip(),
-                        "password": new_password,
-                    })
+    else:
+        login_tab, signup_tab = st.tabs([t("login"), t("signup")])
 
-                    if result.user and result.session:
-                        st.session_state.user = result.user
-                        st.session_state.access_token = (
-                            result.session.access_token
-                        )
-                        st.session_state.refresh_token = (
-                            result.session.refresh_token
-                        )
-                        apply_token()
+        with login_tab:
+            with st.form("login_otp_form"):
+                login_method = st.radio(
+                    t("contact_method"),
+                    options=["email", "phone"],
+                    format_func=lambda value: t("email_option") if value == "email" else t("phone_option"),
+                    horizontal=True,
+                )
+                login_identifier = st.text_input(
+                    t("email_option") if login_method == "email" else t("phone_option"),
+                    placeholder="name@example.com" if login_method == "email" else "+972501234567",
+                )
+                login_send = st.form_submit_button(
+                    t("send_code"), use_container_width=True, type="primary"
+                )
+
+            if login_send:
+                identifier = login_identifier.strip()
+                if not identifier or (login_method == "phone" and not identifier.startswith("+")):
+                    st.error(t("phone_format") if login_method == "phone" else t("auth_send_error"))
+                else:
+                    try:
+                        payload = {
+                            login_method: identifier,
+                            "options": {"should_create_user": False},
+                        }
+                        supabase.auth.sign_in_with_otp(payload)
+                        st.session_state.auth_pending = {
+                            "flow": "login",
+                            "method": login_method,
+                            "identifier": identifier,
+                        }
+                        st.success(t("otp_sent_email") if login_method == "email" else t("otp_sent_phone"))
                         st.rerun()
-                    else:
-                        st.success(t("check_email"))
-                except Exception:
-                    st.error(t("error_signup"))
+                    except Exception:
+                        st.error(t("auth_send_error"))
+
+        with signup_tab:
+            with st.form("signup_otp_form"):
+                signup_method = st.radio(
+                    t("contact_method"),
+                    options=["email", "phone"],
+                    format_func=lambda value: t("email_option") if value == "email" else t("phone_option"),
+                    horizontal=True,
+                    key="signup_method",
+                )
+                signup_name = st.text_input(t("full_name"), key="signup_full_name")
+                signup_age = st.number_input(
+                    t("age"), min_value=1, max_value=120, value=18, step=1
+                )
+                signup_identifier = st.text_input(
+                    t("email_option") if signup_method == "email" else t("phone_option"),
+                    placeholder="name@example.com" if signup_method == "email" else "+972501234567",
+                    key="signup_identifier",
+                )
+                signup_send = st.form_submit_button(
+                    t("send_code"), use_container_width=True, type="primary"
+                )
+
+            if signup_send:
+                identifier = signup_identifier.strip()
+                clean_name = signup_name.strip()
+                if not clean_name:
+                    st.error("يرجى إدخال الاسم." if st.session_state.language == "ar" else "Please enter your name.")
+                elif not identifier or (signup_method == "phone" and not identifier.startswith("+")):
+                    st.error(t("phone_format") if signup_method == "phone" else t("auth_send_error"))
+                else:
+                    try:
+                        payload = {
+                            signup_method: identifier,
+                            "options": {"should_create_user": True},
+                        }
+                        supabase.auth.sign_in_with_otp(payload)
+                        st.session_state.auth_pending = {
+                            "flow": "signup",
+                            "method": signup_method,
+                            "identifier": identifier,
+                            "full_name": clean_name,
+                            "age": int(signup_age),
+                        }
+                        st.success(t("otp_sent_email") if signup_method == "email" else t("otp_sent_phone"))
+                        st.rerun()
+                    except Exception:
+                        st.error(t("auth_send_error"))
 
     st.stop()
 
@@ -838,7 +957,7 @@ user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
 
 if not st.session_state.profile_name:
     st.session_state.profile_name = user_metadata.get(
-        "full_name", get_user_email().split("@")[0]
+        "full_name", get_user_contact().split("@")[0]
     )
 
 
@@ -1086,8 +1205,14 @@ if st.session_state.show_profile:
             )
 
             st.text_input(
-                t("email"),
-                value=get_user_email(),
+                t("contact_value"),
+                value=get_user_contact(),
+                disabled=True,
+            )
+            account_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
+            st.text_input(
+                t("age"),
+                value=str(account_metadata.get("age", "")),
                 disabled=True,
             )
 
@@ -1104,8 +1229,12 @@ if st.session_state.show_profile:
                 st.warning("يرجى إدخال الاسم.")
             else:
                 try:
+                    existing_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
+                    profile_data = {"full_name": clean_name}
+                    if "age" in existing_metadata:
+                        profile_data["age"] = existing_metadata["age"]
                     result = supabase.auth.update_user({
-                        "data": {"full_name": clean_name}
+                        "data": profile_data
                     })
 
                     st.session_state.profile_name = clean_name
@@ -1237,7 +1366,7 @@ with st.sidebar:
         render_group("older", groups["older"])
 
     st.divider()
-    st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
+    st.caption("👤 " + (st.session_state.profile_name or get_user_contact()))
 
     if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
@@ -1303,6 +1432,7 @@ if st.session_state.show_settings:
     with st.expander(t("about")):
         st.markdown(t("about_text"))
         st.caption("Founder: Yamin Zoabi")
+        st.caption(t("founder_birth"))
 
     with st.expander(t("privacy")):
         st.markdown(t("privacy_text"))
