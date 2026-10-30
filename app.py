@@ -1,3 +1,4 @@
+import json
 import extra_streamlit_components as stx
 from cryptography.fernet import Fernet, InvalidToken
 import streamlit as st
@@ -40,6 +41,7 @@ defaults = {
 for key, value in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = value
+cookie_manager = stx.CookieManager(key="nexora_auth")
 
 # =====================================
 # الترجمة
@@ -514,7 +516,16 @@ try:
 except Exception:
     st.error(t("secrets_error"))
     st.stop()
-
+# =====================================
+# تشفير جلسة تسجيل الدخول
+# =====================================
+try:
+    COOKIE_CIPHER = Fernet(
+        st.secrets["COOKIE_SECRET"].encode()
+    )
+except Exception:
+    st.error("إعداد COOKIE_SECRET غير صحيح أو غير موجود في Secrets.")
+    st.stop()
 MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
@@ -538,9 +549,76 @@ GENERAL RULES:
 # =====================================
 # المصادقة والمستخدم
 # =====================================
+COOKIE_NAME = "nexora_auth"
+
+
 def apply_token():
     if st.session_state.access_token:
         supabase.postgrest.auth(st.session_state.access_token)
+
+
+def save_session_cookie():
+    access = st.session_state.access_token
+    refresh = st.session_state.refresh_token
+
+    if not access or not refresh:
+        return
+
+    session_data = json.dumps({
+        "access_token": access,
+        "refresh_token": refresh,
+    })
+
+    encrypted = COOKIE_CIPHER.encrypt(
+        session_data.encode()
+    ).decode()
+
+    cookie_manager.set(
+        COOKIE_NAME,
+        encrypted,
+        key="nexora_auth_save",
+        path="/",
+        expires_at=datetime.now() + timedelta(days=30),
+        secure=True,
+        same_site="lax",
+    )
+
+
+def restore_session_cookie():
+    if st.session_state.user:
+        return
+
+    encrypted = cookie_manager.get(COOKIE_NAME)
+
+    if not encrypted:
+        return
+
+    try:
+        session_data = COOKIE_CIPHER.decrypt(
+            encrypted.encode()
+        ).decode()
+
+        tokens = json.loads(session_data)
+
+        result = supabase.auth.set_session(
+            tokens["access_token"],
+            tokens["refresh_token"],
+        )
+
+        if result and result.session and result.user:
+            st.session_state.user = result.user
+            st.session_state.access_token = result.session.access_token
+            st.session_state.refresh_token = result.session.refresh_token
+            apply_token()
+
+    except Exception:
+        st.session_state.access_token = None
+        st.session_state.refresh_token = None
+        st.session_state.user = None
+        cookie_manager.delete(
+            COOKIE_NAME,
+            key="nexora_auth_delete",
+        )
 
 
 def get_user_id():
@@ -549,6 +627,7 @@ def get_user_id():
 
 
 def get_user_email():
+    return getattr(st.session_state.user, "email", "") or ""
     return getattr(st.session_state.user, "email", "") or ""
 
 
