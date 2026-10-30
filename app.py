@@ -641,6 +641,30 @@ def show_error(error):
 
 def logout():
     try:
+        cookie_manager.delete(
+            COOKIE_NAME,
+            key="nexora_auth_delete",
+        )
+    except Exception:
+        pass
+
+    try:
+        apply_token()
+        supabase.auth.sign_out()
+    except Exception:
+        pass
+
+    for key in [
+        "user", "access_token", "refresh_token",
+        "conversation_id", "messages", "show_settings",
+        "show_profile", "profile_image", "profile_name",
+    ]:
+        st.session_state[key] = [] if key == "messages" else (
+            False if key in ("show_settings", "show_profile") else None
+        )
+
+    st.rerun()
+    try:
         apply_token()
         supabase.auth.sign_out()
     except Exception:
@@ -681,7 +705,14 @@ def delete_account():
         show_error(e)
 
 
+# =====================================
 # استعادة الجلسة
+# =====================================
+
+# محاولة استعادة الجلسة من الكوكيز
+restore_session_cookie()
+
+# استعادة الجلسة الحالية إذا كانت موجودة
 if st.session_state.access_token and not st.session_state.user:
     try:
         if st.session_state.refresh_token:
@@ -691,9 +722,11 @@ if st.session_state.access_token and not st.session_state.user:
             )
 
         result = supabase.auth.get_user()
+
         if result and result.user:
             st.session_state.user = result.user
             apply_token()
+
     except Exception:
         st.session_state.access_token = None
         st.session_state.refresh_token = None
