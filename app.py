@@ -757,6 +757,7 @@ if not st.session_state.user:
                         st.session_state.conversation_id = None
                         st.session_state.messages = []
                         apply_token()
+                        save_session_cookie()
                         st.rerun()
                     else:
                         st.error(t("error_login"))
