@@ -1,3 +1,5 @@
+import extra_streamlit_components as stx
+from cryptography.fernet import Fernet, InvalidToken
 import streamlit as st
 from groq import Groq
 from supabase import create_client
