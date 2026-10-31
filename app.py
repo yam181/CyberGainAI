@@ -1418,6 +1418,7 @@ if prompt:
             final_prompt = (
                 f"{user_text}\n\n---\n{extra}" if user_text else extra
             )
+
     try:
         if not st.session_state.conversation_id:
             create_conversation()
@@ -1429,6 +1430,7 @@ if prompt:
             "role": "user",
             "content": final_prompt,
         })
+
         save_message(cid, "user", final_prompt)
 
         with st.chat_message("user", avatar=None):
@@ -1436,12 +1438,26 @@ if prompt:
 
         with st.chat_message("assistant", avatar=None):
             with st.spinner(t("thinking")):
+
+                user_content = [
+                    {
+                        "type": "text",
+                        "text": final_prompt or "حلّل الصورة المرفقة واشرح ما يظهر فيها.",
+                    }
+                ] + image_contents
+
+                api_messages = [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    *st.session_state.messages[-12:-1],
+                    {
+                        "role": "user",
+                        "content": user_content if image_contents else final_prompt,
+                    },
+                ]
+
                 result = groq.chat.completions.create(
                     model=MODEL,
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        *st.session_state.messages[-12:],
-                    ],
+                    messages=api_messages,
                     temperature=st.session_state.temperature,
                     max_tokens=st.session_state.max_tokens,
                 )
@@ -1457,6 +1473,7 @@ if prompt:
             "role": "assistant",
             "content": answer,
         })
+
         save_message(cid, "assistant", answer)
 
         if first_message:
