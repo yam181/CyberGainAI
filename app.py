@@ -188,45 +188,54 @@ def get_css():
     return """
     <style>
     :root {
-        --nx-bg: #100D18;
-        --nx-purple: #7546C8;
-        --nx-text: #EDE6F8;
-        --nx-border: #352744;
+        --nx-bg: #090812;
+        --nx-panel: #100d1a;
+        --nx-panel-soft: #171224;
+        --nx-purple: #8155d9;
+        --nx-purple-light: #b49aff;
+        --nx-text: #f2effa;
+        --nx-muted: #aaa2ba;
+        --nx-border: rgba(174, 143, 232, .16);
+    }
+
+    html, body, [class*="css"] {
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
 
     .stApp {
-        background: #0B0912 !important;
-        color: #EDE6F8 !important;
+        background:
+            radial-gradient(ellipse at 52% 0%, rgba(91, 55, 150, .16), transparent 38%),
+            linear-gradient(145deg, #090812 0%, #0d0a16 55%, #090812 100%) !important;
+        color: var(--nx-text) !important;
+    }
+
+    [data-testid="stMain"] {
+        background: transparent !important;
     }
 
     .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 6rem !important;
-        max-width: 900px !important;
+        max-width: 1120px !important;
+        padding-top: 2.2rem !important;
+        padding-bottom: 7rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
     }
 
+    /* Sidebar: quiet, clean, and fixed-width */
     [data-testid="stSidebar"] {
-    background: #100D18 !important;
-    border-right: 1px solid #352744 !important;
-    min-width: 260px !important;
-    width: 260px !important;
-    flex-shrink: 0 !important;
-    display: block !important;
-    visibility: visible !important;
-    transform: none !important;
-}
+        background: linear-gradient(180deg, #100d1b 0%, #0d0b15 100%) !important;
+        border-right: 1px solid var(--nx-border) !important;
+        min-width: 260px !important;
+        width: 260px !important;
+    }
 
-[data-testid="stSidebar"] > div:first-child {
-    background: #100D18 !important;
-    padding: 1.2rem 1rem !important;
-}
-
-[data-testid="stSidebar"] button[kind="header"] {
-    display: none !important;
-}
     [data-testid="stSidebar"] > div:first-child {
-        background: #100D18 !important;
-        padding: 1.2rem 1rem !important;
+        background: transparent !important;
+        padding: 1.35rem 1rem !important;
+    }
+
+    [data-testid="stSidebar"] button[kind="header"] {
+        display: none !important;
     }
 
     [data-testid="stToolbar"],
@@ -243,44 +252,43 @@ def get_css():
 
     a[href*="streamlit.io/cloud"],
     a[href*="streamlit.app"],
-    a[href*="share.streamlit.io"] {
+    a[href*="share.streamlit.com"] {
         display: none !important;
-        visibility: hidden !important;
     }
 
     [data-testid="stSidebarCollapsedControl"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarCollapseButton"] {
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
 
-    /* زر الملف الشخصي */
+    /* Profile shortcut */
     .st-key-nx_profile_button {
         position: fixed !important;
-        top: 6px !important;
-        right: 6px !important;
+        top: 12px !important;
+        right: 14px !important;
         z-index: 999999 !important;
-        width: 72px !important;
-        height: 72px !important;
-        padding: 8px !important;
-        background: #0B0912 !important;
-        border-radius: 18px !important;
-        box-sizing: border-box !important;
+        width: 48px !important;
+        height: 48px !important;
+        padding: 2px !important;
+        background: transparent !important;
     }
 
     .st-key-nx_profile_button button {
-        width: 54px !important;
-        height: 54px !important;
-        min-height: 54px !important;
-        background: #211638 !important;
-        border: 3px solid #7546C8 !important;
+        width: 42px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 0 !important;
+        background: #1a1428 !important;
+        border: 1px solid rgba(180, 154, 255, .5) !important;
         border-radius: 50% !important;
-        color: #C4B5FD !important;
-        font-size: 29px !important;
+        color: #d8caff !important;
+        font-size: 20px !important;
+        box-shadow: 0 0 22px rgba(129, 85, 217, .13) !important;
     }
 
-    /* إخفاء صور المستخدم والمساعد */
+    /* Chat messages: simple, readable, no avatars */
     [data-testid="stChatMessageAvatar"],
     [data-testid*="chatAvatarIcon"],
     [data-testid="stChatMessage"] > div:first-child {
@@ -290,149 +298,156 @@ def get_css():
     [data-testid="stChatMessage"] {
         background: transparent !important;
         border: none !important;
-        padding: 10px 0 !important;
-        margin: 6px 0 !important;
+        padding: 13px 0 !important;
+        margin: 8px 0 !important;
     }
 
-    [data-testid="stChatMessage"]:has(
-        [data-testid="chatAvatarIcon-user"]
-    ) {
-        background: #7546C820 !important;
-        border: 1px solid #7546C840 !important;
+    [data-testid="stChatMessage"] > div:last-child {
+        width: 100% !important;
+    }
+
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        background: rgba(116, 78, 178, .12) !important;
+        border: 1px solid rgba(150, 112, 220, .13) !important;
         border-radius: 18px !important;
-        padding: 14px 18px !important;
+        padding: 13px 18px !important;
     }
 
-    [data-testid="stChatMessage"]:has(
-        [data-testid="chatAvatarIcon-assistant"]
-    ) {
-        background: #16121F !important;
-        border: 1px solid #352744 !important;
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+        background: rgba(22, 18, 31, .52) !important;
+        border: 1px solid rgba(174, 143, 232, .10) !important;
         border-radius: 18px !important;
-        padding: 14px 18px !important;
+        padding: 15px 18px !important;
     }
 
-    /* عنوان التطبيق */
+    /* Brand */
     .nexora-title {
-        font-size: 20px !important;
-        font-weight: 700 !important;
-        color: #C4B5FD !important;
-        margin-bottom: 4px !important;
+        font-size: 21px !important;
+        font-weight: 750 !important;
+        letter-spacing: .7px !important;
+        color: #d7c5ff !important;
+        margin: 2px 0 3px 2px !important;
+        text-shadow: 0 0 20px rgba(129, 85, 217, .24);
     }
 
     .nexora-subtitle {
-        color: #A78BFA !important;
+        color: #9386ad !important;
         font-size: 12px !important;
-        margin-bottom: 18px !important;
+        margin: 0 0 23px 3px !important;
     }
 
-    /* شاشة الترحيب */
     .welcome-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 55vh;
+        min-height: 57vh;
         text-align: center;
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem 2rem;
     }
 
     .welcome-logo {
-        font-size: 30px;
-        font-weight: 700;
-        color: #C4B5FD;
-        margin-bottom: 12px;
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: 3px;
+        color: #bda4ff;
+        margin-bottom: 22px;
+        text-shadow: 0 0 26px rgba(129, 85, 217, .55);
     }
 
     .welcome-text {
-        font-size: 26px;
-        color: #EDE6F8;
-        margin-bottom: 8px;
+        font-size: clamp(25px, 3vw, 34px);
+        font-weight: 600;
+        letter-spacing: -.6px;
+        color: #f4efff;
+        margin-bottom: 10px;
     }
 
     .welcome-sub {
         font-size: 15px;
-        color: #A78BFA;
+        color: #a99cbe;
     }
 
-    /* مربع الكتابة */
+    /* Composer */
     [data-testid="stChatInput"] {
-        border-radius: 16px !important;
-        border: 1px solid #493363 !important;
-        background: #16121F !important;
+        background: rgba(23, 18, 36, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .32) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
     }
 
-    /* الأزرار */
+    [data-testid="stChatInput"]:focus-within {
+        border-color: rgba(185, 157, 255, .72) !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2), 0 12px 42px rgba(0, 0, 0, .24) !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        color: #f3effa !important;
+    }
+
+    /* Buttons */
     .stButton > button,
     [data-testid="stFormSubmitButton"] button,
     [data-testid="stDownloadButton"] button,
     button[kind="primary"],
     button[kind="secondary"] {
-        background: #7546C8 !important;
-        border: 1px solid #9B78E8 !important;
-        color: #FFFFFF !important;
-        border-radius: 10px !important;
-        transition: all .2s ease !important;
+        border-radius: 11px !important;
+        transition: background .18s ease, border-color .18s ease, transform .18s ease !important;
+    }
+
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] button,
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #7650bd, #593995) !important;
+        border: 1px solid rgba(190, 163, 255, .38) !important;
+        color: #fff !important;
     }
 
     .stButton > button:hover,
     [data-testid="stFormSubmitButton"] button:hover,
-    [data-testid="stDownloadButton"] button:hover,
-    button[kind="primary"]:hover,
-    button[kind="secondary"]:hover {
-        background: #6136B1 !important;
-        border-color: #C4B5FD !important;
-        color: #FFFFFF !important;
-    }
-
-    /* تحسين قائمة المحادثات */
-    [data-testid="stSidebar"] button {
-        border-radius: 10px !important;
-        transition: all .2s ease !important;
+    button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #8962d0, #6844aa) !important;
+        border-color: rgba(210, 190, 255, .7) !important;
+        transform: translateY(-1px);
     }
 
     [data-testid="stSidebar"] .stButton > button {
-    min-height: 40px !important;
-    border: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-    background: transparent !important;
-}
-
-[data-testid="stSidebar"] .stButton > button:focus,
-[data-testid="stSidebar"] .stButton > button:focus-visible {
-    border: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-}
+        min-height: 39px !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+        color: #d6cfe3 !important;
+        text-align: left !important;
+    }
 
     [data-testid="stSidebar"] .stButton > button:hover {
-        background: #251B35 !important;
-        border-color: #493363 !important;
+        background: rgba(130, 95, 190, .13) !important;
+        border-color: rgba(174, 143, 232, .12) !important;
+    }
+
+    [data-testid="stSidebar"] input {
+        background: #171222 !important;
+        color: #f4efff !important;
+        border: 1px solid rgba(174, 143, 232, .18) !important;
+        border-radius: 11px !important;
+    }
+
+    [data-testid="stSidebar"] input:focus {
+        border-color: #9a78df !important;
+        box-shadow: 0 0 0 1px rgba(154, 120, 223, .25) !important;
     }
 
     .date-group {
         font-size: 11px !important;
-        color: #A99ABF !important;
+        color: #8f83a5 !important;
         font-weight: 700 !important;
-        letter-spacing: .3px !important;
-        margin: 20px 0 8px 5px !important;
-    }
-
-    [data-testid="stSidebar"] input {
-        background: #1B1526 !important;
-        color: #F4EEFF !important;
-        border: 1px solid #403052 !important;
-        border-radius: 10px !important;
-    }
-
-    [data-testid="stSidebar"] input:focus {
-        border-color: #9A6CE0 !important;
-        box-shadow: 0 0 0 1px #9A6CE0 !important;
+        letter-spacing: .5px !important;
+        margin: 20px 0 8px 7px !important;
+        text-transform: uppercase;
     }
 
     [data-testid="stSidebar"] hr {
-        border-color: #352744 !important;
+        border-color: rgba(174, 143, 232, .12) !important;
     }
 
     [data-testid="stSidebar"] ::-webkit-scrollbar {
@@ -440,65 +455,73 @@ def get_css():
     }
 
     [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
-        background: #493363;
+        background: #493763;
         border-radius: 10px;
     }
 
-    /* حقول الإدخال */
+    /* Form controls */
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
     [data-testid="stNumberInput"] input,
     [data-testid="stDateInput"] input,
     [data-testid="stSelectbox"] [role="combobox"],
     [data-testid="stMultiSelect"] [role="combobox"],
-    [data-testid="stChatInput"] textarea,
     [data-testid="stForm"] {
-        background-color: #16121F !important;
-        color: #EDE6F8 !important;
-        border-color: #7546C8 !important;
-        border-radius: 10px !important;
+        background-color: #171222 !important;
+        color: #f1ebfb !important;
+        border-color: rgba(174, 143, 232, .25) !important;
+        border-radius: 11px !important;
     }
 
     [data-testid="stTextInput"] input:focus,
     [data-testid="stTextArea"] textarea:focus,
     [data-testid="stNumberInput"] input:focus,
-    [data-testid="stDateInput"] input:focus,
-    [data-testid="stChatInput"] textarea:focus {
-        border-color: #A78BFA !important;
-        box-shadow: 0 0 0 1px #7546C8 !important;
+    [data-testid="stDateInput"] input:focus {
+        border-color: #a78bfa !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .25) !important;
     }
 
     [data-testid="stAppViewContainer"],
     [data-testid="stMain"],
     [data-testid="stMainBlockContainer"] {
-        color: #EDE6F8 !important;
+        color: var(--nx-text) !important;
     }
 
     [data-testid="stAlert"] {
-        border-color: #7546C8 !important;
+        border-color: rgba(129, 85, 217, .45) !important;
+        border-radius: 12px !important;
     }
 
     h1, h2, h3 {
-        color: #C4B5FD !important;
+        color: #e1d4ff !important;
+        letter-spacing: -.3px;
     }
 
     @media (max-width: 768px) {
         .block-container {
-            padding-left: .7rem !important;
-            padding-right: .7rem !important;
+            padding: 1.2rem .8rem 6rem !important;
+        }
+
+        .welcome-container {
+            min-height: 48vh;
         }
 
         .welcome-text {
-            font-size: 22px !important;
+            font-size: 24px !important;
         }
 
         [data-testid="stSidebar"] {
             border-right: none !important;
+            min-width: 260px !important;
+        }
+
+        .st-key-nx_profile_button {
+            top: 7px !important;
+            right: 8px !important;
         }
     }
     </style>
     """
-
 
 st.markdown(get_css(), unsafe_allow_html=True)
 
@@ -1159,7 +1182,6 @@ with st.sidebar:
     
     try:
         conversations = list_conversations()
-        st.write("عدد المحادثات المحفوظة:", len(conversations))
     except Exception as error:
         st.error("حدث خطأ أثناء تحميل المحادثات:")
         st.exception(error)
