@@ -1,6 +1,6 @@
 import json
 import extra_streamlit_components as stx
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 import streamlit as st
 from groq import Groq
 from supabase import create_client
@@ -57,7 +57,7 @@ TRANSLATIONS = {
         "login_btn": "دخول",
         "signup_btn": "إنشاء حساب",
         "logout": "تسجيل الخروج",
-        "new_chat": "محادثة جديدة",
+        "new_chat": "＋ محادثة جديدة",
         "delete_confirm": "حذف «{title}»؟",
         "yes": "نعم",
         "cancel": "إلغاء",
@@ -119,7 +119,7 @@ TRANSLATIONS = {
         "login_btn": "Login",
         "signup_btn": "Create Account",
         "logout": "Log Out",
-        "new_chat": "New chat",
+        "new_chat": "＋ New Chat",
         "delete_confirm": "Delete «{title}»?",
         "yes": "Yes",
         "cancel": "Cancel",
@@ -180,332 +180,351 @@ def t(key, **kwargs):
     return value.format(**kwargs) if kwargs else value
 
 
+
 # =====================================
 # التصميم
 # =====================================
-PALETTES = {
-    "dark": {
-        "APP_BG": (
-            "radial-gradient(ellipse at 86% 9%, rgba(35,116,220,.55), transparent 36%),"
-            "linear-gradient(112deg, #050a12 0%, #071321 48%, #0a2850 100%)"
-        ),
-        "SIDEBAR": "#08162b",
-        "TEXT": "#f4f7ff",
-        "MUTED": "#a9b7ce",
-        "BORDER": "rgba(139,174,230,.22)",
-        "ROW": "rgba(255,255,255,.04)",
-        "ROW_HOVER": "rgba(49,136,244,.18)",
-        "ROW_ACTIVE": "rgba(49,136,244,.30)",
-        "INPUT_BG": "#142744",
-        "USER_MSG": "rgba(49,136,244,.18)",
-        "ASSIST_MSG": "rgba(255,255,255,.03)",
-        "CHAT_INPUT": "rgba(20,39,70,.96)",
-        "LOGO": "#a9eaff",
-    },
-    "light": {
-        "APP_BG": "#f3f6fb",
-        "SIDEBAR": "#ffffff",
-        "TEXT": "#0f1b2d",
-        "MUTED": "#5b6b84",
-        "BORDER": "rgba(15,40,80,.16)",
-        "ROW": "rgba(15,40,80,.04)",
-        "ROW_HOVER": "rgba(49,136,244,.12)",
-        "ROW_ACTIVE": "rgba(49,136,244,.22)",
-        "INPUT_BG": "#ffffff",
-        "USER_MSG": "rgba(49,136,244,.12)",
-        "ASSIST_MSG": "#ffffff",
-        "CHAT_INPUT": "#ffffff",
-        "LOGO": "#1b6fd6",
-    },
-}
-
-CSS_TEMPLATE = """
-<style>
-:root {
-    --nx-text: __TEXT__;
-    --nx-muted: __MUTED__;
-    --nx-border: __BORDER__;
-    --nx-row: __ROW__;
-    --nx-row-hover: __ROW_HOVER__;
-    --nx-row-active: __ROW_ACTIVE__;
-    --nx-input: __INPUT_BG__;
-    --nx-blue: #3188f4;
-    --nx-cyan: #22b8d7;
-}
-html, body, [class*="css"] {
-    font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
-}
-.stApp {
-    background: __APP_BG__ !important;
-    color: var(--nx-text) !important;
-}
-[data-testid="stMain"], [data-testid="stAppViewContainer"] {
-    background: transparent !important;
-}
-[data-testid="stMain"] p, [data-testid="stMain"] li,
-[data-testid="stMain"] label, [data-testid="stMain"] h1,
-[data-testid="stMain"] h2, [data-testid="stMain"] h3,
-[data-testid="stMain"] h4 { color: var(--nx-text); }
-.block-container {
-    max-width: 1100px !important;
-    padding: 1.2rem 2rem 6rem !important;
-}
-
-/* ---------- إخفاء عناصر Streamlit (GitHub, Deploy, القائمة) ---------- */
-[data-testid="stHeader"] { background: transparent !important; }
-[data-testid="stToolbar"], [data-testid="stToolbarActions"],
-[data-testid="stAppDeployButton"], .stAppDeployButton, .stDeployButton,
-[data-testid="stMainMenu"], [data-testid="stStatusWidget"],
-[data-testid="stDecoration"], .viewerBadge_container__1QSob,
-[data-testid="stHeader"] a[href*="github"],
-footer, #MainMenu {
-    display: none !important;
-    visibility: hidden !important;
-}
-/* زر فتح/إغلاق الشريط الجانبي يبقى ظاهرًا */
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarCollapseButton"] {
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
-
-/* ---------- الشريط الجانبي ---------- */
-[data-testid="stSidebar"] {
-    background: __SIDEBAR__ !important;
-    border-right: 1px solid var(--nx-border) !important;
-}
-[data-testid="stSidebar"] > div:first-child { background: transparent !important; }
-[data-testid="stSidebarContent"] {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-[data-testid="stSidebarUserContent"] { padding: .9rem .8rem 1.2rem !important; }
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .4rem !important; }
-[data-testid="stSidebar"] [data-testid="stHorizontalBlock"] {
-    gap: .25rem !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-}
-[data-testid="stSidebar"] hr {
-    border-color: var(--nx-border) !important;
-    margin: .6rem 0 !important;
-}
-[data-testid="stSidebar"] p, [data-testid="stSidebar"] span,
-[data-testid="stSidebar"] label { color: var(--nx-text); }
-[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p { color: var(--nx-muted) !important; }
-
-/* أزرار الشريط الجانبي */
-[data-testid="stSidebar"] .stButton > button {
-    width: 100% !important;
-    min-height: 38px !important;
-    border-radius: 10px !important;
-    color: var(--nx-text) !important;
-    background: var(--nx-row) !important;
-    border: 1px solid transparent !important;
-    box-shadow: none !important;
-    justify-content: flex-start !important;
-    padding: .4rem .7rem !important;
-}
-[data-testid="stSidebar"] .stButton > button:hover {
-    background: var(--nx-row-hover) !important;
-    border-color: var(--nx-border) !important;
-}
-[data-testid="stSidebar"] .stButton > button:focus,
-[data-testid="stSidebar"] .stButton > button:active {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: var(--nx-blue) !important;
-}
-[data-testid="stSidebar"] .stButton > button p {
-    font-size: 13px !important;
-    line-height: 1.35 !important;
-    margin: 0 !important;
-    text-align: start !important;
-    unicode-bidi: plaintext;
-}
-
-/* زر محادثة جديدة */
-.st-key-nx_new_chat button {
-    background: linear-gradient(100deg, #3987fa, #17a9d2) !important;
-    color: #fff !important;
-    border: 0 !important;
-    justify-content: center !important;
-    font-weight: 600 !important;
-    box-shadow: 0 5px 18px rgba(35,126,231,.25) !important;
-}
-.st-key-nx_new_chat button p { text-align: center !important; color: #fff !important; }
-.st-key-nx_new_chat button:hover { filter: brightness(1.08); }
-
-/* صفوف المحادثات: بدون إطارات، والعنوان يظهر كاملًا (سطرين كحد أقصى) */
-[class*="st-key-nx_row_"] button {
-    background: transparent !important;
-    border: 1px solid transparent !important;
-    min-height: 40px !important;
-    height: auto !important;
-}
-[class*="st-key-nx_row_"] button:hover { background: var(--nx-row-hover) !important; }
-[class*="st-key-nx_row_active_"] button {
-    background: var(--nx-row-active) !important;
-}
-[class*="st-key-nx_row_"] button p {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    white-space: normal !important;
-    word-break: break-word;
-}
-/* زر ⋯ */
-[class*="st-key-nx_more_"] button {
-    background: transparent !important;
-    border: 0 !important;
-    min-height: 34px !important;
-    padding: 0 !important;
-    justify-content: center !important;
-    color: var(--nx-muted) !important;
-}
-[class*="st-key-nx_more_"] button:hover { color: var(--nx-text) !important; }
-
-/* عناوين المجموعات الزمنية */
-.date-group {
-    color: var(--nx-muted) !important;
-    font-size: 11.5px !important;
-    font-weight: 650 !important;
-    letter-spacing: .3px;
-    padding: 4px 6px;
-    margin: 10px 0 2px !important;
-}
-
-/* حقول الإدخال */
-[data-testid="stSidebar"] input, [data-testid="stMain"] input,
-[data-testid="stMain"] textarea {
-    background: var(--nx-input) !important;
-    color: var(--nx-text) !important;
-    border: 1px solid var(--nx-border) !important;
-    border-radius: 10px !important;
-}
-[data-testid="stSidebar"] input:focus, [data-testid="stMain"] input:focus,
-[data-testid="stMain"] textarea:focus {
-    border-color: var(--nx-blue) !important;
-    box-shadow: 0 0 0 1px rgba(49,136,244,.35) !important;
-    outline: none !important;
-}
-[data-baseweb="input"], [data-baseweb="base-input"], [data-baseweb="textarea"] {
-    border-color: var(--nx-border) !important;
-}
-[data-baseweb="input"]:focus-within, [data-baseweb="base-input"]:focus-within {
-    border-color: var(--nx-blue) !important;
-}
-[data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] {
-    background: var(--nx-input) !important;
-    color: var(--nx-text) !important;
-}
-
-/* ---------- المحتوى الرئيسي ---------- */
-.welcome-container {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; min-height: 42vh; text-align: center;
-    padding: 1rem 1rem 1.4rem;
-}
-.welcome-logo {
-    font-size: 17px; font-weight: 750; letter-spacing: 3px;
-    color: __LOGO__; margin-bottom: 20px;
-    text-shadow: 0 0 26px rgba(45,177,255,.35);
-}
-.welcome-text {
-    font-size: clamp(24px, 3vw, 34px); font-weight: 600;
-    color: var(--nx-text); margin-bottom: 10px;
-}
-.welcome-sub { font-size: 15px; color: var(--nx-muted); }
-
-/* إزالة صور الروبوت والمستخدم بجانب الرسائل */
-[data-testid^="stChatMessageAvatar"],
-[data-testid^="chatAvatarIcon"],
-[data-testid="stChatMessage"] > div:has([data-testid^="stChatMessageAvatar"]),
-[data-testid="stChatMessage"] > div:has([data-testid^="chatAvatarIcon"]) {
-    display: none !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* شكل الرسائل */
-[data-testid="stChatMessage"] {
-    background: __ASSIST_MSG__ !important;
-    border: 1px solid var(--nx-border) !important;
-    border-radius: 16px !important;
-    padding: 14px 18px !important;
-    margin-bottom: .6rem !important;
-    gap: 0 !important;
-}
-[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]),
-[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-    background: __USER_MSG__ !important;
-    border-color: rgba(49,136,244,.35) !important;
-}
-[data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li,
-[data-testid="stChatMessage"] h1, [data-testid="stChatMessage"] h2,
-[data-testid="stChatMessage"] h3 {
-    color: var(--nx-text) !important;
-    unicode-bidi: plaintext;
-    text-align: start;
-    line-height: 1.7;
-}
-[data-testid="stChatMessage"] pre, [data-testid="stChatMessage"] code {
-    direction: ltr; text-align: left; unicode-bidi: normal;
-}
-
-/* مربع الكتابة */
-[data-testid="stChatInput"] {
-    background: __CHAT_INPUT__ !important;
-    border: 1px solid var(--nx-border) !important;
-    border-radius: 18px !important;
-    box-shadow: 0 10px 36px rgba(0,0,0,.18) !important;
-}
-[data-testid="stChatInput"]:focus-within {
-    border-color: var(--nx-blue) !important;
-    box-shadow: 0 0 0 1px rgba(49,136,244,.4), 0 10px 36px rgba(0,0,0,.2) !important;
-}
-[data-testid="stChatInput"] textarea {
-    background: transparent !important;
-    color: var(--nx-text) !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    unicode-bidi: plaintext;
-}
-[data-testid="stChatInput"] button {
-    background: linear-gradient(100deg, #3987fa, #17a9d2) !important;
-    color: #fff !important;
-    border-radius: 12px !important;
-}
-
-.stButton > button, [data-testid="stFormSubmitButton"] button,
-[data-testid="stDownloadButton"] button {
-    border-radius: 10px !important;
-    transition: all .18s ease !important;
-}
-
-@media (max-width: 768px) {
-    .block-container { padding: 1rem .7rem 5.5rem !important; }
-    [data-testid="stChatMessage"] { padding: 12px 14px !important; }
-    .welcome-container { min-height: 36vh; }
-    .welcome-text { font-size: 23px !important; }
-}
-</style>
-"""
-
-
 def get_css():
-    palette = PALETTES.get(st.session_state.theme, PALETTES["dark"])
-    css = CSS_TEMPLATE
-    for name, value in palette.items():
-        css = css.replace(f"__{name}__", value)
-    return css
+    return """
+    <style>
+    :root {
+        --nx-bg: #090812;
+        --nx-panel: #100d1a;
+        --nx-panel-soft: #171224;
+        --nx-purple: #8155d9;
+        --nx-purple-light: #b49aff;
+        --nx-text: #f2effa;
+        --nx-muted: #aaa2ba;
+        --nx-border: rgba(174, 143, 232, .16);
+    }
 
+    html, body, [class*="css"] {
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    .stApp {
+        background:
+            radial-gradient(ellipse at 52% 0%, rgba(91, 55, 150, .16), transparent 38%),
+            linear-gradient(145deg, #090812 0%, #0d0a16 55%, #090812 100%) !important;
+        color: var(--nx-text) !important;
+    }
+
+    [data-testid="stMain"] {
+        background: transparent !important;
+    }
+
+    .block-container {
+        max-width: 1120px !important;
+        padding-top: 2.2rem !important;
+        padding-bottom: 7rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+
+    /* Sidebar: quiet, clean, and fixed-width */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #100d1b 0%, #0d0b15 100%) !important;
+        border-right: 1px solid var(--nx-border) !important;
+        min-width: 260px !important;
+        width: 260px !important;
+    }
+
+    [data-testid="stSidebar"] > div:first-child {
+        background: transparent !important;
+        padding: 1.35rem 1rem !important;
+    }
+
+    [data-testid="stSidebar"] button[kind="header"] {
+        display: none !important;
+    }
+
+    [data-testid="stToolbar"],
+    [data-testid="stToolbarActions"],
+    [data-testid="stStatusWidget"],
+    .stDeployButton,
+    .viewerBadge_container__1QSob,
+    [data-testid="stDecoration"],
+    footer,
+    #MainMenu {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    a[href*="streamlit.io/cloud"],
+    a[href*="streamlit.app"],
+    a[href*="share.streamlit.com"] {
+        display: none !important;
+    }
+
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    /* Profile shortcut */
+    .st-key-nx_profile_button {
+        position: fixed !important;
+        top: 12px !important;
+        right: 14px !important;
+        z-index: 999999 !important;
+        width: 48px !important;
+        height: 48px !important;
+        padding: 2px !important;
+        background: transparent !important;
+    }
+
+    .st-key-nx_profile_button button {
+        width: 42px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 0 !important;
+        background: #1a1428 !important;
+        border: 1px solid rgba(180, 154, 255, .5) !important;
+        border-radius: 50% !important;
+        color: #d8caff !important;
+        font-size: 20px !important;
+        box-shadow: 0 0 22px rgba(129, 85, 217, .13) !important;
+    }
+
+    /* Chat messages: simple, readable, no avatars */
+    [data-testid="stChatMessageAvatar"],
+    [data-testid*="chatAvatarIcon"],
+    [data-testid="stChatMessage"] > div:first-child {
+        display: none !important;
+    }
+
+    [data-testid="stChatMessage"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 13px 0 !important;
+        margin: 8px 0 !important;
+    }
+
+    [data-testid="stChatMessage"] > div:last-child {
+        width: 100% !important;
+    }
+
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        background: rgba(116, 78, 178, .12) !important;
+        border: 1px solid rgba(150, 112, 220, .13) !important;
+        border-radius: 18px !important;
+        padding: 13px 18px !important;
+    }
+
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+        background: rgba(22, 18, 31, .52) !important;
+        border: 1px solid rgba(174, 143, 232, .10) !important;
+        border-radius: 18px !important;
+        padding: 15px 18px !important;
+    }
+
+    /* Brand */
+    .nexora-title {
+        font-size: 21px !important;
+        font-weight: 750 !important;
+        letter-spacing: .7px !important;
+        color: #d7c5ff !important;
+        margin: 2px 0 3px 2px !important;
+        text-shadow: 0 0 20px rgba(129, 85, 217, .24);
+    }
+
+    .nexora-subtitle {
+        color: #9386ad !important;
+        font-size: 12px !important;
+        margin: 0 0 23px 3px !important;
+    }
+
+    .welcome-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 57vh;
+        text-align: center;
+        padding: 1.5rem 1rem 2rem;
+    }
+
+    .welcome-logo {
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: 3px;
+        color: #bda4ff;
+        margin-bottom: 22px;
+        text-shadow: 0 0 26px rgba(129, 85, 217, .55);
+    }
+
+    .welcome-text {
+        font-size: clamp(25px, 3vw, 34px);
+        font-weight: 600;
+        letter-spacing: -.6px;
+        color: #f4efff;
+        margin-bottom: 10px;
+    }
+
+    .welcome-sub {
+        font-size: 15px;
+        color: #a99cbe;
+    }
+
+    /* Composer */
+    [data-testid="stChatInput"] {
+        background: rgba(23, 18, 36, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .32) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
+    }
+
+    [data-testid="stChatInput"]:focus-within {
+        border-color: rgba(185, 157, 255, .72) !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2), 0 12px 42px rgba(0, 0, 0, .24) !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        color: #f3effa !important;
+    }
+
+    /* Buttons */
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] button,
+    [data-testid="stDownloadButton"] button,
+    button[kind="primary"],
+    button[kind="secondary"] {
+        border-radius: 11px !important;
+        transition: background .18s ease, border-color .18s ease, transform .18s ease !important;
+    }
+
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] button,
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #7650bd, #593995) !important;
+        border: 1px solid rgba(190, 163, 255, .38) !important;
+        color: #fff !important;
+    }
+
+    .stButton > button:hover,
+    [data-testid="stFormSubmitButton"] button:hover,
+    button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #8962d0, #6844aa) !important;
+        border-color: rgba(210, 190, 255, .7) !important;
+        transform: translateY(-1px);
+    }
+
+    [data-testid="stSidebar"] .stButton > button {
+        min-height: 39px !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+        color: #d6cfe3 !important;
+        text-align: left !important;
+    }
+
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: rgba(130, 95, 190, .13) !important;
+        border-color: rgba(174, 143, 232, .12) !important;
+    }
+
+    [data-testid="stSidebar"] input {
+        background: #171222 !important;
+        color: #f4efff !important;
+        border: 1px solid rgba(174, 143, 232, .18) !important;
+        border-radius: 11px !important;
+    }
+
+    [data-testid="stSidebar"] input:focus {
+        border-color: #9a78df !important;
+        box-shadow: 0 0 0 1px rgba(154, 120, 223, .25) !important;
+    }
+
+    .date-group {
+        font-size: 11px !important;
+        color: #8f83a5 !important;
+        font-weight: 700 !important;
+        letter-spacing: .5px !important;
+        margin: 20px 0 8px 7px !important;
+        text-transform: uppercase;
+    }
+
+    [data-testid="stSidebar"] hr {
+        border-color: rgba(174, 143, 232, .12) !important;
+    }
+
+    [data-testid="stSidebar"] ::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
+        background: #493763;
+        border-radius: 10px;
+    }
+
+    /* Form controls */
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stDateInput"] input,
+    [data-testid="stSelectbox"] [role="combobox"],
+    [data-testid="stMultiSelect"] [role="combobox"],
+    [data-testid="stForm"] {
+        background-color: #171222 !important;
+        color: #f1ebfb !important;
+        border-color: rgba(174, 143, 232, .25) !important;
+        border-radius: 11px !important;
+    }
+
+    [data-testid="stTextInput"] input:focus,
+    [data-testid="stTextArea"] textarea:focus,
+    [data-testid="stNumberInput"] input:focus,
+    [data-testid="stDateInput"] input:focus {
+        border-color: #a78bfa !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .25) !important;
+    }
+
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"] {
+        color: var(--nx-text) !important;
+    }
+
+    [data-testid="stAlert"] {
+        border-color: rgba(129, 85, 217, .45) !important;
+        border-radius: 12px !important;
+    }
+
+    h1, h2, h3 {
+        color: #e1d4ff !important;
+        letter-spacing: -.3px;
+    }
+
+    @media (max-width: 768px) {
+        .block-container {
+            padding: 1.2rem .8rem 6rem !important;
+        }
+
+        .welcome-container {
+            min-height: 48vh;
+        }
+
+        .welcome-text {
+            font-size: 24px !important;
+        }
+
+        [data-testid="stSidebar"] {
+            border-right: none !important;
+            min-width: 260px !important;
+        }
+
+        .st-key-nx_profile_button {
+            top: 7px !important;
+            right: 8px !important;
+        }
+    }
+    </style>
+    """
 
 st.markdown(get_css(), unsafe_allow_html=True)
+
 
 
 # =====================================
@@ -520,7 +539,6 @@ try:
 except Exception:
     st.error(t("secrets_error"))
     st.stop()
-
 # =====================================
 # تشفير جلسة تسجيل الدخول
 # =====================================
@@ -531,7 +549,6 @@ try:
 except Exception:
     st.error("إعداد COOKIE_SECRET غير صحيح أو غير موجود في Secrets.")
     st.stop()
-
 MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
@@ -634,10 +651,7 @@ def get_user_id():
 
 def get_user_email():
     return getattr(st.session_state.user, "email", "") or ""
-
-
-def default_title():
-    return "محادثة جديدة" if st.session_state.language == "ar" else "New Chat"
+    return getattr(st.session_state.user, "email", "") or ""
 
 
 def show_error(error):
@@ -657,6 +671,22 @@ def logout():
     except Exception:
         pass
 
+    try:
+        apply_token()
+        supabase.auth.sign_out()
+    except Exception:
+        pass
+
+    for key in [
+        "user", "access_token", "refresh_token",
+        "conversation_id", "messages", "show_settings",
+        "show_profile", "profile_image", "profile_name",
+    ]:
+        st.session_state[key] = [] if key == "messages" else (
+            False if key in ("show_settings", "show_profile") else None
+        )
+
+    st.rerun()
     try:
         apply_token()
         supabase.auth.sign_out()
@@ -701,8 +731,11 @@ def delete_account():
 # =====================================
 # استعادة الجلسة
 # =====================================
+
+# محاولة استعادة الجلسة من الكوكيز
 restore_session_cookie()
 
+# استعادة الجلسة الحالية إذا كانت موجودة
 if st.session_state.access_token and not st.session_state.user:
     try:
         if st.session_state.refresh_token:
@@ -728,10 +761,10 @@ if st.session_state.access_token and not st.session_state.user:
 # =====================================
 if not st.session_state.user:
     st.markdown(
-        f"""
+        """
         <div class="welcome-container">
             <div class="welcome-logo">NEXORA AI</div>
-            <div class="welcome-sub">{t("subtitle")}</div>
+            <div class="welcome-sub">مساعدك الذكي</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -812,7 +845,6 @@ if not st.session_state.user:
                             result.session.refresh_token
                         )
                         apply_token()
-                        save_session_cookie()
                         st.rerun()
                     else:
                         st.success(t("check_email"))
@@ -856,7 +888,7 @@ def create_conversation():
     result = supabase.table("conversations").insert({
         "id": cid,
         "user_id": get_user_id(),
-        "title": default_title(),
+        "title": "محادثة جديدة" if st.session_state.language == "ar" else "New Chat",
         "created_at": now,
         "updated_at": now,
     }).execute()
@@ -939,11 +971,9 @@ def generate_title(question):
                         "language as the user's question. Return only the title."
                     ),
                 },
-                {"role": "user", "content": question[:1000]},
+                {"role": "user", "content": question},
             ],
-            # النموذج يستهلك جزءًا من الحد في التفكير، فالقيمة 40 كانت
-            # تعيد عنوانًا فارغًا ويسقط الكود على أول 45 حرفًا من السؤال
-            max_tokens=200,
+            max_tokens=40,
             temperature=0.2,
         )
         title = (result.choices[0].message.content or "").strip()
@@ -1009,6 +1039,16 @@ def group_conversations_by_date(conversations):
 
 
 # =====================================
+# زر الملف الشخصي
+# =====================================
+with st.container(key="nx_profile_button"):
+    if st.button("👤", key="nx_profile_open", help=t("profile")):
+        st.session_state.show_profile = True
+        st.session_state.show_settings = False
+        st.rerun()
+
+
+# =====================================
 # صفحة الملف الشخصي
 # =====================================
 if st.session_state.show_profile:
@@ -1030,9 +1070,9 @@ if st.session_state.show_profile:
                 """
                 <div style="
                     width:150px;height:150px;border-radius:50%;
-                    background:#10294b;border:3px solid #3188f4;
+                    background:#211638;border:3px solid #7546C8;
                     display:flex;align-items:center;justify-content:center;
-                    font-size:60px;color:#a9d4ff;">
+                    font-size:60px;color:#C4B5FD;">
                     👤
                 </div>
                 """,
@@ -1118,26 +1158,33 @@ if st.session_state.show_profile:
 # الشريط الجانبي
 # =====================================
 with st.sidebar:
-    with st.container(key="nx_new_chat"):
-        if st.button("＋  " + t("new_chat"), use_container_width=True):
-            st.session_state.conversation_id = None
-            st.session_state.messages = []
-            st.session_state.show_settings = False
-            st.session_state.show_profile = False
-            st.rerun()
+    st.markdown(
+        f'<div class="nexora-title">{t("app_title")}</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f'<div class="nexora-subtitle">{t("subtitle")}</div>',
+        unsafe_allow_html=True,
+    )
+
+    if st.button(t("new_chat"), use_container_width=True, type="primary"):
+        st.session_state.conversation_id = None
+        st.session_state.messages = []
+        st.session_state.show_settings = False
+        st.rerun()
 
     search_query = st.text_input(
-        "search",
-        placeholder="🔎  " + t("search_placeholder"),
+        "🔎",
+        placeholder=t("search_placeholder"),
         label_visibility="collapsed",
         key="sidebar_search",
     )
-
+    
     try:
         conversations = list_conversations()
     except Exception as error:
         st.error("حدث خطأ أثناء تحميل المحادثات:")
-        show_error(error)
+        st.exception(error)
         conversations = []
 
     if search_query.strip():
@@ -1163,32 +1210,30 @@ with st.sidebar:
 
             for conv in items:
                 cid = str(conv["id"])
-                title = conv.get("title") or default_title()
+                title = conv.get("title") or t("new_chat")
                 active = str(st.session_state.conversation_id) == cid
-                row_class = "active" if active else "idle"
 
-                col1, col2 = st.columns([8, 1], gap="small")
+                col1, col2 = st.columns([6, 1], gap="small")
 
                 with col1:
-                    with st.container(key=f"nx_row_{row_class}_{cid}"):
-                        if st.button(
-                            title[:60],
-                            key=f"open_{cid}",
-                            use_container_width=True,
-                        ):
-                            try:
-                                st.session_state.conversation_id = cid
-                                st.session_state.messages = load_messages(cid)
-                                st.session_state.show_settings = False
-                                st.rerun()
-                            except Exception as error:
-                                show_error(error)
+                    label = title[:24] + ("…" if len(title) > 24 else "")
+                    if st.button(
+                        label,
+                        key=f"open_{cid}",
+                        use_container_width=True,
+                        type="primary" if active else "tertiary",
+                    ):
+                        try:
+                            st.session_state.conversation_id = cid
+                            st.session_state.messages = load_messages(cid)
+                            st.rerun()
+                        except Exception as error:
+                            show_error(error)
 
                 with col2:
-                    with st.container(key=f"nx_more_{cid}"):
-                        if st.button("⋯", key=f"menu_{cid}"):
-                            key = f"show_menu_{cid}"
-                            st.session_state[key] = not st.session_state.get(key, False)
+                    if st.button("⋯", key=f"menu_{cid}"):
+                        key = f"show_menu_{cid}"
+                        st.session_state[key] = not st.session_state.get(key, False)
 
                 if st.session_state.get(f"show_menu_{cid}", False):
                     st.caption(t("delete_confirm", title=title))
@@ -1214,22 +1259,9 @@ with st.sidebar:
         render_group("older", groups["older"])
 
     st.divider()
+    st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
 
-    if st.button(
-        "👤  " + (st.session_state.profile_name or get_user_email()),
-        key="nx_profile_open",
-        use_container_width=True,
-        help=t("profile"),
-    ):
-        st.session_state.show_profile = True
-        st.session_state.show_settings = False
-        st.rerun()
-
-    if st.button(
-        "⚙️  " + t("settings_prefs"),
-        key="nx_settings_open",
-        use_container_width=True,
-    ):
+    if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
         st.rerun()
 
