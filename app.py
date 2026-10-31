@@ -211,10 +211,26 @@ def get_css():
     }
     /* Screenshot-inspired left navigation + conversation panel */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #07152a 0%, #0a1b35 100%) !important;
-        border-right: 1px solid rgba(100,157,235,.30) !important;
-        min-width: 300px !important; width: 300px !important;
-    }
+    background: linear-gradient(180deg, #07152a 0%, #0a1b35 100%) !important;
+    border-right: 1px solid rgba(100,157,235,.30) !important;
+    min-width: 350px !important;
+    width: 350px !important;
+    max-width: 350px !important;
+    flex-shrink: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    width: 100% !important;
+    min-width: 0 !important;
+}
     [data-testid="stSidebar"] > div:first-child {
         background: transparent !important; padding: .7rem .55rem .9rem 3.15rem !important;
     }
