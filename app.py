@@ -1197,7 +1197,7 @@ with st.sidebar:
     
     try:
         conversations = list_conversations()
-        st.sidebar.write("عدد المحادثات:", len(conversations))
+        st.sidebar.error("اختبار القائمة الجانبية يعمل!")
         st.sidebar.write("معرّف المستخدم:", get_user_id())
     except Exception as error:
         st.error("حدث خطأ أثناء تحميل المحادثات:")
