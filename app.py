@@ -1195,13 +1195,18 @@ with st.sidebar:
         key="sidebar_search",
     )
     
+        st.sidebar.error("وصلنا إلى قسم المحادثات!")
+
     try:
-        conversations = list_conversations()
-        st.sidebar.error("اختبار القائمة الجانبية يعمل!")
         st.sidebar.write("معرّف المستخدم:", get_user_id())
+
+        conversations = list_conversations()
+
+        st.sidebar.write("عدد المحادثات:", len(conversations))
+
     except Exception as error:
-        st.error("حدث خطأ أثناء تحميل المحادثات:")
-        st.exception(error)
+        st.sidebar.error("فشل تحميل المحادثات!")
+        st.sidebar.code(str(error))
         conversations = []
 
     if search_query.strip():
