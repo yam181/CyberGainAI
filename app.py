@@ -1166,7 +1166,7 @@ if st.session_state.show_profile:
     if st.button("🚪 " + t("logout"), use_container_width=True):
         logout()
 
-    st.stop()
+
 
 
 # =====================================
