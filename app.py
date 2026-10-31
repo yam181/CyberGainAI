@@ -36,7 +36,6 @@ defaults = {
     "profile_image": None,
     "profile_name": "",
     "confirm_delete_account": False,
-    "auth_pending": None,
 }
 
 for key, value in defaults.items():
@@ -80,7 +79,7 @@ TRANSLATIONS = {
         "delete_account_confirm":
             "هل أنت متأكد من حذف حسابك نهائياً؟ سيتم حذف محادثاتك.",
         "about_text":
-            "NEXORA AI هو مساعد ذكي أسسه Yamin Zoabi، وتاريخ ميلاده 25/12/2007.",
+            "NEXORA AI هو مساعد ذكي تم تطويره بواسطة Yamin Zoabi.",
         "privacy_text":
             "تُحفظ المحادثات في قاعدة بيانات Supabase وفق إعدادات الوصول الخاصة بها.",
         "no_conversations": "لا توجد محادثات بعد",
@@ -109,23 +108,6 @@ TRANSLATIONS = {
         "remove_photo": "إزالة الصورة",
         "account_info": "معلومات الحساب",
         "account_settings": "إعدادات الحساب",
-        "contact_method": "طريقة التسجيل",
-        "email_option": "البريد الإلكتروني",
-        "phone_option": "رقم الهاتف",
-        "contact_value": "البريد الإلكتروني أو رقم الهاتف",
-        "full_name": "الاسم الكامل",
-        "age": "العمر",
-        "send_code": "إرسال رمز التحقق",
-        "verify_code": "تأكيد الرمز",
-        "otp_code": "رمز التحقق المكوّن من 6 أرقام",
-        "otp_sent_email": "أرسلنا رمز التحقق إلى بريدك الإلكتروني.",
-        "otp_sent_phone": "أرسلنا رمز التحقق إلى هاتفك.",
-        "otp_pending": "أدخل رمز التحقق الذي وصلك.",
-        "otp_error": "تعذّر التحقق من الرمز. تأكد منه وحاول مجددًا.",
-        "otp_cancel": "إلغاء التحقق",
-        "phone_format": "اكتب رقم الهاتف بالصيغة الدولية، مثل +972501234567.",
-        "auth_send_error": "تعذّر إرسال رمز التحقق. افحص البيانات وإعدادات Supabase.",
-        "founder_birth": "تاريخ ميلاد المؤسس: 25/12/2007.",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -159,7 +141,7 @@ TRANSLATIONS = {
         "delete_account_confirm":
             "Are you sure you want to delete your account and conversations?",
         "about_text":
-            "NEXORA AI is a smart assistant founded by Yamin Zoabi, born on 25 December 2007.",
+            "NEXORA AI is a smart assistant developed by Yamin Zoabi.",
         "privacy_text":
             "Conversations are stored in Supabase according to its access policies.",
         "no_conversations": "No conversations yet",
@@ -188,23 +170,6 @@ TRANSLATIONS = {
         "remove_photo": "Remove photo",
         "account_info": "Account Information",
         "account_settings": "Account Settings",
-        "contact_method": "Sign-in method",
-        "email_option": "Email",
-        "phone_option": "Phone number",
-        "contact_value": "Email address or phone number",
-        "full_name": "Full name",
-        "age": "Age",
-        "send_code": "Send verification code",
-        "verify_code": "Verify code",
-        "otp_code": "6-digit verification code",
-        "otp_sent_email": "A verification code was sent to your email.",
-        "otp_sent_phone": "A verification code was sent to your phone.",
-        "otp_pending": "Enter the verification code you received.",
-        "otp_error": "Could not verify the code. Check it and try again.",
-        "otp_cancel": "Cancel verification",
-        "phone_format": "Enter your phone in international format, e.g. +972501234567.",
-        "auth_send_error": "Could not send the verification code. Check your details and Supabase settings.",
-        "founder_birth": "Founder date of birth: 25 December 2007.",
     },
 }
 
@@ -223,45 +188,54 @@ def get_css():
     return """
     <style>
     :root {
-        --nx-bg: #100D18;
-        --nx-purple: #7546C8;
-        --nx-text: #EDE6F8;
-        --nx-border: #352744;
+        --nx-bg: #090812;
+        --nx-panel: #100d1a;
+        --nx-panel-soft: #171224;
+        --nx-purple: #8155d9;
+        --nx-purple-light: #b49aff;
+        --nx-text: #f2effa;
+        --nx-muted: #aaa2ba;
+        --nx-border: rgba(174, 143, 232, .16);
+    }
+
+    html, body, [class*="css"] {
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
 
     .stApp {
-        background: #0B0912 !important;
-        color: #EDE6F8 !important;
+        background:
+            radial-gradient(ellipse at 52% 0%, rgba(91, 55, 150, .16), transparent 38%),
+            linear-gradient(145deg, #090812 0%, #0d0a16 55%, #090812 100%) !important;
+        color: var(--nx-text) !important;
+    }
+
+    [data-testid="stMain"] {
+        background: transparent !important;
     }
 
     .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 6rem !important;
-        max-width: 900px !important;
+        max-width: 1120px !important;
+        padding-top: 2.2rem !important;
+        padding-bottom: 7rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
     }
 
+    /* Sidebar: quiet, clean, and fixed-width */
     [data-testid="stSidebar"] {
-    background: #100D18 !important;
-    border-right: 1px solid #352744 !important;
-    min-width: 260px !important;
-    width: 260px !important;
-    flex-shrink: 0 !important;
-    display: block !important;
-    visibility: visible !important;
-    transform: none !important;
-}
+        background: linear-gradient(180deg, #100d1b 0%, #0d0b15 100%) !important;
+        border-right: 1px solid var(--nx-border) !important;
+        min-width: 260px !important;
+        width: 260px !important;
+    }
 
-[data-testid="stSidebar"] > div:first-child {
-    background: #100D18 !important;
-    padding: 1.2rem 1rem !important;
-}
-
-[data-testid="stSidebar"] button[kind="header"] {
-    display: none !important;
-}
     [data-testid="stSidebar"] > div:first-child {
-        background: #100D18 !important;
-        padding: 1.2rem 1rem !important;
+        background: transparent !important;
+        padding: 1.35rem 1rem !important;
+    }
+
+    [data-testid="stSidebar"] button[kind="header"] {
+        display: none !important;
     }
 
     [data-testid="stToolbar"],
@@ -278,44 +252,43 @@ def get_css():
 
     a[href*="streamlit.io/cloud"],
     a[href*="streamlit.app"],
-    a[href*="share.streamlit.io"] {
+    a[href*="share.streamlit.com"] {
         display: none !important;
-        visibility: hidden !important;
     }
 
     [data-testid="stSidebarCollapsedControl"],
-[data-testid="collapsedControl"],
-[data-testid="stSidebarCollapseButton"] {
-    visibility: visible !important;
-    pointer-events: auto !important;
-}
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
 
-    /* زر الملف الشخصي */
+    /* Profile shortcut */
     .st-key-nx_profile_button {
         position: fixed !important;
-        top: 6px !important;
-        right: 6px !important;
+        top: 12px !important;
+        right: 14px !important;
         z-index: 999999 !important;
-        width: 72px !important;
-        height: 72px !important;
-        padding: 8px !important;
-        background: #0B0912 !important;
-        border-radius: 18px !important;
-        box-sizing: border-box !important;
+        width: 48px !important;
+        height: 48px !important;
+        padding: 2px !important;
+        background: transparent !important;
     }
 
     .st-key-nx_profile_button button {
-        width: 54px !important;
-        height: 54px !important;
-        min-height: 54px !important;
-        background: #211638 !important;
-        border: 3px solid #7546C8 !important;
+        width: 42px !important;
+        height: 42px !important;
+        min-height: 42px !important;
+        padding: 0 !important;
+        background: #1a1428 !important;
+        border: 1px solid rgba(180, 154, 255, .5) !important;
         border-radius: 50% !important;
-        color: #C4B5FD !important;
-        font-size: 29px !important;
+        color: #d8caff !important;
+        font-size: 20px !important;
+        box-shadow: 0 0 22px rgba(129, 85, 217, .13) !important;
     }
 
-    /* إخفاء صور المستخدم والمساعد */
+    /* Chat messages: simple, readable, no avatars */
     [data-testid="stChatMessageAvatar"],
     [data-testid*="chatAvatarIcon"],
     [data-testid="stChatMessage"] > div:first-child {
@@ -325,149 +298,156 @@ def get_css():
     [data-testid="stChatMessage"] {
         background: transparent !important;
         border: none !important;
-        padding: 10px 0 !important;
-        margin: 6px 0 !important;
+        padding: 13px 0 !important;
+        margin: 8px 0 !important;
     }
 
-    [data-testid="stChatMessage"]:has(
-        [data-testid="chatAvatarIcon-user"]
-    ) {
-        background: #7546C820 !important;
-        border: 1px solid #7546C840 !important;
+    [data-testid="stChatMessage"] > div:last-child {
+        width: 100% !important;
+    }
+
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        background: rgba(116, 78, 178, .12) !important;
+        border: 1px solid rgba(150, 112, 220, .13) !important;
         border-radius: 18px !important;
-        padding: 14px 18px !important;
+        padding: 13px 18px !important;
     }
 
-    [data-testid="stChatMessage"]:has(
-        [data-testid="chatAvatarIcon-assistant"]
-    ) {
-        background: #16121F !important;
-        border: 1px solid #352744 !important;
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+        background: rgba(22, 18, 31, .52) !important;
+        border: 1px solid rgba(174, 143, 232, .10) !important;
         border-radius: 18px !important;
-        padding: 14px 18px !important;
+        padding: 15px 18px !important;
     }
 
-    /* عنوان التطبيق */
+    /* Brand */
     .nexora-title {
-        font-size: 20px !important;
-        font-weight: 700 !important;
-        color: #C4B5FD !important;
-        margin-bottom: 4px !important;
+        font-size: 21px !important;
+        font-weight: 750 !important;
+        letter-spacing: .7px !important;
+        color: #d7c5ff !important;
+        margin: 2px 0 3px 2px !important;
+        text-shadow: 0 0 20px rgba(129, 85, 217, .24);
     }
 
     .nexora-subtitle {
-        color: #A78BFA !important;
+        color: #9386ad !important;
         font-size: 12px !important;
-        margin-bottom: 18px !important;
+        margin: 0 0 23px 3px !important;
     }
 
-    /* شاشة الترحيب */
     .welcome-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 55vh;
+        min-height: 57vh;
         text-align: center;
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem 2rem;
     }
 
     .welcome-logo {
-        font-size: 30px;
-        font-weight: 700;
-        color: #C4B5FD;
-        margin-bottom: 12px;
+        font-size: 17px;
+        font-weight: 750;
+        letter-spacing: 3px;
+        color: #bda4ff;
+        margin-bottom: 22px;
+        text-shadow: 0 0 26px rgba(129, 85, 217, .55);
     }
 
     .welcome-text {
-        font-size: 26px;
-        color: #EDE6F8;
-        margin-bottom: 8px;
+        font-size: clamp(25px, 3vw, 34px);
+        font-weight: 600;
+        letter-spacing: -.6px;
+        color: #f4efff;
+        margin-bottom: 10px;
     }
 
     .welcome-sub {
         font-size: 15px;
-        color: #A78BFA;
+        color: #a99cbe;
     }
 
-    /* مربع الكتابة */
+    /* Composer */
     [data-testid="stChatInput"] {
-        border-radius: 16px !important;
-        border: 1px solid #493363 !important;
-        background: #16121F !important;
+        background: rgba(23, 18, 36, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .32) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
     }
 
-    /* الأزرار */
+    [data-testid="stChatInput"]:focus-within {
+        border-color: rgba(185, 157, 255, .72) !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2), 0 12px 42px rgba(0, 0, 0, .24) !important;
+    }
+
+    [data-testid="stChatInput"] textarea {
+        color: #f3effa !important;
+    }
+
+    /* Buttons */
     .stButton > button,
     [data-testid="stFormSubmitButton"] button,
     [data-testid="stDownloadButton"] button,
     button[kind="primary"],
     button[kind="secondary"] {
-        background: #7546C8 !important;
-        border: 1px solid #9B78E8 !important;
-        color: #FFFFFF !important;
-        border-radius: 10px !important;
-        transition: all .2s ease !important;
+        border-radius: 11px !important;
+        transition: background .18s ease, border-color .18s ease, transform .18s ease !important;
+    }
+
+    .stButton > button,
+    [data-testid="stFormSubmitButton"] button,
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #7650bd, #593995) !important;
+        border: 1px solid rgba(190, 163, 255, .38) !important;
+        color: #fff !important;
     }
 
     .stButton > button:hover,
     [data-testid="stFormSubmitButton"] button:hover,
-    [data-testid="stDownloadButton"] button:hover,
-    button[kind="primary"]:hover,
-    button[kind="secondary"]:hover {
-        background: #6136B1 !important;
-        border-color: #C4B5FD !important;
-        color: #FFFFFF !important;
-    }
-
-    /* تحسين قائمة المحادثات */
-    [data-testid="stSidebar"] button {
-        border-radius: 10px !important;
-        transition: all .2s ease !important;
+    button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #8962d0, #6844aa) !important;
+        border-color: rgba(210, 190, 255, .7) !important;
+        transform: translateY(-1px);
     }
 
     [data-testid="stSidebar"] .stButton > button {
-    min-height: 40px !important;
-    border: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-    background: transparent !important;
-}
-
-[data-testid="stSidebar"] .stButton > button:focus,
-[data-testid="stSidebar"] .stButton > button:focus-visible {
-    border: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-}
+        min-height: 39px !important;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        box-shadow: none !important;
+        color: #d6cfe3 !important;
+        text-align: left !important;
+    }
 
     [data-testid="stSidebar"] .stButton > button:hover {
-        background: #251B35 !important;
-        border-color: #493363 !important;
+        background: rgba(130, 95, 190, .13) !important;
+        border-color: rgba(174, 143, 232, .12) !important;
+    }
+
+    [data-testid="stSidebar"] input {
+        background: #171222 !important;
+        color: #f4efff !important;
+        border: 1px solid rgba(174, 143, 232, .18) !important;
+        border-radius: 11px !important;
+    }
+
+    [data-testid="stSidebar"] input:focus {
+        border-color: #9a78df !important;
+        box-shadow: 0 0 0 1px rgba(154, 120, 223, .25) !important;
     }
 
     .date-group {
         font-size: 11px !important;
-        color: #A99ABF !important;
+        color: #8f83a5 !important;
         font-weight: 700 !important;
-        letter-spacing: .3px !important;
-        margin: 20px 0 8px 5px !important;
-    }
-
-    [data-testid="stSidebar"] input {
-        background: #1B1526 !important;
-        color: #F4EEFF !important;
-        border: 1px solid #403052 !important;
-        border-radius: 10px !important;
-    }
-
-    [data-testid="stSidebar"] input:focus {
-        border-color: #9A6CE0 !important;
-        box-shadow: 0 0 0 1px #9A6CE0 !important;
+        letter-spacing: .5px !important;
+        margin: 20px 0 8px 7px !important;
+        text-transform: uppercase;
     }
 
     [data-testid="stSidebar"] hr {
-        border-color: #352744 !important;
+        border-color: rgba(174, 143, 232, .12) !important;
     }
 
     [data-testid="stSidebar"] ::-webkit-scrollbar {
@@ -475,65 +455,73 @@ def get_css():
     }
 
     [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
-        background: #493363;
+        background: #493763;
         border-radius: 10px;
     }
 
-    /* حقول الإدخال */
+    /* Form controls */
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
     [data-testid="stNumberInput"] input,
     [data-testid="stDateInput"] input,
     [data-testid="stSelectbox"] [role="combobox"],
     [data-testid="stMultiSelect"] [role="combobox"],
-    [data-testid="stChatInput"] textarea,
     [data-testid="stForm"] {
-        background-color: #16121F !important;
-        color: #EDE6F8 !important;
-        border-color: #7546C8 !important;
-        border-radius: 10px !important;
+        background-color: #171222 !important;
+        color: #f1ebfb !important;
+        border-color: rgba(174, 143, 232, .25) !important;
+        border-radius: 11px !important;
     }
 
     [data-testid="stTextInput"] input:focus,
     [data-testid="stTextArea"] textarea:focus,
     [data-testid="stNumberInput"] input:focus,
-    [data-testid="stDateInput"] input:focus,
-    [data-testid="stChatInput"] textarea:focus {
-        border-color: #A78BFA !important;
-        box-shadow: 0 0 0 1px #7546C8 !important;
+    [data-testid="stDateInput"] input:focus {
+        border-color: #a78bfa !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .25) !important;
     }
 
     [data-testid="stAppViewContainer"],
     [data-testid="stMain"],
     [data-testid="stMainBlockContainer"] {
-        color: #EDE6F8 !important;
+        color: var(--nx-text) !important;
     }
 
     [data-testid="stAlert"] {
-        border-color: #7546C8 !important;
+        border-color: rgba(129, 85, 217, .45) !important;
+        border-radius: 12px !important;
     }
 
     h1, h2, h3 {
-        color: #C4B5FD !important;
+        color: #e1d4ff !important;
+        letter-spacing: -.3px;
     }
 
     @media (max-width: 768px) {
         .block-container {
-            padding-left: .7rem !important;
-            padding-right: .7rem !important;
+            padding: 1.2rem .8rem 6rem !important;
+        }
+
+        .welcome-container {
+            min-height: 48vh;
         }
 
         .welcome-text {
-            font-size: 22px !important;
+            font-size: 24px !important;
         }
 
         [data-testid="stSidebar"] {
             border-right: none !important;
+            min-width: 260px !important;
+        }
+
+        .st-key-nx_profile_button {
+            top: 7px !important;
+            right: 8px !important;
         }
     }
     </style>
     """
-
 
 st.markdown(get_css(), unsafe_allow_html=True)
 
@@ -570,9 +558,6 @@ FOUNDER:
 The founder of NEXORA AI is Yamin Zoabi.
 Always spell the name exactly as "Yamin Zoabi".
 When asked who founded or created NEXORA AI, identify Yamin Zoabi.
-Always write the founder name exactly in English as "Yamin Zoabi", even in Arabic replies.
-The founder date of birth is 25/12/2007 (25 December 2007).
-When asked about the founder, include the date of birth when relevant.
 Do not invent another founder.
 
 GENERAL RULES:
@@ -648,7 +633,6 @@ def restore_session_cookie():
             st.session_state.access_token = result.session.access_token
             st.session_state.refresh_token = result.session.refresh_token
             apply_token()
-            save_session_cookie()
 
     except Exception:
         st.session_state.access_token = None
@@ -667,13 +651,7 @@ def get_user_id():
 
 def get_user_email():
     return getattr(st.session_state.user, "email", "") or ""
-
-
-def get_user_contact():
-    user = st.session_state.user
-    if not user:
-        return ""
-    return get_user_email() or (getattr(user, "phone", "") or "")
+    return getattr(st.session_state.user, "email", "") or ""
 
 
 def show_error(error):
@@ -708,7 +686,22 @@ def logout():
             False if key in ("show_settings", "show_profile") else None
         )
 
-    st.session_state.auth_pending = None
+    st.rerun()
+    try:
+        apply_token()
+        supabase.auth.sign_out()
+    except Exception:
+        pass
+
+    for key in [
+        "user", "access_token", "refresh_token",
+        "conversation_id", "messages", "show_settings",
+        "show_profile", "profile_image", "profile_name",
+    ]:
+        st.session_state[key] = [] if key == "messages" else (
+            False if key in ("show_settings", "show_profile") else None
+        )
+
     st.rerun()
 
 
@@ -764,7 +757,7 @@ if st.session_state.access_token and not st.session_state.user:
 
 
 # =====================================
-# تسجيل الدخول وإنشاء الحساب باستخدام OTP
+# تسجيل الدخول وإنشاء الحساب
 # =====================================
 if not st.session_state.user:
     st.markdown(
@@ -793,159 +786,70 @@ if not st.session_state.user:
             )
             st.rerun()
 
-    pending = st.session_state.auth_pending
+    login_tab, signup_tab = st.tabs([t("login"), t("signup")])
 
-    if pending:
-        st.subheader(t("verify_code"))
-        st.info(t("otp_pending"))
-        destination = pending["identifier"]
-        st.caption(destination)
+    with login_tab:
+        with st.form("login_form"):
+            email = st.text_input(t("email"))
+            password = st.text_input(t("password"), type="password")
 
-        with st.form("verify_otp_form"):
-            otp_value = st.text_input(
-                t("otp_code"),
-                max_chars=6,
-                placeholder="123456",
-            )
-            verify_clicked = st.form_submit_button(
-                t("verify_code"), use_container_width=True, type="primary"
-            )
-
-        if verify_clicked:
-            token = otp_value.strip()
-            if not token.isdigit() or len(token) != 6:
-                st.error(t("otp_error"))
-            else:
+            if st.form_submit_button(
+                t("login_btn"), use_container_width=True, type="primary"
+            ):
                 try:
-                    verify_payload = {
-                        "token": token,
-                        "type": "email" if pending["method"] == "email" else "sms",
-                    }
-                    verify_payload[pending["method"]] = pending["identifier"]
-                    result = supabase.auth.verify_otp(verify_payload)
+                    result = supabase.auth.sign_in_with_password({
+                        "email": email.strip(),
+                        "password": password,
+                    })
 
-                    if result and result.user and result.session:
-                        verified_user = result.user
-                        if pending["flow"] == "signup":
-                            updated = supabase.auth.update_user({
-                                "data": {
-                                    "full_name": pending["full_name"],
-                                    "age": int(pending["age"]),
-                                }
-                            })
-                            if getattr(updated, "user", None):
-                                verified_user = updated.user
-
-                        st.session_state.user = verified_user
-                        st.session_state.access_token = result.session.access_token
-                        st.session_state.refresh_token = result.session.refresh_token
-                        st.session_state.profile_name = (
-                            pending.get("full_name")
-                            or (getattr(verified_user, "user_metadata", {}) or {}).get("full_name", "")
-                            or pending["identifier"].split("@")[0]
+                    if result.user and result.session:
+                        st.session_state.user = result.user
+                        st.session_state.access_token = (
+                            result.session.access_token
+                        )
+                        st.session_state.refresh_token = (
+                            result.session.refresh_token
                         )
                         st.session_state.conversation_id = None
                         st.session_state.messages = []
-                        st.session_state.auth_pending = None
                         apply_token()
                         save_session_cookie()
                         st.rerun()
                     else:
-                        st.error(t("otp_error"))
+                        st.error(t("error_login"))
                 except Exception:
-                    st.error(t("otp_error"))
+                    st.error(t("error_login"))
 
-        if st.button(t("otp_cancel"), key="cancel_otp"):
-            st.session_state.auth_pending = None
-            st.rerun()
+    with signup_tab:
+        with st.form("signup_form"):
+            new_email = st.text_input(t("email"), key="signup_email")
+            new_password = st.text_input(
+                t("password"), type="password", key="signup_password"
+            )
 
-    else:
-        login_tab, signup_tab = st.tabs([t("login"), t("signup")])
+            if st.form_submit_button(
+                t("signup_btn"), use_container_width=True, type="primary"
+            ):
+                try:
+                    result = supabase.auth.sign_up({
+                        "email": new_email.strip(),
+                        "password": new_password,
+                    })
 
-        with login_tab:
-            with st.form("login_otp_form"):
-                login_method = st.radio(
-                    t("contact_method"),
-                    options=["email", "phone"],
-                    format_func=lambda value: t("email_option") if value == "email" else t("phone_option"),
-                    horizontal=True,
-                )
-                login_identifier = st.text_input(
-                    t("email_option") if login_method == "email" else t("phone_option"),
-                    placeholder="name@example.com" if login_method == "email" else "+972501234567",
-                )
-                login_send = st.form_submit_button(
-                    t("send_code"), use_container_width=True, type="primary"
-                )
-
-            if login_send:
-                identifier = login_identifier.strip()
-                if not identifier or (login_method == "phone" and not identifier.startswith("+")):
-                    st.error(t("phone_format") if login_method == "phone" else t("auth_send_error"))
-                else:
-                    try:
-                        payload = {
-                            login_method: identifier,
-                            "options": {"should_create_user": False},
-                        }
-                        supabase.auth.sign_in_with_otp(payload)
-                        st.session_state.auth_pending = {
-                            "flow": "login",
-                            "method": login_method,
-                            "identifier": identifier,
-                        }
-                        st.success(t("otp_sent_email") if login_method == "email" else t("otp_sent_phone"))
+                    if result.user and result.session:
+                        st.session_state.user = result.user
+                        st.session_state.access_token = (
+                            result.session.access_token
+                        )
+                        st.session_state.refresh_token = (
+                            result.session.refresh_token
+                        )
+                        apply_token()
                         st.rerun()
-                    except Exception:
-                        st.error(t("auth_send_error"))
-
-        with signup_tab:
-            with st.form("signup_otp_form"):
-                signup_method = st.radio(
-                    t("contact_method"),
-                    options=["email", "phone"],
-                    format_func=lambda value: t("email_option") if value == "email" else t("phone_option"),
-                    horizontal=True,
-                    key="signup_method",
-                )
-                signup_name = st.text_input(t("full_name"), key="signup_full_name")
-                signup_age = st.number_input(
-                    t("age"), min_value=1, max_value=120, value=18, step=1
-                )
-                signup_identifier = st.text_input(
-                    t("email_option") if signup_method == "email" else t("phone_option"),
-                    placeholder="name@example.com" if signup_method == "email" else "+972501234567",
-                    key="signup_identifier",
-                )
-                signup_send = st.form_submit_button(
-                    t("send_code"), use_container_width=True, type="primary"
-                )
-
-            if signup_send:
-                identifier = signup_identifier.strip()
-                clean_name = signup_name.strip()
-                if not clean_name:
-                    st.error("يرجى إدخال الاسم." if st.session_state.language == "ar" else "Please enter your name.")
-                elif not identifier or (signup_method == "phone" and not identifier.startswith("+")):
-                    st.error(t("phone_format") if signup_method == "phone" else t("auth_send_error"))
-                else:
-                    try:
-                        payload = {
-                            signup_method: identifier,
-                            "options": {"should_create_user": True},
-                        }
-                        supabase.auth.sign_in_with_otp(payload)
-                        st.session_state.auth_pending = {
-                            "flow": "signup",
-                            "method": signup_method,
-                            "identifier": identifier,
-                            "full_name": clean_name,
-                            "age": int(signup_age),
-                        }
-                        st.success(t("otp_sent_email") if signup_method == "email" else t("otp_sent_phone"))
-                        st.rerun()
-                    except Exception:
-                        st.error(t("auth_send_error"))
+                    else:
+                        st.success(t("check_email"))
+                except Exception:
+                    st.error(t("error_signup"))
 
     st.stop()
 
@@ -957,7 +861,7 @@ user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
 
 if not st.session_state.profile_name:
     st.session_state.profile_name = user_metadata.get(
-        "full_name", get_user_contact().split("@")[0]
+        "full_name", get_user_email().split("@")[0]
     )
 
 
@@ -1205,14 +1109,8 @@ if st.session_state.show_profile:
             )
 
             st.text_input(
-                t("contact_value"),
-                value=get_user_contact(),
-                disabled=True,
-            )
-            account_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
-            st.text_input(
-                t("age"),
-                value=str(account_metadata.get("age", "")),
+                t("email"),
+                value=get_user_email(),
                 disabled=True,
             )
 
@@ -1229,12 +1127,8 @@ if st.session_state.show_profile:
                 st.warning("يرجى إدخال الاسم.")
             else:
                 try:
-                    existing_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
-                    profile_data = {"full_name": clean_name}
-                    if "age" in existing_metadata:
-                        profile_data["age"] = existing_metadata["age"]
                     result = supabase.auth.update_user({
-                        "data": profile_data
+                        "data": {"full_name": clean_name}
                     })
 
                     st.session_state.profile_name = clean_name
@@ -1288,7 +1182,6 @@ with st.sidebar:
     
     try:
         conversations = list_conversations()
-        st.write("عدد المحادثات المحفوظة:", len(conversations))
     except Exception as error:
         st.error("حدث خطأ أثناء تحميل المحادثات:")
         st.exception(error)
@@ -1366,7 +1259,7 @@ with st.sidebar:
         render_group("older", groups["older"])
 
     st.divider()
-    st.caption("👤 " + (st.session_state.profile_name or get_user_contact()))
+    st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
 
     if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
@@ -1432,7 +1325,6 @@ if st.session_state.show_settings:
     with st.expander(t("about")):
         st.markdown(t("about_text"))
         st.caption("Founder: Yamin Zoabi")
-        st.caption(t("founder_birth"))
 
     with st.expander(t("privacy")):
         st.markdown(t("privacy_text"))
