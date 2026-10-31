@@ -320,7 +320,14 @@ def get_css():
     }
     @media(max-width:768px) {
         .block-container { padding:1rem .7rem 5rem !important; }
-        [data-testid="stSidebar"] { min-width:285px !important; width:285px !important; }
+        [data-testid="stChatMessageAvatar"],
+[data-testid="chatAvatarIcon"],
+[data-testid="stChatMessage"] > div:first-child {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+}
         .welcome-container { min-height:36vh; }
         .welcome-text { font-size:23px !important; }
     }
