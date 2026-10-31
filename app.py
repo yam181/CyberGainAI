@@ -968,26 +968,56 @@ def generate_title(question):
         return question[:45]
 
 
+
 def process_uploaded_files(files):
     parts = []
+    image_contents = []
 
     for file in files:
         name = file.name
 
         if file.type and file.type.startswith("image/"):
-            parts.append(f"[صورة مرفقة: {name}]")
+            if len(image_contents) >= 3:
+                parts.append("[تم تجاهل الصورة: الحد الأقصى 3 صور]")
+                continue
+
+            if file.size > 20 * 1024 * 1024:
+                parts.append(f"[الصورة {name} أكبر من 20 MB]")
+                continue
+
+            try:
+                image_data = base64.b64encode(
+                    file.getvalue()
+                ).decode("utf-8")
+
+                image_contents.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{file.type};base64,{image_data}"
+                    },
+                })
+
+                parts.append(f"[صورة مرفقة: {name}]")
+
+            except Exception:
+                parts.append(f"[تعذرت قراءة الصورة: {name}]")
+
         elif name.lower().endswith(
             (".txt", ".md", ".csv", ".json", ".py", ".js", ".html", ".css")
         ):
             try:
-                content = file.getvalue().decode("utf-8", errors="ignore")
+                content = file.getvalue().decode(
+                    "utf-8", errors="ignore"
+                )
                 parts.append(f"[ملف {name}]\n{content[:3000]}")
             except Exception:
                 parts.append(f"[ملف {name} - تعذر قراءة المحتوى]")
+
         else:
             parts.append(f"[ملف مرفق: {name}]")
 
-    return "\n\n".join(parts)
+    return "\n\n".join(parts), image_contents
+
 
 
 def group_conversations_by_date(conversations):
