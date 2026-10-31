@@ -1195,7 +1195,7 @@ with st.sidebar:
         key="sidebar_search",
     )
     
-        try:
+    try:
         conversations = list_conversations()
         st.write("عدد المحادثات:", len(conversations))
         st.write("معرّف المستخدم:", get_user_id())
