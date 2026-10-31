@@ -188,337 +188,125 @@ def get_css():
     return """
     <style>
     :root {
-        --nx-bg: #090812;
-        --nx-panel: #100d1a;
-        --nx-panel-soft: #171224;
-        --nx-purple: #8155d9;
-        --nx-purple-light: #b49aff;
-        --nx-text: #f2effa;
-        --nx-muted: #aaa2ba;
-        --nx-border: rgba(174, 143, 232, .16);
+        --nx-bg: #07101d;
+        --nx-panel: #101d35;
+        --nx-panel-soft: #142544;
+        --nx-blue: #3188f4;
+        --nx-cyan: #22b8d7;
+        --nx-text: #f4f7ff;
+        --nx-muted: #a9b7ce;
+        --nx-border: rgba(139, 174, 230, .28);
     }
-
-    html, body, [class*="css"] {
-        font-family: Inter, "Segoe UI", Arial, sans-serif;
-    }
-
+    html, body, [class*="css"] { font-family: Inter, "Segoe UI", Arial, sans-serif; }
     .stApp {
         background:
-            radial-gradient(ellipse at 52% 0%, rgba(91, 55, 150, .16), transparent 38%),
-            linear-gradient(145deg, #090812 0%, #0d0a16 55%, #090812 100%) !important;
+          radial-gradient(ellipse at 86% 9%, rgba(35,116,220,.72), transparent 34%),
+          radial-gradient(ellipse at 48% 48%, rgba(16,53,99,.42), transparent 48%),
+          linear-gradient(112deg, #050a12 0%, #071321 48%, #0b2c56 100%) !important;
         color: var(--nx-text) !important;
     }
-
-    [data-testid="stMain"] {
-        background: transparent !important;
-    }
-
+    [data-testid="stMain"], [data-testid="stAppViewContainer"] { background: transparent !important; }
     .block-container {
-        max-width: 1120px !important;
-        padding-top: 2.2rem !important;
-        padding-bottom: 7rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+        max-width: 1500px !important; padding: 1.25rem 2rem 5.5rem !important;
     }
-
-    /* Sidebar: quiet, clean, and fixed-width */
+    /* Screenshot-inspired left navigation + conversation panel */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #100d1b 0%, #0d0b15 100%) !important;
-        border-right: 1px solid var(--nx-border) !important;
-        min-width: 260px !important;
-        width: 260px !important;
+        background: linear-gradient(180deg, #07152a 0%, #0a1b35 100%) !important;
+        border-right: 1px solid rgba(100,157,235,.30) !important;
+        min-width: 300px !important; width: 300px !important;
     }
-
     [data-testid="stSidebar"] > div:first-child {
-        background: transparent !important;
-        padding: 1.35rem 1rem !important;
+        background: transparent !important; padding: .7rem .55rem .9rem 3.15rem !important;
     }
-
-    [data-testid="stSidebar"] button[kind="header"] {
-        display: none !important;
+    [data-testid="stSidebar"]:before {
+        content: "▣\A ✎\A ▤\A ♟\A ▣\A ▦\A ⚙";
+        white-space: pre; position: fixed; left: 0; top: 0; bottom: 0; width: 42px;
+        padding-top: 24px; box-sizing: border-box; text-align: center; line-height: 53px;
+        color: #dceaff; font-size: 17px; background: linear-gradient(180deg,#10294b,#123b68 72%,#0b1c34);
+        border-right: 1px solid rgba(120,174,240,.25); z-index: 1;
     }
-
-    [data-testid="stToolbar"],
-    [data-testid="stToolbarActions"],
-    [data-testid="stStatusWidget"],
-    .stDeployButton,
-    .viewerBadge_container__1QSob,
-    [data-testid="stDecoration"],
-    footer,
-    #MainMenu {
-        display: none !important;
-        visibility: hidden !important;
+    [data-testid="stSidebar"] button[kind="header"] { display:none !important; }
+    [data-testid="stToolbar"], [data-testid="stToolbarActions"], [data-testid="stStatusWidget"],
+    .stDeployButton, .viewerBadge_container__1QSob, [data-testid="stDecoration"], footer, #MainMenu {
+        display:none !important; visibility:hidden !important;
     }
-
-    a[href*="streamlit.io/cloud"],
-    a[href*="streamlit.app"],
-    a[href*="share.streamlit.com"] {
-        display: none !important;
-    }
-
-    [data-testid="stSidebarCollapsedControl"],
-    [data-testid="collapsedControl"],
-    [data-testid="stSidebarCollapseButton"] {
-        visibility: visible !important;
-        pointer-events: auto !important;
-    }
-
-    /* Profile shortcut */
-    .st-key-nx_profile_button {
-        position: fixed !important;
-        top: 12px !important;
-        right: 14px !important;
-        z-index: 999999 !important;
-        width: 48px !important;
-        height: 48px !important;
-        padding: 2px !important;
-        background: transparent !important;
-    }
-
-    .st-key-nx_profile_button button {
-        width: 42px !important;
-        height: 42px !important;
-        min-height: 42px !important;
-        padding: 0 !important;
-        background: #1a1428 !important;
-        border: 1px solid rgba(180, 154, 255, .5) !important;
-        border-radius: 50% !important;
-        color: #d8caff !important;
-        font-size: 20px !important;
-        box-shadow: 0 0 22px rgba(129, 85, 217, .13) !important;
-    }
-
-    /* Chat messages: simple, readable, no avatars */
-    [data-testid="stChatMessageAvatar"],
-    [data-testid*="chatAvatarIcon"],
-    [data-testid="stChatMessage"] > div:first-child {
-        display: none !important;
-    }
-
-    [data-testid="stChatMessage"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 13px 0 !important;
-        margin: 8px 0 !important;
-    }
-
-    [data-testid="stChatMessage"] > div:last-child {
-        width: 100% !important;
-    }
-
-    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-        background: rgba(116, 78, 178, .12) !important;
-        border: 1px solid rgba(150, 112, 220, .13) !important;
-        border-radius: 18px !important;
-        padding: 13px 18px !important;
-    }
-
-    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-        background: rgba(22, 18, 31, .52) !important;
-        border: 1px solid rgba(174, 143, 232, .10) !important;
-        border-radius: 18px !important;
-        padding: 15px 18px !important;
-    }
-
-    /* Brand */
-    .nexora-title {
-        font-size: 21px !important;
-        font-weight: 750 !important;
-        letter-spacing: .7px !important;
-        color: #d7c5ff !important;
-        margin: 2px 0 3px 2px !important;
-        text-shadow: 0 0 20px rgba(129, 85, 217, .24);
-    }
-
-    .nexora-subtitle {
-        color: #9386ad !important;
-        font-size: 12px !important;
-        margin: 0 0 23px 3px !important;
-    }
-
-    .welcome-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 57vh;
-        text-align: center;
-        padding: 1.5rem 1rem 2rem;
-    }
-
-    .welcome-logo {
-        font-size: 17px;
-        font-weight: 750;
-        letter-spacing: 3px;
-        color: #bda4ff;
-        margin-bottom: 22px;
-        text-shadow: 0 0 26px rgba(129, 85, 217, .55);
-    }
-
-    .welcome-text {
-        font-size: clamp(25px, 3vw, 34px);
-        font-weight: 600;
-        letter-spacing: -.6px;
-        color: #f4efff;
-        margin-bottom: 10px;
-    }
-
-    .welcome-sub {
-        font-size: 15px;
-        color: #a99cbe;
-    }
-
-    /* Composer */
-    [data-testid="stChatInput"] {
-        background: rgba(23, 18, 36, .96) !important;
-        border: 1px solid rgba(164, 128, 226, .32) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
-    }
-
-    [data-testid="stChatInput"]:focus-within {
-        border-color: rgba(185, 157, 255, .72) !important;
-        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2), 0 12px 42px rgba(0, 0, 0, .24) !important;
-    }
-
-    [data-testid="stChatInput"] textarea {
-        color: #f3effa !important;
-    }
-
-    /* Buttons */
-    .stButton > button,
-    [data-testid="stFormSubmitButton"] button,
-    [data-testid="stDownloadButton"] button,
-    button[kind="primary"],
-    button[kind="secondary"] {
-        border-radius: 11px !important;
-        transition: background .18s ease, border-color .18s ease, transform .18s ease !important;
-    }
-
-    .stButton > button,
-    [data-testid="stFormSubmitButton"] button,
-    button[kind="primary"] {
-        background: linear-gradient(135deg, #7650bd, #593995) !important;
-        border: 1px solid rgba(190, 163, 255, .38) !important;
-        color: #fff !important;
-    }
-
-    .stButton > button:hover,
-    [data-testid="stFormSubmitButton"] button:hover,
-    button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #8962d0, #6844aa) !important;
-        border-color: rgba(210, 190, 255, .7) !important;
-        transform: translateY(-1px);
-    }
-
+    [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"] { visibility:visible !important; pointer-events:auto !important; }
+    /* Sidebar header and controls */
+    .nexora-title, .nexora-subtitle { display:none !important; }
     [data-testid="stSidebar"] .stButton > button {
-        min-height: 39px !important;
-        background: transparent !important;
-        border: 1px solid transparent !important;
-        box-shadow: none !important;
-        color: #d6cfe3 !important;
-        text-align: left !important;
+        min-height: 35px !important; border-radius: 9px !important; text-align:left !important;
+        color:#eaf2ff !important; background:rgba(21,43,78,.72) !important;
+        border:1px solid rgba(125,166,224,.18) !important; box-shadow:none !important;
+        font-size:12px !important; padding: .35rem .65rem !important;
     }
-
     [data-testid="stSidebar"] .stButton > button:hover {
-        background: rgba(130, 95, 190, .13) !important;
-        border-color: rgba(174, 143, 232, .12) !important;
+        background:rgba(43,105,190,.38) !important; border-color:rgba(109,174,255,.55) !important;
     }
-
+    [data-testid="stSidebar"] button[kind="primary"] {
+        background:linear-gradient(100deg,#3987fa,#17a9d2) !important;
+        border:0 !important; color:white !important; text-align:center !important;
+        box-shadow:0 5px 18px rgba(35,126,231,.22) !important;
+    }
     [data-testid="stSidebar"] input {
-        background: #171222 !important;
-        color: #f4efff !important;
-        border: 1px solid rgba(174, 143, 232, .18) !important;
-        border-radius: 11px !important;
+        background:rgba(12,27,51,.95) !important; color:#f5f8ff !important;
+        border:1px solid rgba(135,171,224,.32) !important; border-radius:10px !important;
+        min-height:36px !important; font-size:12px !important;
     }
-
-    [data-testid="stSidebar"] input:focus {
-        border-color: #9a78df !important;
-        box-shadow: 0 0 0 1px rgba(154, 120, 223, .25) !important;
-    }
-
+    [data-testid="stSidebar"] input:focus { border-color:#4c9cff !important; box-shadow:0 0 0 1px rgba(76,156,255,.25) !important; }
+    [data-testid="stSidebar"] [data-testid="stHorizontalBlock"] { gap:.25rem !important; }
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap:.42rem !important; }
+    [data-testid="stSidebar"] hr { border-color:rgba(120,160,220,.22) !important; margin:.5rem 0 !important; }
     .date-group {
-        font-size: 11px !important;
-        color: #8f83a5 !important;
-        font-weight: 700 !important;
-        letter-spacing: .5px !important;
-        margin: 20px 0 8px 7px !important;
-        text-transform: uppercase;
+        color:#dce9ff !important; font-size:12px !important; font-weight:650 !important;
+        background:rgba(34,67,119,.64); border:1px solid rgba(123,166,226,.20);
+        border-radius:9px; padding:7px 10px; margin:9px 0 7px !important;
     }
-
-    [data-testid="stSidebar"] hr {
-        border-color: rgba(174, 143, 232, .12) !important;
+    /* Individual conversation rows: compact outlined cards like the reference */
+    [data-testid="stSidebar"] [data-testid="stButton"] { margin:0 !important; }
+    [data-testid="stSidebar"] [data-testid="stButton"] button[kind="tertiary"] {
+        background:linear-gradient(110deg,rgba(15,31,57,.96),rgba(18,37,66,.92)) !important;
+        border:1px solid rgba(116,154,211,.36) !important; border-radius:11px !important;
+        min-height:49px !important; padding: .45rem .6rem !important;
+        white-space:normal !important; overflow:hidden !important;
     }
-
-    [data-testid="stSidebar"] ::-webkit-scrollbar {
-        width: 5px;
+    [data-testid="stSidebar"] [data-testid="stButton"] button[kind="primary"] { min-height:49px !important; }
+    [data-testid="stSidebar"] [data-testid="stButton"] button[kind="tertiary"]:hover {
+        border-color:rgba(74,160,255,.75) !important; background:rgba(30,65,111,.94) !important;
     }
-
-    [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {
-        background: #493763;
-        border-radius: 10px;
+    [data-testid="stSidebar"] [data-testid="stButton"] button p { font-size:11px !important; line-height:1.25 !important; }
+    [data-testid="stSidebar"] ::-webkit-scrollbar { width:5px; }
+    [data-testid="stSidebar"] ::-webkit-scrollbar-thumb { background:#315783; border-radius:10px; }
+    /* Main workspace */
+    .welcome-container {
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
+        min-height:42vh; text-align:center; padding:1rem 1rem 1.4rem;
     }
-
-    /* Form controls */
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextArea"] textarea,
-    [data-testid="stNumberInput"] input,
-    [data-testid="stDateInput"] input,
-    [data-testid="stSelectbox"] [role="combobox"],
-    [data-testid="stMultiSelect"] [role="combobox"],
-    [data-testid="stForm"] {
-        background-color: #171222 !important;
-        color: #f1ebfb !important;
-        border-color: rgba(174, 143, 232, .25) !important;
-        border-radius: 11px !important;
+    .welcome-logo { font-size:17px; font-weight:750; letter-spacing:3px; color:#a9eaff;
+        margin-bottom:20px; text-shadow:0 0 26px rgba(45,177,255,.55); }
+    .welcome-text { font-size:clamp(24px,3vw,34px); font-weight:600; color:#f5f8ff; margin-bottom:10px; }
+    .welcome-sub { font-size:15px; color:#b8c9df; }
+    [data-testid="stChatInput"] {
+        background:rgba(20,39,70,.94) !important; border:1px solid rgba(130,172,230,.34) !important;
+        border-radius:17px !important; box-shadow:0 12px 42px rgba(0,0,0,.24) !important;
     }
-
-    [data-testid="stTextInput"] input:focus,
-    [data-testid="stTextArea"] textarea:focus,
-    [data-testid="stNumberInput"] input:focus,
-    [data-testid="stDateInput"] input:focus {
-        border-color: #a78bfa !important;
-        box-shadow: 0 0 0 1px rgba(129, 85, 217, .25) !important;
+    [data-testid="stChatInput"] textarea { color:#f4f8ff !important; }
+    [data-testid="stChatMessageAvatar"], [data-testid*="chatAvatarIcon"] { display:none !important; }
+    [data-testid="stChatMessage"] { background:rgba(16,34,60,.55) !important; border:1px solid rgba(133,171,224,.18) !important; border-radius:16px !important; padding:14px 18px !important; }
+    .stButton > button, [data-testid="stFormSubmitButton"] button, [data-testid="stDownloadButton"] button {
+        border-radius:10px !important; transition:all .18s ease !important;
     }
-
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMain"],
-    [data-testid="stMainBlockContainer"] {
-        color: var(--nx-text) !important;
+    [data-testid="stMain"] h1, [data-testid="stMain"] h2, [data-testid="stMain"] h3 { color:#e8f3ff !important; }
+    [data-testid="stMain"] [data-testid="stTextInput"] input,
+    [data-testid="stMain"] [data-testid="stTextArea"] textarea,
+    [data-testid="stMain"] [data-testid="stSelectbox"] [role="combobox"] {
+        background:#142744 !important; color:#f4f8ff !important; border-color:rgba(135,174,229,.3) !important;
     }
-
-    [data-testid="stAlert"] {
-        border-color: rgba(129, 85, 217, .45) !important;
-        border-radius: 12px !important;
-    }
-
-    h1, h2, h3 {
-        color: #e1d4ff !important;
-        letter-spacing: -.3px;
-    }
-
-    @media (max-width: 768px) {
-        .block-container {
-            padding: 1.2rem .8rem 6rem !important;
-        }
-
-        .welcome-container {
-            min-height: 48vh;
-        }
-
-        .welcome-text {
-            font-size: 24px !important;
-        }
-
-        [data-testid="stSidebar"] {
-            border-right: none !important;
-            min-width: 260px !important;
-        }
-
-        .st-key-nx_profile_button {
-            top: 7px !important;
-            right: 8px !important;
-        }
+    @media(max-width:768px) {
+        .block-container { padding:1rem .7rem 5rem !important; }
+        [data-testid="stSidebar"] { min-width:285px !important; width:285px !important; }
+        .welcome-container { min-height:36vh; }
+        .welcome-text { font-size:23px !important; }
     }
     </style>
     """
@@ -1158,16 +946,7 @@ if st.session_state.show_profile:
 # الشريط الجانبي
 # =====================================
 with st.sidebar:
-    st.markdown(
-        f'<div class="nexora-title">{t("app_title")}</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f'<div class="nexora-subtitle">{t("subtitle")}</div>',
-        unsafe_allow_html=True,
-    )
-
-    if st.button(t("new_chat"), use_container_width=True, type="primary"):
+    if st.button("✎  New Chat", use_container_width=True, type="primary"):
         st.session_state.conversation_id = None
         st.session_state.messages = []
         st.session_state.show_settings = False
