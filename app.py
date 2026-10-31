@@ -210,16 +210,28 @@ def get_css():
         max-width: 1500px !important; padding: 1.25rem 2rem 5.5rem !important;
     }
     /* Screenshot-inspired left navigation + conversation panel */
-    [data-testid="stSidebar"] {
+   [data-testid="stSidebar"] {
     background: linear-gradient(180deg, #07152a 0%, #0a1b35 100%) !important;
     border-right: 1px solid rgba(100,157,235,.30) !important;
-    min-width: 350px !important;
-    width: 350px !important;
-    max-width: 350px !important;
-    flex-shrink: 0 !important;
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
+    flex: 0 0 300px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+[data-testid="stSidebar"] > div {
+    width: 100% !important;
+    min-width: 300px !important;
+    box-sizing: border-box !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+    width: 100% !important;
+    min-width: 300px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    box-sizing: border-box !important;
 }
 
 [data-testid="stSidebar"] > div:first-child {
