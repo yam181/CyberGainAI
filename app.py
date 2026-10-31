@@ -1195,15 +1195,14 @@ with st.sidebar:
         key="sidebar_search",
     )
     
+            st.sidebar.error("وصلنا إلى قسم المحادثات!")
+
         st.sidebar.error("وصلنا إلى قسم المحادثات!")
 
     try:
         st.sidebar.write("معرّف المستخدم:", get_user_id())
-
         conversations = list_conversations()
-
         st.sidebar.write("عدد المحادثات:", len(conversations))
-
     except Exception as error:
         st.sidebar.error("فشل تحميل المحادثات!")
         st.sidebar.code(str(error))
@@ -1213,7 +1212,7 @@ with st.sidebar:
         query = search_query.strip().casefold()
         conversations = [
             conv for conv in conversations
-            if query in (conv.get("title") or "").casefold()
+            if query in conv.get("title", "").casefold()
         ]
 
     if not conversations:
