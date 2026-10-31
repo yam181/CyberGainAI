@@ -1,12 +1,13 @@
 import json
 import extra_streamlit_components as stx
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet
 import streamlit as st
 from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone, timedelta
 import uuid
 import re
+import base64
 
 # =====================================
 # إعداد الصفحة
@@ -549,7 +550,7 @@ try:
 except Exception:
     st.error("إعداد COOKIE_SECRET غير صحيح أو غير موجود في Secrets.")
     st.stop()
-MODEL = "openai/gpt-oss-120b"
+MODEL = "qwen/qwen3.8-27b"
 
 SYSTEM_PROMPT = """
 You are NEXORA AI, a helpful AI assistant.
@@ -651,8 +652,7 @@ def get_user_id():
 
 def get_user_email():
     return getattr(st.session_state.user, "email", "") or ""
-    return getattr(st.session_state.user, "email", "") or ""
-
+    
 
 def show_error(error):
     message = str(error)
@@ -687,22 +687,7 @@ def logout():
         )
 
     st.rerun()
-    try:
-        apply_token()
-        supabase.auth.sign_out()
-    except Exception:
-        pass
-
-    for key in [
-        "user", "access_token", "refresh_token",
-        "conversation_id", "messages", "show_settings",
-        "show_profile", "profile_image", "profile_name",
-    ]:
-        st.session_state[key] = [] if key == "messages" else (
-            False if key in ("show_settings", "show_profile") else None
-        )
-
-    st.rerun()
+   
 
 
 def delete_account():
