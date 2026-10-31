@@ -1408,15 +1408,16 @@ if prompt:
     if not user_text and not files:
         st.stop()
 
-    final_prompt = user_text
+final_prompt = user_text
+image_contents = []
 
-    if files:
-        extra = process_uploaded_files(files)
-        if extra:
-            final_prompt = (
-                f"{user_text}\n\n---\n{extra}" if user_text else extra
-            )
+if files:
+    extra, image_contents = process_uploaded_files(files)
 
+    if extra:
+        final_prompt = (
+            f"{user_text}\n\n---\n{extra}" if user_text else extra
+        )
     try:
         if not st.session_state.conversation_id:
             create_conversation()
