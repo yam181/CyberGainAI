@@ -1195,9 +1195,7 @@ with st.sidebar:
         key="sidebar_search",
     )
     
-            st.sidebar.error("وصلنا إلى قسم المحادثات!")
-
-        st.sidebar.error("وصلنا إلى قسم المحادثات!")
+               st.sidebar.error("وصلنا إلى قسم المحادثات!")
 
     try:
         st.sidebar.write("معرّف المستخدم:", get_user_id())
@@ -1214,7 +1212,6 @@ with st.sidebar:
             conv for conv in conversations
             if query in conv.get("title", "").casefold()
         ]
-
     if not conversations:
         st.caption(t("no_conversations"))
     else:
