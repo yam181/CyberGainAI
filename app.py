@@ -1195,8 +1195,10 @@ with st.sidebar:
         key="sidebar_search",
     )
     
-    try:
+        try:
         conversations = list_conversations()
+        st.sidebar.write("عدد المحادثات:", len(conversations))
+        st.sidebar.write("معرّف المستخدم:", get_user_id())
     except Exception as error:
         st.error("حدث خطأ أثناء تحميل المحادثات:")
         st.exception(error)
