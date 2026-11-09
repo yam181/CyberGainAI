@@ -1166,7 +1166,7 @@ if st.session_state.show_profile:
     if st.button("🚪 " + t("logout"), use_container_width=True):
         logout()
 
-
+    st.stop()
 
 
 # =====================================
@@ -1195,23 +1195,20 @@ with st.sidebar:
         key="sidebar_search",
     )
     
-    st.sidebar.error("وصلنا إلى قسم المحادثات!")
-
     try:
-        st.sidebar.write("معرّف المستخدم:", get_user_id())
         conversations = list_conversations()
-        st.sidebar.write("عدد المحادثات:", len(conversations))
     except Exception as error:
-        st.sidebar.error("فشل تحميل المحادثات!")
-        st.sidebar.code(str(error))
+        st.error("حدث خطأ أثناء تحميل المحادثات:")
+        st.exception(error)
         conversations = []
 
     if search_query.strip():
         query = search_query.strip().casefold()
         conversations = [
             conv for conv in conversations
-            if query in conv.get("title", "").casefold()
+            if query in (conv.get("title") or "").casefold()
         ]
+
     if not conversations:
         st.caption(t("no_conversations"))
     else:
