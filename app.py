@@ -37,6 +37,11 @@ defaults = {
     "profile_image": None,
     "profile_name": "",
     "confirm_delete_account": False,
+    "guest_mode": False,
+    "guest_message_count": 0,
+    "guest_limit_reached": False,
+    "memory_enabled": True,
+    "show_conversations_settings": False,
 }
 
 for key, value in defaults.items():
@@ -109,6 +114,15 @@ TRANSLATIONS = {
         "remove_photo": "إزالة الصورة",
         "account_info": "معلومات الحساب",
         "account_settings": "إعدادات الحساب",
+        "guest_continue": "المتابعة كزائر",
+        "guest_limit": "وصلت إلى الحد المجاني للزائر. سجّل الدخول أو أنشئ حساباً لمواصلة استخدام NEXORA وحفظ المحادثات الجديدة.",
+        "guest_badge": "وضع الزائر — 10 رسائل",
+        "conversations": "المحادثات",
+        "memory": "ذاكرة NEXORA",
+        "memory_description": "يسمح لـ NEXORA بالاستفادة من محادثاتك السابقة لتقديم إجابات أكثر ارتباطاً بسياقك. تبقى البيانات ضمن حسابك.",
+        "memory_enabled": "تفعيل الذاكرة من المحادثات السابقة",
+        "memory_saved": "تم حفظ إعداد الذاكرة.",
+        "guest_note": "يمكنك تجربة NEXORA دون تسجيل. محادثات الزائر مؤقتة ولا تُحفظ بعد انتهاء الجلسة.",
     },
     "en": {
         "app_title": "NEXORA AI",
@@ -171,6 +185,15 @@ TRANSLATIONS = {
         "remove_photo": "Remove photo",
         "account_info": "Account Information",
         "account_settings": "Account Settings",
+        "guest_continue": "Continue as Guest",
+        "guest_limit": "You reached the guest message limit. Sign in or create an account to keep using NEXORA and save new conversations.",
+        "guest_badge": "Guest mode — 10 messages",
+        "conversations": "Conversations",
+        "memory": "NEXORA Memory",
+        "memory_description": "Allows NEXORA to use your previous conversations for more relevant answers. Your data stays within your account.",
+        "memory_enabled": "Use memory from previous conversations",
+        "memory_saved": "Memory preference saved.",
+        "guest_note": "Try NEXORA without signing in. Guest conversations are temporary and are not saved after the session ends.",
     },
 }
 
@@ -550,7 +573,7 @@ try:
 except Exception:
     st.error("إعداد COOKIE_SECRET غير صحيح أو غير موجود في Secrets.")
     st.stop()
-MODEL = "qwen/qwen3.8-27b"
+MODEL = "openai/gpt-oss-120b"
 
 SYSTEM_PROMPT = """
 You are NEXORA AI, a helpful AI assistant.
@@ -681,9 +704,12 @@ def logout():
         "user", "access_token", "refresh_token",
         "conversation_id", "messages", "show_settings",
         "show_profile", "profile_image", "profile_name",
+        "guest_mode", "guest_message_count",
     ]:
         st.session_state[key] = [] if key == "messages" else (
-            False if key in ("show_settings", "show_profile") else None
+            False if key in ("show_settings", "show_profile", "guest_mode") else (
+                0 if key == "guest_message_count" else None
+            )
         )
 
     st.rerun()
@@ -744,7 +770,9 @@ if st.session_state.access_token and not st.session_state.user:
 # =====================================
 # تسجيل الدخول وإنشاء الحساب
 # =====================================
-if not st.session_state.user:
+if not st.session_state.user and not st.session_state.guest_mode:
+    if st.session_state.guest_limit_reached:
+        st.warning(t("guest_limit"))
     st.markdown(
         """
         <div class="welcome-container">
@@ -830,21 +858,35 @@ if not st.session_state.user:
                             result.session.refresh_token
                         )
                         apply_token()
+                        save_session_cookie()
                         st.rerun()
                     else:
                         st.success(t("check_email"))
                 except Exception:
                     st.error(t("error_signup"))
 
+    st.divider()
+    st.caption(t("guest_note"))
+    if st.button(t("guest_continue"), use_container_width=True):
+        st.session_state.guest_mode = True
+        st.session_state.guest_message_count = 0
+        st.session_state.guest_limit_reached = False
+        st.session_state.conversation_id = None
+        st.session_state.messages = []
+        st.rerun()
+
     st.stop()
 
 
-apply_token()
+if st.session_state.user:
+    apply_token()
+
 
 # تحميل اسم الحساب من بيانات Supabase
-user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
+user_metadata = getattr(st.session_state.user, "user_metadata", None) or {} if st.session_state.user else {}
+st.session_state.memory_enabled = user_metadata.get("nexora_memory_enabled", True)
 
-if not st.session_state.profile_name:
+if st.session_state.user and not st.session_state.profile_name:
     st.session_state.profile_name = user_metadata.get(
         "full_name", get_user_email().split("@")[0]
     )
@@ -854,6 +896,8 @@ if not st.session_state.profile_name:
 # دوال المحادثات
 # =====================================
 def list_conversations():
+    if st.session_state.guest_mode or not st.session_state.user:
+        return []
     apply_token()
     result = (
         supabase.table("conversations")
@@ -866,6 +910,11 @@ def list_conversations():
 
 
 def create_conversation():
+    if st.session_state.guest_mode:
+        cid = str(uuid.uuid4())
+        st.session_state.conversation_id = cid
+        st.session_state.messages = []
+        return cid
     apply_token()
     now = datetime.now(timezone.utc).isoformat()
     cid = str(uuid.uuid4())
@@ -887,6 +936,8 @@ def create_conversation():
 
 
 def load_messages(cid):
+    if st.session_state.guest_mode:
+        return []
     apply_token()
     result = (
         supabase.table("chat_history")
@@ -904,6 +955,8 @@ def load_messages(cid):
 
 
 def save_message(cid, role, content):
+    if st.session_state.guest_mode:
+        return
     apply_token()
     supabase.table("chat_history").insert({
         "user_id": get_user_id(),
@@ -915,6 +968,8 @@ def save_message(cid, role, content):
 
 
 def update_title(cid, title):
+    if st.session_state.guest_mode:
+        return
     apply_token()
     supabase.table("conversations").update({
         "title": title,
@@ -923,6 +978,8 @@ def update_title(cid, title):
 
 
 def update_activity(cid):
+    if st.session_state.guest_mode:
+        return
     apply_token()
     supabase.table("conversations").update({
         "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -930,6 +987,8 @@ def update_activity(cid):
 
 
 def delete_conversation(cid):
+    if st.session_state.guest_mode:
+        return
     apply_token()
     supabase.table("chat_history").delete().eq(
         "user_id", get_user_id()
@@ -942,6 +1001,50 @@ def delete_conversation(cid):
     if str(st.session_state.conversation_id) == str(cid):
         st.session_state.conversation_id = None
         st.session_state.messages = []
+
+
+def get_previous_conversation_memory(current_cid):
+    """Fetch a small, private sample of this user's previous chats as context."""
+    if (
+        st.session_state.guest_mode
+        or not st.session_state.user
+        or not st.session_state.memory_enabled
+    ):
+        return ""
+
+    try:
+        apply_token()
+        result = (
+            supabase.table("chat_history")
+            .select("role,content,created_at,conversation_id")
+            .eq("user_id", get_user_id())
+            .neq("conversation_id", current_cid)
+            .order("created_at", desc=True)
+            .limit(24)
+            .execute()
+        )
+        rows = list(reversed(result.data or []))
+        snippets = []
+        for row in rows:
+            role = row.get("role")
+            content = (row.get("content") or "").strip()
+            if role not in ("user", "assistant") or not content:
+                continue
+            content = content[:650]
+            speaker = "User" if role == "user" else "NEXORA"
+            snippets.append(f"{speaker}: {content}")
+
+        if not snippets:
+            return ""
+        return (
+            "Relevant context from this user's own previous conversations. "
+            "Use it only when relevant, do not assume old plans are still current, "
+            "and ask if details may have changed:\\n"
+            + "\\n".join(snippets)
+        )[:9000]
+    except Exception:
+        # Memory retrieval must never prevent a normal chat response.
+        return ""
 
 
 def generate_title(question):
@@ -1056,17 +1159,18 @@ def group_conversations_by_date(conversations):
 # =====================================
 # زر الملف الشخصي
 # =====================================
-with st.container(key="nx_profile_button"):
-    if st.button("👤", key="nx_profile_open", help=t("profile")):
-        st.session_state.show_profile = True
-        st.session_state.show_settings = False
-        st.rerun()
+if st.session_state.user:
+    with st.container(key="nx_profile_button"):
+        if st.button("👤", key="nx_profile_open", help=t("profile")):
+            st.session_state.show_profile = True
+            st.session_state.show_settings = False
+            st.rerun()
 
 
 # =====================================
 # صفحة الملف الشخصي
 # =====================================
-if st.session_state.show_profile:
+if st.session_state.show_profile and st.session_state.user:
     st.title("👤 " + t("profile"))
     st.caption("NEXORA AI")
     st.divider()
@@ -1182,6 +1286,8 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
+    if st.session_state.guest_mode:
+        st.info(t("guest_badge"))
     if st.button(t("new_chat"), use_container_width=True, type="primary"):
         st.session_state.conversation_id = None
         st.session_state.messages = []
@@ -1274,7 +1380,10 @@ with st.sidebar:
         render_group("older", groups["older"])
 
     st.divider()
-    st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
+    if st.session_state.user:
+        st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
+    else:
+        st.caption("👤 Guest")
 
     if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
         st.session_state.show_settings = not st.session_state.show_settings
@@ -1290,6 +1399,44 @@ if st.session_state.show_settings:
     if st.button(t("close")):
         st.session_state.show_settings = False
         st.rerun()
+
+    if st.session_state.user:
+        with st.expander(t("conversations"), expanded=False):
+            try:
+                settings_conversations = list_conversations()
+                if not settings_conversations:
+                    st.caption(t("no_conversations"))
+                for conv in settings_conversations:
+                    cid = str(conv["id"])
+                    title = conv.get("title") or t("new_chat")
+                    if st.button(title[:55], key=f"settings_open_{cid}", use_container_width=True):
+                        st.session_state.conversation_id = cid
+                        st.session_state.messages = load_messages(cid)
+                        st.session_state.show_settings = False
+                        st.rerun()
+            except Exception as error:
+                show_error(error)
+
+        with st.expander(t("memory"), expanded=True):
+            st.caption(t("memory_description"))
+            memory_choice = st.checkbox(
+                t("memory_enabled"),
+                value=bool(st.session_state.memory_enabled),
+                key="memory_setting_checkbox",
+            )
+            if st.button(t("save_settings") + " · " + t("memory"), key="save_memory_setting"):
+                try:
+                    current_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
+                    updated_metadata = dict(current_metadata)
+                    updated_metadata["nexora_memory_enabled"] = bool(memory_choice)
+                    result = supabase.auth.update_user({"data": updated_metadata})
+                    if getattr(result, "user", None):
+                        st.session_state.user = result.user
+                    st.session_state.memory_enabled = bool(memory_choice)
+                    st.success(t("memory_saved"))
+                    st.rerun()
+                except Exception as error:
+                    show_error(error)
 
     st.subheader(t("language"))
 
@@ -1346,10 +1493,10 @@ if st.session_state.show_settings:
 
     st.divider()
 
-    if st.button(t("delete_account"), type="primary"):
+    if st.session_state.user and st.button(t("delete_account"), type="primary"):
         st.session_state.confirm_delete_account = True
 
-    if st.session_state.confirm_delete_account:
+    if st.session_state.user and st.session_state.confirm_delete_account:
         st.warning(t("delete_account_confirm"))
 
         yes_col, no_col = st.columns(2)
@@ -1363,8 +1510,17 @@ if st.session_state.show_settings:
                 st.session_state.confirm_delete_account = False
                 st.rerun()
 
-    if st.button(t("logout"), use_container_width=True):
-        logout()
+    if st.session_state.user:
+        if st.button(t("logout"), use_container_width=True):
+            logout()
+    elif st.button(t("logout") if st.session_state.language == "en" else "إنهاء وضع الزائر", use_container_width=True):
+        st.session_state.guest_mode = False
+        st.session_state.guest_message_count = 0
+        st.session_state.guest_limit_reached = False
+        st.session_state.messages = []
+        st.session_state.conversation_id = None
+        st.session_state.show_settings = False
+        st.rerun()
 
     st.stop()
 
@@ -1408,6 +1564,12 @@ if prompt:
     if not user_text and not files:
         st.stop()
 
+    if st.session_state.guest_mode and st.session_state.guest_message_count >= 10:
+        st.session_state.guest_limit_reached = True
+        st.session_state.guest_mode = False
+        st.session_state.conversation_id = None
+        st.rerun()
+
     final_prompt = user_text
     image_contents = []
 
@@ -1446,8 +1608,13 @@ if prompt:
                     }
                 ] + image_contents
 
+                previous_memory = get_previous_conversation_memory(cid)
                 api_messages = [
                     {"role": "system", "content": SYSTEM_PROMPT},
+                    *(
+                        [{"role": "system", "content": previous_memory}]
+                        if previous_memory else []
+                    ),
                     *st.session_state.messages[-12:-1],
                     {
                         "role": "user",
@@ -1480,6 +1647,8 @@ if prompt:
             update_title(cid, generate_title(final_prompt))
 
         update_activity(cid)
+        if st.session_state.guest_mode:
+            st.session_state.guest_message_count += 1
         st.rerun()
 
     except Exception as error:
