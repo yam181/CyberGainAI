@@ -782,49 +782,112 @@ def get_css():
         }
     }
 
-    /* Stable composer controls: attachment | flexible input | send. */
-    .st-key-nx_composer > div [data-testid="stHorizontalBlock"] {
+    /* Composer layout: target the outer row and the form row separately.
+       This prevents the attachment-column sizing from shrinking the input. */
+    .st-key-nx_composer {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+    /* Outer row: plus button + form */
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
         display: flex !important;
+        flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
         width: 100% !important;
         min-width: 0 !important;
         gap: 5px !important;
     }
-    .st-key-nx_composer [data-testid="column"] {
-        min-width: 0 !important;
-        padding: 0 !important;
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
     }
-    .st-key-nx_composer > div [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-        flex: 0 0 36px !important;
-        width: 36px !important;
-        min-width: 36px !important;
-    }
-    .st-key-nx_composer > div [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
         flex: 1 1 0% !important;
         width: 0 !important;
         min-width: 0 !important;
+        max-width: none !important;
     }
+    /* Inner row: full-width input + send button */
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
         display: flex !important;
+        flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
         width: 100% !important;
         min-width: 0 !important;
         gap: 4px !important;
     }
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="column"] {
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
         flex: 1 1 0% !important;
         width: 0 !important;
         min-width: 0 !important;
+        max-width: none !important;
     }
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-        flex: 0 0 36px !important;
-        width: 36px !important;
-        min-width: 36px !important;
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+    }
+    /* Make the entire message field a real, touchable input surface. */
+    .st-key-nx_composer [data-testid="stTextInput"] {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        position: relative !important;
+        z-index: 5 !important;
+        margin: 0 !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] > div,
+    .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"],
+    .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"] > div {
+        display: flex !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        background: #171222 !important;
+        pointer-events: auto !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: 36px !important;
+        box-sizing: border-box !important;
+        text-align: right !important;
+        direction: rtl !important;
+        padding: 0 12px !important;
+        color: #f3effa !important;
+        -webkit-text-fill-color: #f3effa !important;
+        background: #171222 !important;
+        border: 0 !important;
+        border-radius: 18px !important;
+        outline: none !important;
+        box-shadow: none !important;
+        cursor: text !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+        opacity: 1 !important;
+        text-align: right !important;
     }
     .st-key-nx_composer .st-key-nx_add_files,
     .st-key-nx_composer .st-key-nx_add_files [data-testid="stPopover"],
@@ -835,12 +898,12 @@ def get_css():
         opacity: 1 !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
         margin: 0 !important;
         padding: 0 !important;
-        flex: 0 0 36px !important;
+        flex: 0 0 38px !important;
     }
     .st-key-nx_composer .st-key-nx_add_files button,
     .st-key-nx_composer .st-key-nx_chat_send button {
@@ -853,33 +916,46 @@ def get_css():
         min-width: 32px !important;
         height: 32px !important;
         min-height: 32px !important;
-        padding: 0 !important;
         margin: 0 !important;
+        padding: 0 !important;
         border: 0 !important;
         border-radius: 50% !important;
         background: transparent !important;
         color: #e5d9ff !important;
         box-shadow: none !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"],
-    .st-key-nx_composer [data-testid="stTextInput"] > div,
-    .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"],
-    .st-key-nx_composer [data-testid="stTextInput"] input {
-        width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input {
-        text-align: right !important;
-        direction: rtl !important;
-        cursor: text !important;
         pointer-events: auto !important;
     }
-    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-        color: #fff !important;
-        -webkit-text-fill-color: #fff !important;
-        opacity: 1 !important;
-        text-align: right !important;
+    @media (max-width: 768px) {
+        .st-key-nx_composer {
+            padding: 2px 5px !important;
+            overflow: visible !important;
+        }
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex-basis: 36px !important;
+            width: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+        }
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex-basis: 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+        }
+        .st-key-nx_composer .st-key-nx_add_files,
+        .st-key-nx_composer .st-key-nx_add_files [data-testid="stPopover"],
+        .st-key-nx_composer .st-key-nx_chat_send,
+        .st-key-nx_composer .st-key-nx_chat_send [data-testid="stFormSubmitButton"] {
+            flex-basis: 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input {
+            height: 36px !important;
+            min-height: 36px !important;
+            font-size: 14px !important;
+        }
     }
 
     </style>
