@@ -828,6 +828,60 @@ def get_css():
             text-align: right !important;
             direction: rtl !important;
         }
+        /* Final fit fix: keep the mobile composer and input strictly inside the capsule. */
+        .st-key-nx_composer {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            padding: 2px 5px !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+        .st-key-nx_composer > div,
+        .st-key-nx_composer [data-testid="stForm"],
+        .st-key-nx_composer [data-testid="stForm"] > div,
+        .st-key-nx_composer [data-testid="stTextInput"],
+        .st-key-nx_composer [data-testid="stTextInput"] > div,
+        .st-key-nx_composer [data-testid="stTextInput"] > div > div,
+        .st-key-nx_composer [data-baseweb="input"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+        }
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            gap: 2px !important;
+        }
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            gap: 2px !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 28px !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
+            margin: 0 !important;
+            padding: 0 6px !important;
+            border: 0 !important;
+            border-radius: 14px !important;
+            background: #171222 !important;
+            background-color: #171222 !important;
+            font-size: 12px !important;
+            line-height: 28px !important;
+            box-sizing: border-box !important;
+        }
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="column"] {
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
         [data-testid="stMainBlockContainer"] {
             padding-bottom: 2rem !important;
         }
