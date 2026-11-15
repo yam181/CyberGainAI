@@ -1,4 +1,4 @@
-```txt
+txt
 streamlit>=1.49.0
 groq
 supabase
@@ -14,4 +14,4 @@ requests
 arabic-reshaper
 python-bidi
 reportlab
-```
+
