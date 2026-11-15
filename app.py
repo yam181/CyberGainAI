@@ -383,10 +383,20 @@ def get_css():
         color: #a99cbe;
     }
 
-    /* Compact ChatGPT-style composer */
+    /* One unified ChatGPT-style composer: every control lives inside one capsule. */
+    .st-key-nx_composer {
+        background: rgba(23, 18, 36, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .38) !important;
+        border-radius: 28px !important;
+        padding: 6px 9px !important;
+        margin-top: 12px !important;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, .20) !important;
+    }
     .st-key-nx_composer [data-testid="stHorizontalBlock"] {
         align-items: center !important;
-        gap: 8px !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        width: 100% !important;
     }
     .st-key-nx_composer [data-testid="column"] {
         min-width: 0 !important;
@@ -402,6 +412,9 @@ def get_css():
         margin: 0 !important;
         box-shadow: none !important;
     }
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+        gap: 3px !important;
+    }
     .st-key-nx_voice_mode_toggle button {
         min-height: 42px !important;
         border-radius: 22px !important;
@@ -415,18 +428,19 @@ def get_css():
     .st-key-nx_composer [data-testid="stTextInput"] input {
         height: 48px !important;
         min-height: 48px !important;
-        background: rgba(23, 18, 36, .96) !important;
+        background: transparent !important;
         color: #f3effa !important;
-        border: 1px solid rgba(164, 128, 226, .32) !important;
+        border: 0 !important;
         border-radius: 18px !important;
         text-align: right !important;
         direction: rtl !important;
         padding: 0 16px !important;
-        box-shadow: 0 8px 28px rgba(0, 0, 0, .18) !important;
+        box-shadow: none !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input:focus {
-        border-color: rgba(185, 157, 255, .72) !important;
-        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
     .st-key-nx_add_files button,
     .st-key-nx_chat_send button {
@@ -659,8 +673,14 @@ def get_css():
         .block-container {
             padding: 1.2rem .8rem 6rem !important;
         }
+        .st-key-nx_composer {
+            padding: 4px 5px !important;
+            border-radius: 25px !important;
+            width: 100% !important;
+            overflow: visible !important;
+        }
 
-        /* Mobile composer: force every control to stay on ONE horizontal row. */
+        /* Mobile composer: all controls remain together in the same capsule. */
         .st-key-nx_composer [data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-wrap: nowrap !important;
@@ -674,8 +694,8 @@ def get_css():
         }
         /* Outer row: add | message+send | record | voice mode */
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
-            flex: 0 0 38px !important;
-            width: 38px !important;
+            flex: 0 0 34px !important;
+            width: 34px !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
             flex: 1 1 0 !important;
@@ -686,8 +706,8 @@ def get_css():
             width: 38px !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4) {
-            flex: 0 0 82px !important;
-            width: 82px !important;
+            flex: 0 0 72px !important;
+            width: 72px !important;
         }
         /* Keep the text field and send button side by side inside the form. */
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
@@ -713,11 +733,11 @@ def get_css():
             min-height: 40px !important;
         }
         .st-key-nx_voice_mode_toggle button {
-            width: 82px !important;
-            min-width: 82px !important;
+            width: 72px !important;
+            min-width: 72px !important;
             height: 40px !important;
             min-height: 40px !important;
-            padding: 0 4px !important;
+            padding: 0 3px !important;
             font-size: 10px !important;
             white-space: nowrap !important;
         }
