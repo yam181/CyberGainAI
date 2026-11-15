@@ -6,7 +6,6 @@ from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone, timedelta, date
 import mimetypes
-import hashlib
 from pathlib import Path
 import uuid
 import re
@@ -43,10 +42,6 @@ defaults = {
     "profile_name": "",
     "confirm_delete_account": False,
     "active_tool": "المحادثة العامة",
-    "voice_transcript": "",
-    "send_voice_transcript": False,
-    "voice_recording_hash": "",
-    "voice_tts_audio": None,
     "nx_export_errors": {},
 }
 
@@ -420,39 +415,6 @@ def get_css():
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
         gap: 3px !important;
     }
-    /* Voice mode is only a tiny waveform glyph, never a colored button. */
-    .st-key-nx_composer .st-key-nx_voice_mode_toggle button,
-    .st-key-nx_composer .st-key-nx_voice_mode_toggle .stButton > button {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 28px !important;
-        min-width: 28px !important;
-        max-width: 28px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-        background-color: transparent !important;
-        background-image: none !important;
-        box-shadow: none !important;
-        color: #d8caff !important;
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        padding: 0 !important;
-        white-space: nowrap !important;
-        transform: none !important;
-    }
-    .st-key-nx_composer .st-key-nx_voice_mode_toggle button:hover,
-    .st-key-nx_composer .st-key-nx_voice_mode_toggle button:focus {
-        background: transparent !important;
-        background-color: transparent !important;
-        background-image: none !important;
-        box-shadow: none !important;
-        border: 0 !important;
-        color: #eee6ff !important;
-    }
     .st-key-nx_composer [data-testid="stTextInput"] input {
         height: 38px !important;
         min-height: 38px !important;
@@ -495,82 +457,6 @@ def get_css():
         border: 0 !important;
         box-shadow: none !important;
         color: #d8caff !important;
-    }
-    /* Keep Streamlit's recorder itself transparent: no grey panel or padded card. */
-    .st-key-nx_composer [data-testid="stAudioInput"] {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 32px !important;
-        min-width: 32px !important;
-        max-width: 32px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        background: transparent !important;
-        border: 0 !important;
-        border-radius: 50% !important;
-        box-shadow: none !important;
-        overflow: visible !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] > div,
-    .st-key-nx_composer [data-testid="stAudioInput"] > div > div,
-    .st-key-nx_composer [data-testid="stAudioInput"] [data-testid],
-    .st-key-nx_composer [data-testid="stAudioInput"] label {
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        outline: 0 !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] > div,
-    .st-key-nx_composer [data-testid="stAudioInput"] > div > div {
-        width: 32px !important;
-        min-width: 32px !important;
-        max-width: 32px !important;
-        min-height: 0 !important;
-        height: 32px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] button {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 32px !important;
-        min-width: 32px !important;
-        max-width: 32px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        max-height: 32px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        border-radius: 50% !important;
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] button:hover {
-        background: transparent !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] label {
-        display: none !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] audio {
-        display: none !important;
-    }
-    .st-key-nx_talk_label {
-        color: #d8caff !important;
-        font-size: 10px !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-        text-align: center !important;
-        margin: 0 !important;
-        padding-top: 2px !important;
     }
     .st-key-nx_composer [data-testid="stPopover"] button {
         width: 30px !important;
@@ -618,8 +504,7 @@ def get_css():
 
     /* Final composer overrides: no individual button tiles or bright fills. */
     .st-key-nx_composer .st-key-nx_add_files button,
-    .st-key-nx_composer .st-key-nx_chat_send button,
-    .st-key-nx_composer .st-key-nx_voice_mode_toggle button {
+    .st-key-nx_composer .st-key-nx_chat_send button {
         background: transparent !important;
         background-color: transparent !important;
         background-image: none !important;
@@ -755,22 +640,14 @@ def get_css():
             min-width: 0 !important;
             padding: 0 !important;
         }
-        /* Outer row: add | message+send | record | voice mode */
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
-            flex: 0 0 25px !important;
-            width: 25px !important;
+        /* Mobile composer: attachment + text field and send only. */
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex: 0 0 30px !important;
+            width: 30px !important;
         }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
             flex: 1 1 0 !important;
             width: auto !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3) {
-            flex: 0 0 27px !important;
-            width: 27px !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4) {
-            flex: 0 0 28px !important;
-            width: 28px !important;
         }
         /* Keep the text field and send button side by side inside the form. */
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
@@ -788,8 +665,7 @@ def get_css():
             font-size: 14px !important;
         }
         .st-key-nx_add_files button,
-        .st-key-nx_chat_send button,
-        .st-key-nx_composer [data-testid="stAudioInput"] button {
+        .st-key-nx_chat_send button {
             width: 28px !important;
             min-width: 28px !important;
             height: 32px !important;
@@ -800,19 +676,6 @@ def get_css():
             min-width: 27px !important;
             height: 30px !important;
             min-height: 30px !important;
-        }
-        .st-key-nx_composer .st-key-nx_voice_mode_toggle button {
-            width: 26px !important;
-            min-width: 26px !important;
-            max-width: 26px !important;
-            height: 30px !important;
-            min-height: 30px !important;
-            padding: 0 !important;
-            font-size: 12px !important;
-            border: 0 !important;
-            background: transparent !important;
-            background-image: none !important;
-            box-shadow: none !important;
         }
 
         .welcome-container {
@@ -1046,8 +909,7 @@ def logout():
     for key in [
         "user", "access_token", "refresh_token",
         "conversation_id", "messages", "show_settings",
-        "show_profile", "profile_image", "profile_name", "voice_transcript",
-        "send_voice_transcript",
+        "show_profile", "profile_image", "profile_name",
     ]:
         st.session_state[key] = [] if key == "messages" else (
             False if key in ("show_settings", "show_profile") else None
@@ -2071,24 +1933,17 @@ else:
 
 
 # =====================================
-# شريط المحادثة: إضافة ملفات + كتابة + إرسال + ميكروفون
+# شريط المحادثة: إضافة ملفات + كتابة + إرسال
 # =====================================
-# شريط صغير مستوحى من واجهة ChatGPT: الإضافة يساراً والميكروفون يميناً.
 if st.session_state.pop("nx_clear_chat_text", False):
     st.session_state["nx_chat_text"] = ""
 
-if "nx_audio_widget_version" not in st.session_state:
-    st.session_state["nx_audio_widget_version"] = 0
 if "nx_attachment_version" not in st.session_state:
     st.session_state["nx_attachment_version"] = 0
 
 with st.container(key="nx_composer"):
-    add_col, chat_form_col, mic_col, voice_col = st.columns(
-        [0.62, 10.0, 0.68, 0.62],
-        vertical_alignment="center",
-    )
+    add_col, chat_form_col = st.columns([0.62, 10.0], vertical_alignment="center")
 
-    # الزائد على اليسار: الصور والملفات داخل قائمة واحدة.
     with add_col:
         with st.popover("＋", help="إضافة صورة أو ملف", use_container_width=True, key="nx_add_files"):
             st.caption("أضف صورة أو مستنداً إلى رسالتك")
@@ -2099,7 +1954,6 @@ with st.container(key="nx_composer"):
                 label_visibility="collapsed",
             )
 
-    # حقل الكتابة وزر الإرسال داخل Form واحد: Enter يرسل الرسالة مباشرة.
     with chat_form_col:
         with st.form("nx_chat_form", clear_on_submit=False, border=False):
             text_col, send_col = st.columns([8.5, 0.8], vertical_alignment="center")
@@ -2111,109 +1965,9 @@ with st.container(key="nx_composer"):
                     key="nx_chat_text",
                 )
             with send_col:
-                send_clicked_button = st.form_submit_button(
+                send_clicked = st.form_submit_button(
                     "➤", key="nx_chat_send", type="primary", use_container_width=True
                 )
-
-    # الميكروفون يسجل الكلام، ثم Groq يحوّله إلى نص ويرسله إلى NEXORA.
-    with mic_col:
-        audio_result = st.audio_input(
-            "تسجيل صوتك",
-            sample_rate=16000,
-            key=f"nx_audio_input_{st.session_state['nx_audio_widget_version']}",
-            label_visibility="collapsed",
-        )
-
-    # زر حقيقي لتفعيل/إيقاف وضع المحادثة الصوتية (صوت الرد + إدخال الصوت).
-    if "nx_voice_mode_active" not in st.session_state:
-        st.session_state["nx_voice_mode_active"] = False
-    with voice_col:
-        voice_button_label = "▂▅▇▅▂" if not st.session_state["nx_voice_mode_active"] else "▂▇▅▇▂"
-        voice_mode_clicked = st.button(
-            voice_button_label,
-            key="nx_voice_mode_toggle",
-            type="secondary",
-            use_container_width=True,
-            help="تحدث مع AI" if not st.session_state["nx_voice_mode_active"] else "إيقاف وضع الصوت",
-        )
-        if voice_mode_clicked:
-            st.session_state["nx_voice_mode_active"] = not st.session_state["nx_voice_mode_active"]
-            st.rerun()
-
-# حوّل التسجيل مرة واحدة فقط، ثم أرسل النص تلقائياً إلى NEXORA.
-if audio_result is not None:
-    audio_bytes = audio_result.getvalue()
-    audio_hash = hashlib.sha256(audio_bytes).hexdigest()
-    if audio_hash != st.session_state.get("nx_last_audio_hash", ""):
-        try:
-            with st.spinner("أستمع إلى كلامك وأحوّله إلى نص..."):
-                transcription = groq.audio.transcriptions.create(
-                    file=("nexora_voice.wav", audio_bytes),
-                    model="whisper-large-v3-turbo",
-                    response_format="text",
-                    language="ar",
-                )
-            transcript_text = transcription if isinstance(transcription, str) else getattr(transcription, "text", "")
-            transcript_text = (transcript_text or "").strip()
-            if transcript_text:
-                st.session_state["nx_last_audio_hash"] = audio_hash
-                st.session_state["nx_chat_text"] = transcript_text
-                st.session_state["nx_voice_mode_active"] = True
-                st.session_state["nx_voice_reply_mode"] = True
-                st.session_state["nx_voice_auto_send"] = True
-                st.session_state["nx_audio_widget_version"] += 1
-                st.rerun()
-            else:
-                st.warning("لم أتمكن من سماع كلمات واضحة. جرّب التسجيل مرة أخرى.")
-        except Exception as audio_error:
-            st.error("تعذّر تحويل التسجيل إلى نص. قد تكون وصلت إلى حد Groq المجاني أو لم يُسمح للمتصفح باستخدام الميكروفون.")
-            show_error(audio_error)
-
-send_clicked = send_clicked_button or st.session_state.pop("nx_voice_auto_send", False)
-
-# صوت الرد يعمل محلياً داخل المتصفح، دون API مدفوع.
-last_answer_for_voice = st.session_state.get("nx_last_voice_reply", "")
-if last_answer_for_voice:
-    speech_text = json.dumps(last_answer_for_voice[:4000], ensure_ascii=False).replace("<", "\\u003c")
-    st.components.v1.html(
-        f"""
-        <div style="direction:rtl;display:flex;align-items:center;gap:14px;padding:12px 14px;margin:10px 0;border:1px solid rgba(150,110,220,.28);border-radius:16px;background:rgba(25,19,39,.72);font-family:Arial,sans-serif;color:#eee">
-          <div id="nxVoiceOrb" style="width:42px;height:42px;flex:0 0 42px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c7a8ff,#7043bd 65%,#38215e);box-shadow:0 0 0 0 rgba(151,104,235,.55);animation:nxPulse 1.8s infinite"></div>
-          <div style="flex:1"><div style="font-weight:700">NEXORA Live Voice</div><div id="nxVoiceStatus" style="font-size:12px;opacity:.75">رد NEXORA جاهز للاستماع</div></div>
-          <button id="nxVoicePlay" style="border:0;border-radius:20px;padding:9px 15px;background:#7650bd;color:white;font-size:14px;cursor:pointer">▶ استمع</button>
-          <button id="nxVoiceStop" style="border:0;border-radius:20px;padding:9px 12px;background:#393243;color:white;font-size:14px;cursor:pointer">■</button>
-        </div>
-        <style>@keyframes nxPulse{{0%{{box-shadow:0 0 0 0 rgba(151,104,235,.5)}}70%{{box-shadow:0 0 0 13px rgba(151,104,235,0)}}100%{{box-shadow:0 0 0 0 rgba(151,104,235,0)}}}}</style>
-        <script>
-          const nxText = {speech_text};
-          const nxStatus = document.getElementById('nxVoiceStatus');
-          const nxOrb = document.getElementById('nxVoiceOrb');
-          function nxSpeak() {{
-            if (!('speechSynthesis' in window)) {{ nxStatus.textContent='المتصفح لا يدعم القراءة الصوتية.'; return; }}
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(nxText);
-            u.lang = 'ar'; u.rate = 1; u.pitch = 1;
-            const voices = window.speechSynthesis.getVoices();
-            const arVoice = voices.find(v => (v.lang || '').toLowerCase().startsWith('ar'));
-            if (arVoice) u.voice = arVoice;
-            u.onstart = () => {{ nxStatus.textContent='NEXORA يتحدث الآن...'; nxOrb.style.animationDuration='.7s'; }};
-            u.onend = () => {{ nxStatus.textContent='انتهى الرد الصوتي'; nxOrb.style.animationDuration='1.8s'; }};
-            u.onerror = () => {{ nxStatus.textContent='تعذّر تشغيل الصوت. اضغط استمع مرة أخرى.'; nxOrb.style.animationDuration='1.8s'; }};
-            window.speechSynthesis.speak(u);
-          }}
-          document.getElementById('nxVoicePlay').onclick = nxSpeak;
-          document.getElementById('nxVoiceStop').onclick = () => {{ window.speechSynthesis.cancel(); nxStatus.textContent='تم إيقاف الصوت'; nxOrb.style.animationDuration='1.8s'; }};
-          // محاولة تشغيل تلقائي بعد الرد الصوتي؛ إن منع المتصفح التشغيل، يبقى زر الاستماع متاحاً.
-          window.speechSynthesis.onvoiceschanged = () => {{}};
-          setTimeout(() => {{ try {{ nxSpeak(); }} catch(e) {{}} }}, 350);
-        </script>
-        """,
-        height=90,
-        scrolling=False,
-    )
-    if st.button("إخفاء مشغل الصوت", key="nx_voice_hide_player"):
-        st.session_state["nx_last_voice_reply"] = ""
-        st.rerun()
 
 prompt = typed_text if send_clicked else None
 files = uploaded_files or []
@@ -2283,10 +2037,6 @@ if send_clicked:
 
         st.session_state.messages.append({"role": "user", "content": final_prompt})
         st.session_state.messages.append({"role": "assistant", "content": answer})
-        # الرد النصي يبقى متاحاً؛ يمكن للمستخدم تشغيله بصوت الجهاز من زر الاستماع.
-        st.session_state["nx_last_voice_reply"] = answer if (st.session_state.get("nx_voice_reply_mode") or st.session_state.get("nx_voice_mode_active")) else ""
-        st.session_state["nx_voice_reply_mode"] = False
-        st.session_state["nx_voice_auto_send"] = False
         st.session_state["nx_clear_chat_text"] = True
         st.session_state["nx_attachment_version"] += 1
         try:
