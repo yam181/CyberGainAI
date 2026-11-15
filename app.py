@@ -380,12 +380,80 @@ def get_css():
         color: #a99cbe;
     }
 
-    /* Composer */
-    [data-testid="stChatInput"] {
+    /* Compact ChatGPT-style composer */
+    .st-key-nx_composer [data-testid="stHorizontalBlock"] {
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .st-key-nx_composer [data-testid="column"] {
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] {
+        margin: 0 !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input {
+        height: 48px !important;
+        min-height: 48px !important;
         background: rgba(23, 18, 36, .96) !important;
+        color: #f3effa !important;
         border: 1px solid rgba(164, 128, 226, .32) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
+        border-radius: 18px !important;
+        text-align: right !important;
+        direction: rtl !important;
+        padding: 0 16px !important;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, .18) !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input:focus {
+        border-color: rgba(185, 157, 255, .72) !important;
+        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2) !important;
+    }
+    .st-key-nx_add_files button,
+    .st-key-nx_chat_send button {
+        width: 44px !important;
+        min-width: 44px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        font-size: 20px !important;
+    }
+    .st-key-nx_add_files button {
+        background: rgba(35, 29, 49, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .25) !important;
+        color: #d8caff !important;
+    }
+    .st-key-nx_chat_send button {
+        background: linear-gradient(135deg, #8d63dc, #6240a7) !important;
+        border: 1px solid rgba(190, 163, 255, .4) !important;
+        color: white !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] {
+        margin: 0 !important;
+        padding: 0 !important;
+        min-width: 0 !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] button {
+        width: 44px !important;
+        min-width: 44px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        background: rgba(35, 29, 49, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .32) !important;
+        color: #d8caff !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] label {
+        display: none !important;
+    }
+    .st-key-nx_composer [data-testid="stPopover"] button {
+        width: 44px !important;
+        min-width: 44px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
     }
 
     [data-testid="stChatInput"]:focus-within {
@@ -1770,36 +1838,53 @@ else:
 
 
 # =====================================
-# شريط المحادثة: كتابة + إرسال + ميكروفون
+# شريط المحادثة: إضافة ملفات + كتابة + إرسال + ميكروفون
 # =====================================
-# التسجيل يتم عبر عنصر Streamlit الأصلي، والتحويل إلى نص عبر Groq Whisper.
-# لا نستخدم خدمة صوت مدفوعة أو مكتبة تسجيل خارجية.
+# شريط صغير مستوحى من واجهة ChatGPT: الإضافة يساراً والميكروفون يميناً.
 if st.session_state.pop("nx_clear_chat_text", False):
     st.session_state["nx_chat_text"] = ""
 
 if "nx_audio_widget_version" not in st.session_state:
     st.session_state["nx_audio_widget_version"] = 0
+if "nx_attachment_version" not in st.session_state:
+    st.session_state["nx_attachment_version"] = 0
 
-chat_col, send_col, mic_col = st.columns([8, 1, 1], vertical_alignment="bottom")
-
-with chat_col:
-    typed_text = st.text_input(
-        "رسالتك",
-        placeholder=t("chat_placeholder"),
-        label_visibility="collapsed",
-        key="nx_chat_text",
+with st.container(key="nx_composer"):
+    add_col, chat_col, send_col, mic_col = st.columns(
+        [0.75, 8.4, 0.85, 0.85],
+        vertical_alignment="center",
     )
 
-with send_col:
-    send_clicked_button = st.button("➤", key="nx_chat_send", type="primary", use_container_width=True)
+    with add_col:
+        with st.popover("＋", help="إضافة صورة أو ملف", use_container_width=True, key="nx_add_files"):
+            st.caption("أضف صورة أو مستنداً إلى رسالتك")
+            uploaded_files = st.file_uploader(
+                "الصور والملفات",
+                accept_multiple_files=True,
+                key=f"nx_chat_attachments_{st.session_state['nx_attachment_version']}",
+                label_visibility="collapsed",
+            )
 
-with mic_col:
-    audio_result = st.audio_input(
-        "🎙️",
-        sample_rate=16000,
-        key=f"nx_audio_input_{st.session_state['nx_audio_widget_version']}",
-        label_visibility="collapsed",
-    )
+    with chat_col:
+        typed_text = st.text_input(
+            "رسالتك",
+            placeholder="اكتب رسالتك أو استخدم الميكروفون...",
+            label_visibility="collapsed",
+            key="nx_chat_text",
+        )
+
+    with send_col:
+        send_clicked_button = st.button(
+            "➤", key="nx_chat_send", type="primary", use_container_width=True
+        )
+
+    with mic_col:
+        audio_result = st.audio_input(
+            "🎙️",
+            sample_rate=16000,
+            key=f"nx_audio_input_{st.session_state['nx_audio_widget_version']}",
+            label_visibility="collapsed",
+        )
 
 # حوّل التسجيل مرة واحدة فقط، ثم أرسل النص تلقائياً إلى NEXORA.
 if audio_result is not None:
@@ -1830,15 +1915,6 @@ if audio_result is not None:
             show_error(audio_error)
 
 send_clicked = send_clicked_button or st.session_state.pop("nx_voice_auto_send", False)
-
-if "nx_attachment_version" not in st.session_state:
-    st.session_state["nx_attachment_version"] = 0
-uploaded_files = st.file_uploader(
-    "📎 إرفاق ملفات أو صور",
-    accept_multiple_files=True,
-    key=f"nx_chat_attachments_{st.session_state['nx_attachment_version']}",
-    label_visibility="collapsed",
-)
 
 # صوت الرد يعمل محلياً داخل المتصفح، دون API مدفوع.
 last_answer_for_voice = st.session_state.get("nx_last_voice_reply", "")
