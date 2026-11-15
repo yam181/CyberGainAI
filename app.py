@@ -743,6 +743,81 @@ def get_css():
             right: 8px !important;
         }
 
+        /* Final mobile-only fix: keep the composer visible, on top, and tappable. */
+        .st-key-nx_composer {
+            position: relative !important;
+            z-index: 50 !important;
+            display: block !important;
+            pointer-events: auto !important;
+            min-height: 42px !important;
+            overflow: visible !important;
+        }
+        .st-key-nx_composer,
+        .st-key-nx_composer * {
+            pointer-events: auto !important;
+        }
+        .st-key-nx_composer [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        /* Outer row: small attachment column + full-width composer column. */
+        .st-key-nx_composer > div [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex: 0 0 30px !important;
+            width: 30px !important;
+            min-width: 30px !important;
+        }
+        .st-key-nx_composer > div [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex: 1 1 0% !important;
+            width: 0 !important;
+            min-width: 0 !important;
+        }
+        /* Inner form row: expandable input + compact send button. */
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex: 1 1 0% !important;
+            width: 0 !important;
+            min-width: 0 !important;
+        }
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex: 0 0 30px !important;
+            width: 30px !important;
+            min-width: 30px !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"],
+        .st-key-nx_composer [data-testid="stTextInput"] > div,
+        .st-key-nx_composer [data-testid="stTextInput"] > div > div,
+        .st-key-nx_composer [data-baseweb="input"] {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            background: #171222 !important;
+            box-sizing: border-box !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            touch-action: manipulation !important;
+            background: #171222 !important;
+            color: #f3effa !important;
+            -webkit-text-fill-color: #f3effa !important;
+            font-size: 13px !important;
+            padding: 0 8px !important;
+            text-align: right !important;
+            direction: rtl !important;
+        }
         [data-testid="stMainBlockContainer"] {
             padding-bottom: 2rem !important;
         }
