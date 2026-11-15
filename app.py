@@ -890,12 +890,12 @@ def get_css():
         .nexora-subtitle, .welcome-sub, .date-group { color: #75668a !important; }
         .st-key-nx_composer [data-testid="InputInstructions"],
 .st-key-nx_composer [data-testid="InputInstructions"] *,
-.st-key-nx_composer small,
-.st-key-nx_composer [class*="instruction"] {
+.st-key-nx_composer [data-testid="stForm"] [data-testid="InputInstructions"] {
     display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    opacity: 0 !important;
+}
+
+.st-key-nx_composer [data-testid="stForm"] div:has(> span) {
+    /* Leave other form elements unchanged */
 }
         </style>
         """
