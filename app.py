@@ -1612,26 +1612,42 @@ if active_tool == "AI Personal Assistant":
             st.warning("اكتب اسم المهمة أولاً.")
         else:
             try:
-                apply_token()
-                supabase.table("assistant_tasks").insert({
-                    "user_id": get_user_id(),
-                    "title": task_title.strip(),
-                    "due_at": task_due.isoformat() if task_due else None,
-                    "is_done": False,
-                }).execute()
-                st.success("تمت إضافة المهمة.")
+               apply_token()
+supabase.table("assistant_tasks").insert({
+    "user_id": get_user_id(),
+    "title": task_title.strip(),
+    "due_at": task_due.isoformat() if task_due else None,
+    "completed": False,
+}).execute()
+st.success("تمت إضافة المهمة.")
+st.rerun()
+except Exception:
+    st.error("لم تتم إضافة المهمة. تأكد من تشغيل ملف SQL المرفق في Supabase.")
+
+try:
+    task_rows = supabase.table("assistant_tasks").select(
+        "id,title,due_at,completed"
+    ).eq("user_id", get_user_id()).order(
+        "created_at", desc=True
+    ).limit(50).execute().data or []
+
+    if task_rows:
+        for task in task_rows:
+            label = task["title"] + (
+                f" — {task['due_at'][:10]}" if task.get("due_at") else ""
+            )
+            done = st.checkbox(
+                label,
+                value=bool(task.get("completed")),
+                key=f"nx_task_{task['id']}"
+            )
+            if done != bool(task.get("completed")):
+                supabase.table("assistant_tasks").update(
+                    {"completed": done}
+                ).eq("id", task["id"]).eq(
+                    "user_id", get_user_id()
+                ).execute()
                 st.rerun()
-            except Exception:
-                st.error("لم تتم إضافة المهمة. تأكد من تشغيل ملف SQL المرفق في Supabase.")
-    try:
-        task_rows = supabase.table("assistant_tasks").select("id,title,due_at,is_done").eq("user_id", get_user_id()).order("created_at", desc=True).limit(50).execute().data or []
-        if task_rows:
-            for task in task_rows:
-                label = task["title"] + (f" — {task['due_at'][:10]}" if task.get("due_at") else "")
-                done = st.checkbox(label, value=bool(task.get("is_done")), key=f"nx_task_{task['id']}")
-                if done != bool(task.get("is_done")):
-                    supabase.table("assistant_tasks").update({"is_done": done}).eq("id", task["id"]).eq("user_id", get_user_id()).execute()
-                    st.rerun()
         else:
             st.caption("لا توجد مهام بعد.")
     except Exception:
