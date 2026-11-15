@@ -395,6 +395,23 @@ def get_css():
     .st-key-nx_composer [data-testid="stTextInput"] {
         margin: 0 !important;
     }
+    .st-key-nx_composer [data-testid="stForm"] {
+        border: 0 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
+    .st-key-nx_voice_mode_toggle button {
+        min-height: 42px !important;
+        border-radius: 22px !important;
+        border: 1px solid rgba(164, 128, 226, .35) !important;
+        background: rgba(35, 29, 49, .72) !important;
+        color: #d8caff !important;
+        font-size: 12px !important;
+        padding: 0 10px !important;
+        white-space: nowrap !important;
+    }
     .st-key-nx_composer [data-testid="stTextInput"] input {
         height: 48px !important;
         min-height: 48px !important;
@@ -1911,8 +1928,8 @@ if "nx_attachment_version" not in st.session_state:
     st.session_state["nx_attachment_version"] = 0
 
 with st.container(key="nx_composer"):
-    add_col, chat_col, send_col, mic_col, talk_label_col = st.columns(
-        [0.72, 7.9, 0.78, 0.78, 1.55],
+    add_col, chat_form_col, mic_col, voice_col = st.columns(
+        [0.72, 8.9, 0.82, 1.45],
         vertical_alignment="center",
     )
 
@@ -1927,32 +1944,45 @@ with st.container(key="nx_composer"):
                 label_visibility="collapsed",
             )
 
-    # مساحة الكتابة في الوسط.
-    with chat_col:
-        typed_text = st.text_input(
-            "رسالتك",
-            placeholder="اكتب رسالتك...",
-            label_visibility="collapsed",
-            key="nx_chat_text",
-        )
+    # حقل الكتابة وزر الإرسال داخل Form واحد: Enter يرسل الرسالة مباشرة.
+    with chat_form_col:
+        with st.form("nx_chat_form", clear_on_submit=False, border=False):
+            text_col, send_col = st.columns([8.5, 0.8], vertical_alignment="center")
+            with text_col:
+                typed_text = st.text_input(
+                    "رسالتك",
+                    placeholder="اكتب رسالتك...",
+                    label_visibility="collapsed",
+                    key="nx_chat_text",
+                )
+            with send_col:
+                send_clicked_button = st.form_submit_button(
+                    "➤", key="nx_chat_send", type="primary", use_container_width=True
+                )
 
-    # إرسال الرسالة.
-    with send_col:
-        send_clicked_button = st.button(
-            "➤", key="nx_chat_send", type="primary", use_container_width=True
-        )
-
-    # الميكروفون مع تسمية واضحة للتحدث مع NEXORA.
+    # الميكروفون يسجل الكلام، ثم Groq يحوّله إلى نص ويرسله إلى NEXORA.
     with mic_col:
         audio_result = st.audio_input(
-            "تحدث مع AI",
+            "تسجيل صوتك",
             sample_rate=16000,
             key=f"nx_audio_input_{st.session_state['nx_audio_widget_version']}",
             label_visibility="collapsed",
         )
 
-    with talk_label_col:
-        st.markdown('<div style="color:#d8caff;font-size:12px;font-weight:600;white-space:nowrap;text-align:center;padding-top:2px">تحدث مع AI</div>', unsafe_allow_html=True)
+    # زر حقيقي لتفعيل/إيقاف وضع المحادثة الصوتية (صوت الرد + إدخال الصوت).
+    if "nx_voice_mode_active" not in st.session_state:
+        st.session_state["nx_voice_mode_active"] = False
+    with voice_col:
+        voice_button_label = "إيقاف الصوت" if st.session_state["nx_voice_mode_active"] else "تحدث مع AI"
+        voice_mode_clicked = st.button(
+            voice_button_label,
+            key="nx_voice_mode_toggle",
+            type="secondary",
+            use_container_width=True,
+        )
+        if voice_mode_clicked:
+            st.session_state["nx_voice_mode_active"] = not st.session_state["nx_voice_mode_active"]
+            st.rerun()
 
 # حوّل التسجيل مرة واحدة فقط، ثم أرسل النص تلقائياً إلى NEXORA.
 if audio_result is not None:
@@ -1972,6 +2002,7 @@ if audio_result is not None:
             if transcript_text:
                 st.session_state["nx_last_audio_hash"] = audio_hash
                 st.session_state["nx_chat_text"] = transcript_text
+                st.session_state["nx_voice_mode_active"] = True
                 st.session_state["nx_voice_reply_mode"] = True
                 st.session_state["nx_voice_auto_send"] = True
                 st.session_state["nx_audio_widget_version"] += 1
@@ -2097,7 +2128,7 @@ if send_clicked:
         st.session_state.messages.append({"role": "user", "content": final_prompt})
         st.session_state.messages.append({"role": "assistant", "content": answer})
         # الرد النصي يبقى متاحاً؛ يمكن للمستخدم تشغيله بصوت الجهاز من زر الاستماع.
-        st.session_state["nx_last_voice_reply"] = answer if st.session_state.get("nx_voice_reply_mode") else ""
+        st.session_state["nx_last_voice_reply"] = answer if (st.session_state.get("nx_voice_reply_mode") or st.session_state.get("nx_voice_mode_active")) else ""
         st.session_state["nx_voice_reply_mode"] = False
         st.session_state["nx_voice_auto_send"] = False
         st.session_state["nx_clear_chat_text"] = True
