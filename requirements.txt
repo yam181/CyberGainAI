@@ -12,3 +12,4 @@ Pillow
 requests
 arabic-reshaper
 python-bidi
+reportlab
