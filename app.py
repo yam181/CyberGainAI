@@ -888,6 +888,10 @@ def get_css():
         h1, h2, h3, p, label, [data-testid="stMarkdownContainer"] { color: #2b2238; }
         .nexora-title, .welcome-logo, .welcome-text { color: #593995 !important; }
         .nexora-subtitle, .welcome-sub, .date-group { color: #75668a !important; }
+        /* Hide Streamlit form keyboard hint */
+.st-key-nx_composer [data-testid="InputInstructions"] {
+    display: none !important;
+}
         </style>
         """
     return base_css
