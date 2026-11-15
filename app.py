@@ -939,17 +939,21 @@ def get_css():
     }
 
     @media screen and (max-width: 768px) {
-        .st-key-nx_composer {
-            width: calc(100% - 12px) !important;
-            max-width: calc(100% - 12px) !important;
-            min-width: 0 !important;
-            margin: 0 auto !important;
-            padding: 4px 6px !important;
-            border-radius: 23px !important;
-            overflow: visible !important;
-            transform: none !important;
-            left: auto !important;
-        }
+    .st-key-nx_composer {
+        position: fixed !important;
+        left: 50% !important;
+        bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        transform: translateX(-50%) !important;
+        z-index: 9999 !important;
+        width: calc(100% - 12px) !important;
+        max-width: calc(100% - 12px) !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding: 4px 6px !important;
+        border-radius: 23px !important;
+        overflow: visible !important;
+    }
+}
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
             gap: 4px !important;
         }
