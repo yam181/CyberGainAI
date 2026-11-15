@@ -319,10 +319,13 @@ def get_css():
     }
 
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-        background: rgba(116, 78, 178, .12) !important;
-        border: 1px solid rgba(150, 112, 220, .13) !important;
-        border-radius: 18px !important;
+        background: rgba(132, 92, 205, .19) !important;
+        border: 1px solid rgba(171, 137, 235, .22) !important;
+        border-radius: 20px !important;
         padding: 13px 18px !important;
+        width: fit-content !important;
+        max-width: min(88%, 760px) !important;
+        margin-left: auto !important;
     }
 
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
@@ -446,6 +449,15 @@ def get_css():
     }
     .st-key-nx_composer [data-testid="stAudioInput"] label {
         display: none !important;
+    }
+    .st-key-nx_talk_label {
+        color: #d8caff !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding-top: 2px !important;
     }
     .st-key-nx_composer [data-testid="stPopover"] button {
         width: 44px !important;
@@ -1850,11 +1862,12 @@ if "nx_attachment_version" not in st.session_state:
     st.session_state["nx_attachment_version"] = 0
 
 with st.container(key="nx_composer"):
-    add_col, chat_col, send_col, mic_col = st.columns(
-        [0.75, 8.4, 0.85, 0.85],
+    add_col, chat_col, send_col, mic_col, talk_label_col = st.columns(
+        [0.72, 7.9, 0.78, 0.78, 1.55],
         vertical_alignment="center",
     )
 
+    # الزائد على اليسار: الصور والملفات داخل قائمة واحدة.
     with add_col:
         with st.popover("＋", help="إضافة صورة أو ملف", use_container_width=True, key="nx_add_files"):
             st.caption("أضف صورة أو مستنداً إلى رسالتك")
@@ -1865,26 +1878,32 @@ with st.container(key="nx_composer"):
                 label_visibility="collapsed",
             )
 
+    # مساحة الكتابة في الوسط.
     with chat_col:
         typed_text = st.text_input(
             "رسالتك",
-            placeholder="اكتب رسالتك أو استخدم الميكروفون...",
+            placeholder="اكتب رسالتك...",
             label_visibility="collapsed",
             key="nx_chat_text",
         )
 
+    # إرسال الرسالة.
     with send_col:
         send_clicked_button = st.button(
             "➤", key="nx_chat_send", type="primary", use_container_width=True
         )
 
+    # الميكروفون مع تسمية واضحة للتحدث مع NEXORA.
     with mic_col:
         audio_result = st.audio_input(
-            "🎙️",
+            "تحدث مع AI",
             sample_rate=16000,
             key=f"nx_audio_input_{st.session_state['nx_audio_widget_version']}",
             label_visibility="collapsed",
         )
+
+    with talk_label_col:
+        st.markdown('<div style="color:#d8caff;font-size:12px;font-weight:600;white-space:nowrap;text-align:center;padding-top:2px">تحدث مع AI</div>', unsafe_allow_html=True)
 
 # حوّل التسجيل مرة واحدة فقط، ثم أرسل النص تلقائياً إلى NEXORA.
 if audio_result is not None:
