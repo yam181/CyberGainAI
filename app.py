@@ -431,23 +431,72 @@ def get_css():
         border: 1px solid rgba(190, 163, 255, .4) !important;
         color: white !important;
     }
+    /* Keep Streamlit's recorder itself transparent: no grey panel or padded card. */
     .st-key-nx_composer [data-testid="stAudioInput"] {
-        margin: 0 !important;
-        padding: 0 !important;
-        min-width: 0 !important;
-    }
-    .st-key-nx_composer [data-testid="stAudioInput"] button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         width: 44px !important;
         min-width: 44px !important;
+        max-width: 44px !important;
         height: 44px !important;
         min-height: 44px !important;
+        margin: 0 !important;
         padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
         border-radius: 50% !important;
-        background: rgba(35, 29, 49, .96) !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] > div,
+    .st-key-nx_composer [data-testid="stAudioInput"] > div > div,
+    .st-key-nx_composer [data-testid="stAudioInput"] [data-testid],
+    .st-key-nx_composer [data-testid="stAudioInput"] label {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: 0 !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] > div,
+    .st-key-nx_composer [data-testid="stAudioInput"] > div > div {
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        min-height: 0 !important;
+        height: 44px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 50% !important;
+        background: rgba(35, 29, 49, .72) !important;
         border: 1px solid rgba(164, 128, 226, .32) !important;
+        box-shadow: none !important;
         color: #d8caff !important;
     }
+    .st-key-nx_composer [data-testid="stAudioInput"] button:hover {
+        background: rgba(91, 65, 137, .72) !important;
+        border-color: rgba(190, 163, 255, .62) !important;
+    }
     .st-key-nx_composer [data-testid="stAudioInput"] label {
+        display: none !important;
+    }
+    .st-key-nx_composer [data-testid="stAudioInput"] audio {
         display: none !important;
     }
     .st-key-nx_talk_label {
