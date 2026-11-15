@@ -660,6 +660,68 @@ def get_css():
             padding: 1.2rem .8rem 6rem !important;
         }
 
+        /* Mobile composer: force every control to stay on ONE horizontal row. */
+        .st-key-nx_composer [data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 4px !important;
+            width: 100% !important;
+        }
+        .st-key-nx_composer [data-testid="column"] {
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
+        /* Outer row: add | message+send | record | voice mode */
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
+            flex: 0 0 38px !important;
+            width: 38px !important;
+        }
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
+            flex: 1 1 0 !important;
+            width: auto !important;
+        }
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3) {
+            flex: 0 0 38px !important;
+            width: 38px !important;
+        }
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4) {
+            flex: 0 0 82px !important;
+            width: 82px !important;
+        }
+        /* Keep the text field and send button side by side inside the form. */
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex: 1 1 0 !important;
+            width: auto !important;
+        }
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex: 0 0 36px !important;
+            width: 36px !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input {
+            height: 44px !important;
+            min-height: 44px !important;
+            padding: 0 9px !important;
+            font-size: 14px !important;
+        }
+        .st-key-nx_add_files button,
+        .st-key-nx_chat_send button,
+        .st-key-nx_composer [data-testid="stAudioInput"] button {
+            width: 36px !important;
+            min-width: 36px !important;
+            height: 40px !important;
+            min-height: 40px !important;
+        }
+        .st-key-nx_voice_mode_toggle button {
+            width: 82px !important;
+            min-width: 82px !important;
+            height: 40px !important;
+            min-height: 40px !important;
+            padding: 0 4px !important;
+            font-size: 10px !important;
+            white-space: nowrap !important;
+        }
+
         .welcome-container {
             min-height: 48vh;
         }
