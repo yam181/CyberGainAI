@@ -831,31 +831,40 @@ def get_css():
 
     /* Inner row: input takes all remaining space + send button */
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-flow: row nowrap !important;
-        align-items: center !important;
-        gap: 4px !important;
-        width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] [data-testid="column"] {
-        min-width: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-        flex: 1 1 0% !important;
-        width: auto !important;
-        min-width: 0 !important;
-        max-width: none !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-        flex: 0 0 36px !important;
-        width: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
-    }
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.st-key-nx_composer [data-testid="stForm"] [data-testid="column"] {
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+    flex: 1 1 0% !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+.st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+    flex: 0 0 32px !important;
+    width: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+}
 
     /* Make the actual input fill its column, so tapping the center works */
     .st-key-nx_composer [data-testid="stTextInput"],
