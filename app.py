@@ -6,6 +6,7 @@ from groq import Groq
 from supabase import create_client
 from datetime import datetime, timezone, timedelta, date
 import mimetypes
+import hashlib
 from pathlib import Path
 import uuid
 import re
@@ -42,6 +43,10 @@ defaults = {
     "profile_name": "",
     "confirm_delete_account": False,
     "active_tool": "المحادثة العامة",
+    "voice_transcript": "",
+    "send_voice_transcript": False,
+    "voice_recording_hash": "",
+    "voice_tts_audio": None,
     "nx_export_errors": {},
 }
 
@@ -314,13 +319,10 @@ def get_css():
     }
 
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-        background: rgba(132, 92, 205, .19) !important;
-        border: 1px solid rgba(171, 137, 235, .22) !important;
-        border-radius: 20px !important;
+        background: rgba(116, 78, 178, .12) !important;
+        border: 1px solid rgba(150, 112, 220, .13) !important;
+        border-radius: 18px !important;
         padding: 13px 18px !important;
-        width: fit-content !important;
-        max-width: min(88%, 760px) !important;
-        margin-left: auto !important;
     }
 
     [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
@@ -378,93 +380,12 @@ def get_css():
         color: #a99cbe;
     }
 
-    /* One unified ChatGPT-style composer: every control lives inside one capsule. */
-    .st-key-nx_composer {
-        background: #171222 !important;
-        border: 1px solid rgba(164, 128, 226, .30) !important;
-        border-radius: 24px !important;
-        padding: 2px 6px !important;
-        margin-top: 8px !important;
-        box-shadow: 0 5px 18px rgba(0, 0, 0, .16) !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-    }
-    .st-key-nx_composer [data-testid="stHorizontalBlock"] {
-        align-items: center !important;
-        flex-wrap: nowrap !important;
-        gap: 3px !important;
-        width: 100% !important;
-    }
-    .st-key-nx_composer [data-testid="column"] {
-        min-width: 0 !important;
-        padding: 0 !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] {
-        margin: 0 !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] {
-        border: 0 !important;
-        background: transparent !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-        gap: 3px !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input {
-        height: 38px !important;
-        min-height: 38px !important;
-        background: transparent !important;
-        color: #f3effa !important;
-        border: 0 !important;
-        border-radius: 18px !important;
-        text-align: right !important;
-        direction: rtl !important;
-        padding: 0 8px !important;
-        box-shadow: none !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-        color: #d8caff !important;
-        opacity: 1 !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input:focus {
-        border: 0 !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-    .st-key-nx_add_files button,
-    .st-key-nx_chat_send button {
-        width: 30px !important;
-        min-width: 30px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-        font-size: 18px !important;
-    }
-    .st-key-nx_add_files button {
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        color: #d8caff !important;
-    }
-    .st-key-nx_chat_send button {
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer [data-testid="stPopover"] button {
-        width: 30px !important;
-        min-width: 30px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
+    /* Composer */
+    [data-testid="stChatInput"] {
+        background: rgba(23, 18, 36, .96) !important;
+        border: 1px solid rgba(164, 128, 226, .32) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
     }
 
     [data-testid="stChatInput"]:focus-within {
@@ -500,32 +421,6 @@ def get_css():
         background: linear-gradient(135deg, #8962d0, #6844aa) !important;
         border-color: rgba(210, 190, 255, .7) !important;
         transform: translateY(-1px);
-    }
-
-    /* Final composer overrides: no individual button tiles or bright fills. */
-    .st-key-nx_composer .st-key-nx_add_files button,
-    .st-key-nx_composer .st-key-nx_chat_send button {
-        background: transparent !important;
-        background-color: transparent !important;
-        background-image: none !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        transform: none !important;
-    }
-    .st-key-nx_composer .st-key-nx_chat_send button {
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer .st-key-nx_add_files button {
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"],
-    .st-key-nx_composer [data-testid="stTextInput"],
-    .st-key-nx_composer [data-testid="stTextInput"] > div,
-    .st-key-nx_composer [data-testid="stTextInput"] > div > div {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
     }
 
     [data-testid="stSidebar"] .stButton > button {
@@ -617,65 +512,6 @@ def get_css():
     @media (max-width: 768px) {
         .block-container {
             padding: 1.2rem .8rem 6rem !important;
-        }
-        .st-key-nx_composer {
-            padding: 2px 4px !important;
-            border-radius: 20px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Mobile composer: all controls remain together in the same capsule. */
-        .st-key-nx_composer [data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-wrap: nowrap !important;
-            align-items: center !important;
-            gap: 2px !important;
-            width: 100% !important;
-        }
-        .st-key-nx_composer [data-testid="column"] {
-            min-width: 0 !important;
-            padding: 0 !important;
-        }
-        /* Mobile composer: attachment + text field and send only. */
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-            flex: 0 0 30px !important;
-            width: 30px !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 1 1 0 !important;
-            width: auto !important;
-        }
-        /* Keep the text field and send button side by side inside the form. */
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-            flex: 1 1 0 !important;
-            width: auto !important;
-        }
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 0 0 30px !important;
-            width: 30px !important;
-        }
-        .st-key-nx_composer [data-testid="stTextInput"] input {
-            height: 36px !important;
-            min-height: 36px !important;
-            padding: 0 6px !important;
-            font-size: 14px !important;
-        }
-        .st-key-nx_add_files button,
-        .st-key-nx_chat_send button {
-            width: 28px !important;
-            min-width: 28px !important;
-            height: 32px !important;
-            min-height: 32px !important;
-        }
-        .st-key-nx_composer [data-testid="stPopover"] button {
-            width: 27px !important;
-            min-width: 27px !important;
-            height: 30px !important;
-            min-height: 30px !important;
         }
 
         .welcome-container {
@@ -909,7 +745,8 @@ def logout():
     for key in [
         "user", "access_token", "refresh_token",
         "conversation_id", "messages", "show_settings",
-        "show_profile", "profile_image", "profile_name",
+        "show_profile", "profile_image", "profile_name", "voice_transcript",
+        "send_voice_transcript",
     ]:
         st.session_state[key] = [] if key == "messages" else (
             False if key in ("show_settings", "show_profile") else None
@@ -1933,47 +1770,94 @@ else:
 
 
 # =====================================
-# شريط المحادثة: إضافة ملفات + كتابة + إرسال
+# المحادثة الصوتية والكتابة والمرفقات
 # =====================================
-if st.session_state.pop("nx_clear_chat_text", False):
-    st.session_state["nx_chat_text"] = ""
+# التسجيل الصوتي داخل المحادثة: يُحوّل إلى نص أولاً، ويمكن مراجعته قبل الإرسال.
+with st.expander("🎙️ التحدث إلى NEXORA", expanded=False):
+    audio_file = st.audio_input("سجّل رسالتك الصوتية")
+    if audio_file is not None:
+        audio_bytes = audio_file.getvalue()
+        audio_hash = hashlib.sha256(audio_bytes).hexdigest()
+        if len(audio_bytes) > 25 * 1024 * 1024:
+            st.error("حجم التسجيل يتجاوز الحد المسموح 25 MB.")
+        elif st.button("تحويل التسجيل إلى نص", key="nx_transcribe_inline", disabled=(audio_hash == st.session_state.get("voice_recording_hash"))):
+            try:
+                transcription = groq.audio.transcriptions.create(
+                    file=(getattr(audio_file, "name", None) or "recording.wav", audio_bytes),
+                    model="whisper-large-v3-turbo",
+                    response_format="text",
+                )
+                if isinstance(transcription, str):
+                    transcript_text = transcription
+                else:
+                    transcript_text = getattr(transcription, "text", "") or ""
+                transcript_text = transcript_text.strip()
+                if transcript_text:
+                    st.session_state.voice_transcript = transcript_text
+                    st.session_state.voice_recording_hash = audio_hash
+                    st.session_state["nx_transcript_edit"] = transcript_text
+                    st.success("تم تحويل التسجيل. راجع النص ثم أرسله إلى NEXORA.")
+                    st.rerun()
+                else:
+                    st.warning("لم يتم العثور على كلام واضح في التسجيل.")
+            except Exception:
+                st.error("تعذّر تحويل التسجيل. افحص صيغة الصوت وحد الحجم وحالة Groq API.")
 
-if "nx_attachment_version" not in st.session_state:
-    st.session_state["nx_attachment_version"] = 0
+    if st.session_state.get("voice_transcript"):
+        edited_transcript = st.text_area(
+            "النص المستخرج (يمكنك تعديله قبل الإرسال)",
+            key="nx_transcript_edit",
+            height=100,
+        )
+        if st.button("إرسال التسجيل إلى NEXORA", key="nx_send_voice", type="primary"):
+            clean_transcript = (edited_transcript or "").strip()
+            if clean_transcript:
+                st.session_state.voice_transcript = clean_transcript
+                st.session_state.send_voice_transcript = True
+                st.rerun()
+            else:
+                st.warning("النص فارغ؛ سجّل مرة أخرى أو اكتب رسالة.")
 
-with st.container(key="nx_composer"):
-    add_col, chat_form_col = st.columns([0.62, 10.0], vertical_alignment="center")
-
-    with add_col:
-        with st.popover("＋", help="إضافة صورة أو ملف", use_container_width=True, key="nx_add_files"):
-            st.caption("أضف صورة أو مستنداً إلى رسالتك")
-            uploaded_files = st.file_uploader(
-                "الصور والملفات",
-                accept_multiple_files=True,
-                key=f"nx_chat_attachments_{st.session_state['nx_attachment_version']}",
-                label_visibility="collapsed",
+# الاستماع إلى آخر رد نصي. قد لا تكون خدمة TTS متاحة لكل حسابات Groq.
+last_answer_for_voice = next((m.get("content", "") for m in reversed(st.session_state.messages) if m.get("role") == "assistant"), "")
+if last_answer_for_voice:
+    if st.button("🔊 قراءة آخر رد بصوت عربي", key="nx_tts_inline"):
+        try:
+            speech = groq.audio.speech.create(
+                model="canopylabs/orpheus-arabic-saudi",
+                voice="fahad",
+                input=last_answer_for_voice[:200],
+                response_format="wav",
             )
+            if hasattr(speech, "read"):
+                audio_bytes_out = speech.read()
+            elif hasattr(speech, "content"):
+                audio_bytes_out = speech.content
+            else:
+                audio_bytes_out = bytes(speech)
+            if not audio_bytes_out:
+                raise ValueError("Empty speech response")
+            st.audio(audio_bytes_out, format="audio/wav")
+            st.caption("الصوت العربي المتاح قد يكون باللهجة السعودية، وقد لا يتوفر في جميع حسابات Groq.")
+        except Exception:
+            st.warning("تعذّر إنشاء الصوت في هذه المحاولة. بقي الرد النصي متاحاً.")
 
-    with chat_form_col:
-        with st.form("nx_chat_form", clear_on_submit=False, border=False):
-            text_col, send_col = st.columns([8.5, 0.8], vertical_alignment="center")
-            with text_col:
-                typed_text = st.text_input(
-                    "رسالتك",
-                    placeholder="اكتب رسالتك...",
-                    label_visibility="collapsed",
-                    key="nx_chat_text",
-                )
-            with send_col:
-                send_clicked = st.form_submit_button(
-                    "➤", key="nx_chat_send", type="primary", use_container_width=True
-                )
+prompt = st.chat_input(
+    t("chat_placeholder"),
+    accept_file="multiple",
+)
+if st.session_state.get("send_voice_transcript"):
+    prompt = st.session_state.voice_transcript
+    st.session_state.send_voice_transcript = False
+    st.session_state.voice_transcript = ""
 
-prompt = typed_text if send_clicked else None
-files = uploaded_files or []
-
-if send_clicked:
-    user_text = str(prompt or "").strip()
+if prompt:
+    if hasattr(prompt, "text"):
+        user_text = prompt.text.strip() if prompt.text else ""
+        files = prompt.files if prompt.files else []
+    else:
+        user_text = str(prompt).strip()
+        files = []
 
     if not user_text and not files:
         st.stop()
@@ -2037,8 +1921,6 @@ if send_clicked:
 
         st.session_state.messages.append({"role": "user", "content": final_prompt})
         st.session_state.messages.append({"role": "assistant", "content": answer})
-        st.session_state["nx_clear_chat_text"] = True
-        st.session_state["nx_attachment_version"] += 1
         try:
             save_message(cid, "user", final_prompt)
             save_message(cid, "assistant", answer)
