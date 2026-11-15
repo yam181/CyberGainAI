@@ -781,6 +781,52 @@ def get_css():
             padding-bottom: 2rem !important;
         }
     }
+
+    /* Final composer alignment: keep placeholder visible before focus and pin send to the edge. */
+    .st-key-nx_composer [data-testid="stTextInput"] input:not(:focus)::placeholder,
+    .st-key-nx_composer [data-testid="stTextInput"] input:focus::placeholder {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 4px !important;
+    }
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 0 0 38px !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }
+    .st-key-nx_composer .st-key-nx_chat_send,
+    .st-key-nx_composer .st-key-nx_chat_send [data-testid="stFormSubmitButton"] {
+        width: 34px !important;
+        min-width: 34px !important;
+        margin-left: auto !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+    }
+    .st-key-nx_composer .st-key-nx_chat_send button {
+        width: 30px !important;
+        min-width: 30px !important;
+        margin-left: auto !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
     </style>
     """
     if st.session_state.theme == "light":
