@@ -782,49 +782,104 @@ def get_css():
         }
     }
 
-    /* Final composer alignment: keep placeholder visible before focus and pin send to the edge. */
-    .st-key-nx_composer [data-testid="stTextInput"] input:not(:focus)::placeholder,
-    .st-key-nx_composer [data-testid="stTextInput"] input:focus::placeholder {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        opacity: 1 !important;
-        visibility: visible !important;
+    /* Stable composer controls: attachment | flexible input | send. */
+    .st-key-nx_composer > div [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 5px !important;
+    }
+    .st-key-nx_composer [data-testid="column"] {
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+    .st-key-nx_composer > div [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 0 0 36px !important;
+        width: 36px !important;
+        min-width: 36px !important;
+    }
+    .st-key-nx_composer > div [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 1 1 0% !important;
+        width: 0 !important;
+        min-width: 0 !important;
     }
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
         width: 100% !important;
+        min-width: 0 !important;
         gap: 4px !important;
     }
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-        flex: 1 1 auto !important;
-        width: auto !important;
+        flex: 1 1 0% !important;
+        width: 0 !important;
         min-width: 0 !important;
     }
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-        flex: 0 0 38px !important;
-        width: 38px !important;
-        min-width: 38px !important;
+        flex: 0 0 36px !important;
+        width: 36px !important;
+        min-width: 36px !important;
         display: flex !important;
-        align-items: center !important;
-        justify-content: flex-end !important;
-    }
-    .st-key-nx_composer .st-key-nx_chat_send,
-    .st-key-nx_composer .st-key-nx_chat_send [data-testid="stFormSubmitButton"] {
-        width: 34px !important;
-        min-width: 34px !important;
-        margin-left: auto !important;
-        display: flex !important;
-        justify-content: flex-end !important;
-    }
-    .st-key-nx_composer .st-key-nx_chat_send button {
-        width: 30px !important;
-        min-width: 30px !important;
-        margin-left: auto !important;
-        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+    }
+    .st-key-nx_composer .st-key-nx_add_files,
+    .st-key-nx_composer .st-key-nx_add_files [data-testid="stPopover"],
+    .st-key-nx_composer .st-key-nx_chat_send,
+    .st-key-nx_composer .st-key-nx_chat_send [data-testid="stFormSubmitButton"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 36px !important;
+    }
+    .st-key-nx_composer .st-key-nx_add_files button,
+    .st-key-nx_composer .st-key-nx_chat_send button {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 50% !important;
+        background: transparent !important;
+        color: #e5d9ff !important;
+        box-shadow: none !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"],
+    .st-key-nx_composer [data-testid="stTextInput"] > div,
+    .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"],
+    .st-key-nx_composer [data-testid="stTextInput"] input {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input {
+        text-align: right !important;
+        direction: rtl !important;
+        cursor: text !important;
+        pointer-events: auto !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+        opacity: 1 !important;
+        text-align: right !important;
     }
 
     </style>
@@ -2050,7 +2105,7 @@ if "nx_attachment_version" not in st.session_state:
     st.session_state["nx_attachment_version"] = 0
 
 with st.container(key="nx_composer"):
-    add_col, chat_form_col = st.columns([0.75, 10.0], vertical_alignment="center")
+    add_col, chat_form_col = st.columns([0.85, 10.0], vertical_alignment="center")
 
     with add_col:
         with st.popover("＋", help="إضافة صورة أو ملف", use_container_width=True, key="nx_add_files"):
@@ -2064,7 +2119,7 @@ with st.container(key="nx_composer"):
 
     with chat_form_col:
         with st.form("nx_chat_form", clear_on_submit=False, border=False, enter_to_submit=False):
-            text_col, send_col = st.columns([10.0, 0.65], vertical_alignment="center")
+            text_col, send_col = st.columns([10.0, 0.9], vertical_alignment="center")
             with text_col:
                 typed_text = st.text_input(
                     "رسالتك",
