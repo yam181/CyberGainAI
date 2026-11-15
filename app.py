@@ -385,12 +385,17 @@ def get_css():
 
     /* One unified ChatGPT-style composer: every control lives inside one capsule. */
     .st-key-nx_composer {
-        background: rgba(23, 18, 36, .96) !important;
-        border: 1px solid rgba(164, 128, 226, .38) !important;
-        border-radius: 28px !important;
-        padding: 3px 7px !important;
+        background: #171222 !important;
+        border: 1px solid rgba(164, 128, 226, .30) !important;
+        border-radius: 24px !important;
+        padding: 2px 6px !important;
         margin-top: 8px !important;
-        box-shadow: 0 8px 28px rgba(0, 0, 0, .20) !important;
+        box-shadow: 0 5px 18px rgba(0, 0, 0, .16) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
     .st-key-nx_composer [data-testid="stHorizontalBlock"] {
         align-items: center !important;
@@ -415,18 +420,38 @@ def get_css():
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
         gap: 3px !important;
     }
-    .st-key-nx_voice_mode_toggle button {
-        min-height: 30px !important;
+    /* Voice mode is only a tiny waveform glyph, never a colored button. */
+    .st-key-nx_composer .st-key-nx_voice_mode_toggle button,
+    .st-key-nx_composer .st-key-nx_voice_mode_toggle .stButton > button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        max-width: 28px !important;
         height: 30px !important;
+        min-height: 30px !important;
         border: 0 !important;
         border-radius: 0 !important;
         background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
         box-shadow: none !important;
         color: #d8caff !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        padding: 0 2px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        padding: 0 !important;
         white-space: nowrap !important;
+        transform: none !important;
+    }
+    .st-key-nx_composer .st-key-nx_voice_mode_toggle button:hover,
+    .st-key-nx_composer .st-key-nx_voice_mode_toggle button:focus {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        color: #eee6ff !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input {
         height: 38px !important;
@@ -441,7 +466,7 @@ def get_css():
         box-shadow: none !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-        color: #c9b8ed !important;
+        color: #d8caff !important;
         opacity: 1 !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input:focus {
@@ -591,6 +616,33 @@ def get_css():
         transform: translateY(-1px);
     }
 
+    /* Final composer overrides: no individual button tiles or bright fills. */
+    .st-key-nx_composer .st-key-nx_add_files button,
+    .st-key-nx_composer .st-key-nx_chat_send button,
+    .st-key-nx_composer .st-key-nx_voice_mode_toggle button {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    .st-key-nx_composer .st-key-nx_chat_send button {
+        color: #d8caff !important;
+    }
+    .st-key-nx_composer .st-key-nx_add_files button {
+        color: #d8caff !important;
+    }
+    .st-key-nx_composer [data-testid="stForm"],
+    .st-key-nx_composer [data-testid="stTextInput"],
+    .st-key-nx_composer [data-testid="stTextInput"] > div,
+    .st-key-nx_composer [data-testid="stTextInput"] > div > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
     [data-testid="stSidebar"] .stButton > button {
         min-height: 39px !important;
         background: transparent !important;
@@ -683,9 +735,12 @@ def get_css():
         }
         .st-key-nx_composer {
             padding: 2px 4px !important;
-            border-radius: 22px !important;
+            border-radius: 20px !important;
             width: 100% !important;
-            overflow: visible !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
         }
 
         /* Mobile composer: all controls remain together in the same capsule. */
@@ -702,20 +757,20 @@ def get_css():
         }
         /* Outer row: add | message+send | record | voice mode */
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
-            flex: 0 0 27px !important;
-            width: 27px !important;
+            flex: 0 0 25px !important;
+            width: 25px !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
             flex: 1 1 0 !important;
             width: auto !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3) {
-            flex: 0 0 30px !important;
-            width: 30px !important;
+            flex: 0 0 27px !important;
+            width: 27px !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4) {
-            flex: 0 0 62px !important;
-            width: 62px !important;
+            flex: 0 0 28px !important;
+            width: 28px !important;
         }
         /* Keep the text field and send button side by side inside the form. */
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
@@ -723,8 +778,8 @@ def get_css():
             width: auto !important;
         }
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 0 0 36px !important;
-            width: 36px !important;
+            flex: 0 0 30px !important;
+            width: 30px !important;
         }
         .st-key-nx_composer [data-testid="stTextInput"] input {
             height: 36px !important;
@@ -746,17 +801,18 @@ def get_css():
             height: 30px !important;
             min-height: 30px !important;
         }
-        .st-key-nx_voice_mode_toggle button {
-            width: 62px !important;
-            min-width: 62px !important;
+        .st-key-nx_composer .st-key-nx_voice_mode_toggle button {
+            width: 26px !important;
+            min-width: 26px !important;
+            max-width: 26px !important;
             height: 30px !important;
             min-height: 30px !important;
-            padding: 0 1px !important;
-            font-size: 9px !important;
+            padding: 0 !important;
+            font-size: 12px !important;
             border: 0 !important;
             background: transparent !important;
+            background-image: none !important;
             box-shadow: none !important;
-            white-space: nowrap !important;
         }
 
         .welcome-container {
@@ -2028,7 +2084,7 @@ if "nx_attachment_version" not in st.session_state:
 
 with st.container(key="nx_composer"):
     add_col, chat_form_col, mic_col, voice_col = st.columns(
-        [0.72, 8.9, 0.82, 1.45],
+        [0.62, 10.0, 0.68, 0.62],
         vertical_alignment="center",
     )
 
@@ -2072,12 +2128,13 @@ with st.container(key="nx_composer"):
     if "nx_voice_mode_active" not in st.session_state:
         st.session_state["nx_voice_mode_active"] = False
     with voice_col:
-        voice_button_label = "إيقاف الصوت" if st.session_state["nx_voice_mode_active"] else "تحدث مع AI"
+        voice_button_label = "▂▅▇▅▂" if not st.session_state["nx_voice_mode_active"] else "▂▇▅▇▂"
         voice_mode_clicked = st.button(
             voice_button_label,
             key="nx_voice_mode_toggle",
             type="secondary",
             use_container_width=True,
+            help="تحدث مع AI" if not st.session_state["nx_voice_mode_active"] else "إيقاف وضع الصوت",
         )
         if voice_mode_clicked:
             st.session_state["nx_voice_mode_active"] = not st.session_state["nx_voice_mode_active"]
