@@ -691,6 +691,14 @@ def get_css():
             background-color: #171222 !important;
             box-sizing: border-box !important;
         }
+        .st-key-nx_composer .st-key-nx_add_files button,
+        .st-key-nx_composer .st-key-nx_chat_send button {
+            width: 26px !important;
+            min-width: 26px !important;
+            height: 26px !important;
+            min-height: 26px !important;
+            font-size: 15px !important;
+        }
         .st-key-nx_composer [data-testid="stTextInput"] input {
             display: block !important;
             width: 100% !important;
@@ -749,7 +757,8 @@ def get_css():
             z-index: 50 !important;
             display: block !important;
             pointer-events: auto !important;
-            min-height: 42px !important;
+            min-height: 36px !important;
+            padding: 1px 4px !important;
             overflow: visible !important;
         }
         .st-key-nx_composer,
@@ -782,9 +791,9 @@ def get_css():
             min-width: 0 !important;
         }
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 0 0 30px !important;
-            width: 30px !important;
-            min-width: 30px !important;
+            flex: 0 0 27px !important;
+            width: 27px !important;
+            min-width: 27px !important;
         }
         .st-key-nx_composer [data-testid="stTextInput"],
         .st-key-nx_composer [data-testid="stTextInput"] > div,
@@ -804,8 +813,9 @@ def get_css():
             display: block !important;
             width: 100% !important;
             min-width: 0 !important;
-            height: 36px !important;
-            min-height: 36px !important;
+            height: 30px !important;
+            min-height: 30px !important;
+            max-height: 30px !important;
             visibility: visible !important;
             opacity: 1 !important;
             pointer-events: auto !important;
@@ -813,8 +823,8 @@ def get_css():
             background: #171222 !important;
             color: #f3effa !important;
             -webkit-text-fill-color: #f3effa !important;
-            font-size: 13px !important;
-            padding: 0 8px !important;
+            font-size: 12px !important;
+            padding: 0 7px !important;
             text-align: right !important;
             direction: rtl !important;
         }
