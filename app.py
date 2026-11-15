@@ -416,20 +416,42 @@ def get_css():
         gap: 3px !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input {
-        height: 38px !important;
-        min-height: 38px !important;
-        background: transparent !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        background: #171222 !important;
+        background-color: #171222 !important;
         color: #f3effa !important;
+        -webkit-text-fill-color: #f3effa !important;
         border: 0 !important;
         border-radius: 18px !important;
         text-align: right !important;
         direction: rtl !important;
-        padding: 0 8px !important;
+        padding: 0 9px !important;
         box-shadow: none !important;
+        box-sizing: border-box !important;
+        font-size: 14px !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-        color: #d8caff !important;
+        color: #cbb9ee !important;
+        -webkit-text-fill-color: #cbb9ee !important;
         opacity: 1 !important;
+        text-align: right !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] > div,
+    .st-key-nx_composer [data-testid="stTextInput"] > div > div,
+    .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        background: #171222 !important;
+        background-color: #171222 !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        box-sizing: border-box !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input:focus {
         border: 0 !important;
@@ -658,11 +680,36 @@ def get_css():
             flex: 0 0 30px !important;
             width: 30px !important;
         }
+        .st-key-nx_composer [data-testid="stTextInput"],
+        .st-key-nx_composer [data-testid="stTextInput"] > div,
+        .st-key-nx_composer [data-testid="stTextInput"] > div > div,
+        .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            background: #171222 !important;
+            background-color: #171222 !important;
+            box-sizing: border-box !important;
+        }
         .st-key-nx_composer [data-testid="stTextInput"] input {
-            height: 36px !important;
-            min-height: 36px !important;
-            padding: 0 6px !important;
-            font-size: 14px !important;
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 34px !important;
+            min-height: 34px !important;
+            padding: 0 8px !important;
+            font-size: 13px !important;
+            background: #171222 !important;
+            background-color: #171222 !important;
+            text-align: right !important;
+            direction: rtl !important;
+            box-sizing: border-box !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+            color: #cbb9ee !important;
+            -webkit-text-fill-color: #cbb9ee !important;
+            opacity: 1 !important;
         }
         .st-key-nx_add_files button,
         .st-key-nx_chat_send button {
@@ -696,27 +743,8 @@ def get_css():
             right: 8px !important;
         }
 
-        /* Mobile only: keep the composer visible above the safe-area. */
-        [data-testid="stChatInput"] {
-            position: fixed !important;
-            left: .65rem !important;
-            right: .65rem !important;
-            bottom: calc(.45rem + env(safe-area-inset-bottom)) !important;
-            width: auto !important;
-            max-width: none !important;
-            z-index: 100000 !important;
-            margin: 0 !important;
-        }
         [data-testid="stMainBlockContainer"] {
-            padding-bottom: 8.5rem !important;
-        }
-        [data-testid="stChatInput"] textarea {
-            max-height: 120px !important;
-            overflow-y: auto !important;
-            font-size: 16px !important;
-        }
-        [data-testid="stChatInput"] button {
-            min-width: 38px !important; min-height: 38px !important;
+            padding-bottom: 2rem !important;
         }
     }
     </style>
