@@ -10,3 +10,5 @@ python-pptx
 pandas
 Pillow
 requests
+arabic-reshaper
+python-bidi
