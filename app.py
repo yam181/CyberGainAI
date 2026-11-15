@@ -13,6 +13,8 @@ import re
 import base64
 import io
 import requests
+import tempfile
+import streamlit.components.v1 as components
 
 # =====================================
 # إعداد الصفحة
@@ -47,6 +49,9 @@ defaults = {
     "send_voice_transcript": False,
     "voice_recording_hash": "",
     "voice_tts_audio": None,
+    "nx_voice_client_secret": "",
+    "nx_voice_last_event": "",
+    "nx_voice_error": "",
     "nx_export_errors": {},
 }
 
@@ -632,6 +637,202 @@ GENERAL RULES:
 
 
 # =====================================
+# NEXORA Live Voice (OpenAI Realtime + WebRTC)
+# =====================================
+VOICE_COMPONENT_HTML = r"""<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:transparent;color:#f5f1ff}
+.shell{width:100%;border:1px solid rgba(167,139,250,.22);border-radius:18px;background:linear-gradient(135deg,rgba(31,20,52,.97),rgba(19,18,37,.98));padding:14px 16px;display:flex;align-items:center;gap:16px;min-height:76px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.orb-wrap{width:52px;height:52px;flex:0 0 52px;display:grid;place-items:center;position:relative}
+.orb{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#d9c7ff 0,#9b72f5 28%,#6c3bd1 62%,#29144e 100%);box-shadow:0 0 18px rgba(151,104,255,.55),inset 0 0 10px rgba(255,255,255,.3);transition:transform .25s}
+.orb:before,.orb:after{content:"";position:absolute;inset:2px;border:1px solid rgba(173,143,255,.4);border-radius:50%;animation:pulse 2.5s ease-out infinite}
+.orb:after{animation-delay:1.2s}
+.shell.active,.shell.speaking{flex-direction:column;text-align:center;min-height:190px;gap:9px;padding:16px}
+.shell.active .orb-wrap,.shell.speaking .orb-wrap{width:82px;height:82px;flex-basis:82px}
+.shell.active .orb,.shell.speaking .orb{width:62px;height:62px}
+.shell.active .orb{animation:breathe 1.7s ease-in-out infinite}
+.shell.speaking .orb{animation:speak .55s ease-in-out infinite alternate}
+.shell.active .controls,.shell.speaking .controls{justify-content:center}
+@keyframes pulse{0%{transform:scale(.8);opacity:.8}100%{transform:scale(1.55);opacity:0}}
+@keyframes breathe{0%,100%{transform:scale(.94)}50%{transform:scale(1.13)}}
+@keyframes speak{from{transform:scale(.92)}to{transform:scale(1.22)}}
+.info{min-width:0;flex:1}.title{font-size:14px;font-weight:700;letter-spacing:.2px}.status{font-size:12px;color:#b9afd0;margin-top:4px;line-height:1.4}
+.controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+button{border:0;border-radius:11px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;color:white;background:linear-gradient(135deg,#8050dc,#5e35b6);box-shadow:0 4px 14px rgba(107,65,190,.25)}
+button.secondary{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);box-shadow:none}
+button.danger{background:#a63855}button:disabled{opacity:.55;cursor:wait}
+.note{font-size:11px;color:#a99dbf;margin-top:9px;padding-left:2px}
+@media(max-width:520px){.shell{gap:10px;padding:12px}.controls{gap:6px}button{padding:9px 10px}.orb-wrap{width:44px;flex-basis:44px}}
+</style>
+</head>
+<body>
+<div id="shell" class="shell">
+  <div class="orb-wrap"><div id="orb" class="orb"></div></div>
+  <div class="info"><div class="title">NEXORA Live Voice</div><div id="status" class="status">تحدث مع NEXORA مباشرة بالصوت</div></div>
+  <div class="controls">
+    <button id="start">🎙️ ابدأ المحادثة</button>
+    <button id="mute" class="secondary" hidden>كتم الميكروفون</button>
+    <button id="end" class="danger" hidden>إنهاء</button>
+  </div>
+</div>
+<div id="note" class="note">سيطلب المتصفح إذن استخدام الميكروفون عند بدء المكالمة.</div>
+<audio id="remoteAudio" autoplay playsinline></audio>
+<script>
+(function(){
+  const shell=document.getElementById('shell'), statusEl=document.getElementById('status');
+  const startBtn=document.getElementById('start'), muteBtn=document.getElementById('mute'), endBtn=document.getElementById('end');
+  const note=document.getElementById('note'), audioEl=document.getElementById('remoteAudio');
+  let args={}, pc=null, stream=null, dc=null, connected=false, muted=false, waiting=false;
+  let eventCounter=0, pendingEvents=[], pendingAssistant=[], unmatchedUserTurns=0, flushTimer=null, currentSecret='', expectingToken=false;
+  function send(type,data){window.parent.postMessage(Object.assign({isStreamlitMessage:true,type},data||{}),'*')}
+  function setValue(value){send('streamlit:setComponentValue',{value,dataType:'json'})}
+  function height(){send('streamlit:setFrameHeight',{height:104})}
+  function setStatus(text,mode){statusEl.textContent=text;shell.className='shell '+(mode||'');}
+  function emitTranscript(role,text){
+    const clean=(text||'').trim(); if(!clean)return;
+    pendingEvents.push({id:'v'+Date.now()+'_'+(++eventCounter),role,text:clean});
+    if(flushTimer)clearTimeout(flushTimer);
+    flushTimer=setTimeout(()=>{const batch=pendingEvents.splice(0);setValue({id:'batch_'+Date.now()+'_'+eventCounter,type:'transcripts',events:batch});},120);
+  }
+  function showError(message){expectingToken=false;setStatus(message,'');note.textContent='تحقق من إعدادات الميكروفون والاتصال ومفتاح OpenAI.';startBtn.hidden=false;startBtn.disabled=false;muteBtn.hidden=true;endBtn.hidden=true;}
+  async function stopCall(sendStatus=true){
+    try{if(dc){dc.close();dc=null}}catch(e){}
+    try{if(pc){pc.getSenders().forEach(s=>{try{s.track&&s.track.stop()}catch(e){}});pc.close();pc=null}}catch(e){}
+    try{if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}catch(e){}
+    audioEl.srcObject=null;connected=false;muted=false;waiting=false;expectingToken=false;currentSecret='';
+    startBtn.hidden=false;startBtn.disabled=false;muteBtn.hidden=true;endBtn.hidden=true;muteBtn.textContent='كتم الميكروفون';
+    setStatus('انتهت المحادثة الصوتية','');note.textContent='يمكنك بدء مكالمة جديدة في أي وقت.';
+    if(sendStatus)setValue({id:'ended_'+Date.now(),type:'status',status:'ended'});
+  }
+  async function connect(secret){
+    if(!secret||connected||waiting)return;
+    waiting=true;startBtn.disabled=true;setStatus('جارٍ الاتصال…','active');note.textContent='اسمح باستخدام الميكروفون عندما يطلب المتصفح ذلك.';
+    try{
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('المتصفح لا يتيح الوصول إلى الميكروفون داخل هذه الصفحة.');
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
+      pc=new RTCPeerConnection();
+      audioEl.autoplay=true;audioEl.playsInline=true;
+      pc.ontrack=async (event)=>{audioEl.srcObject=event.streams[0];try{await audioEl.play()}catch(e){} };
+      stream.getTracks().forEach(track=>pc.addTrack(track,stream));
+      dc=pc.createDataChannel('oai-events');
+      dc.onopen=()=>{connected=true;waiting=false;startBtn.hidden=true;startBtn.disabled=false;muteBtn.hidden=false;endBtn.hidden=false;setStatus('أنا أستمع إليك… تحدث الآن','active');note.textContent='يمكنك مقاطعة NEXORA بالكلام، أو كتم الميكروفون وإنهاء المكالمة.'};
+      dc.onmessage=(message)=>{
+        let ev;try{ev=JSON.parse(message.data)}catch(e){return}
+        if(ev.type==='input_audio_buffer.speech_started')setStatus('أستمع إليك…','active');
+        if(ev.type==='response.output_audio.delta')setStatus('NEXORA تتحدث…','speaking');
+        if(ev.type==='response.output_audio.done')setStatus('أنا أستمع إليك…','active');
+        if(ev.type==='conversation.item.input_audio_transcription.completed'){unmatchedUserTurns++;emitTranscript('user',ev.transcript||'');if(pendingAssistant.length){unmatchedUserTurns=Math.max(0,unmatchedUserTurns-pendingAssistant.length);pendingAssistant.splice(0).forEach(t=>emitTranscript('assistant',t));}}
+        if(ev.type==='response.output_audio_transcript.done'){if(ev.transcript){if(unmatchedUserTurns>0){unmatchedUserTurns--;emitTranscript('assistant',ev.transcript);}else{pendingAssistant.push(ev.transcript);}}}
+        if(ev.type==='error'){const msg=(ev.error&&ev.error.message)||'حدث خطأ أثناء المكالمة الصوتية.';stopCall(false).then(()=>{showError(msg);setValue({id:'error_'+Date.now(),type:'error',message:msg});});}
+      };
+      const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+      const response=await fetch('https://api.openai.com/v1/realtime/calls',{method:'POST',headers:{'Authorization':'Bearer '+secret,'Content-Type':'application/sdp'},body:offer.sdp});
+      if(!response.ok){const body=await response.text();throw new Error('فشل اتصال Realtime ('+response.status+'). '+body.slice(0,180));}
+      const answerSdp=await response.text();await pc.setRemoteDescription({type:'answer',sdp:answerSdp});
+      currentSecret=secret;
+    }catch(error){await stopCall(false);showError(error&&error.message?error.message:'تعذّر بدء المكالمة.');setValue({id:'error_'+Date.now(),type:'error',message:(error&&error.message)||'Voice connection failed'});}
+  }
+  startBtn.addEventListener('click',()=>{
+    if(connected||waiting)return;
+    setStatus('جارٍ تجهيز المكالمة…','active');startBtn.disabled=true;note.textContent='لحظة واحدة…';
+    expectingToken=true;setValue({id:'request_'+Date.now(),type:'request_token'});
+  });
+  muteBtn.addEventListener('click',()=>{if(!stream)return;muted=!muted;stream.getAudioTracks().forEach(t=>t.enabled=!muted);muteBtn.textContent=muted?'تشغيل الميكروفون':'كتم الميكروفون';setStatus(muted?'الميكروفون مكتوم':'أنا أستمع إليك…','active')});
+  endBtn.addEventListener('click',()=>stopCall(true));
+  window.addEventListener('beforeunload',()=>{try{if(stream)stream.getTracks().forEach(t=>t.stop());if(pc)pc.close()}catch(e){}});
+  window.addEventListener('message',(event)=>{
+    const d=event.data||{};if(d.type!=='streamlit:render')return;args=d.args||{};
+    if(args.error){showError(args.error);}
+    const token=args.client_secret||'';
+    if(token&&expectingToken&&token!==currentSecret&&!connected&&!waiting)connect(token);
+  });
+  send('streamlit:componentReady',{apiVersion:1});height();
+})();
+</script>
+</body>
+</html>"""
+
+
+def create_realtime_client_secret():
+    """Create a short-lived browser token; the permanent API key stays server-side."""
+    api_key = st.secrets.get("OPENAI_API_KEY", "")
+    if not api_key:
+        raise RuntimeError("أضف OPENAI_API_KEY إلى Streamlit Secrets أولاً.")
+    base_instructions = (
+        "You are NEXORA, a friendly, helpful voice assistant. "
+        "Reply in the same language as the user. If the user speaks Arabic, "
+        "use natural conversational Arabic and understand Levantine dialect. "
+        "Keep answers clear and reasonably concise. Never invent sources. "
+        "Give safe, defensive IT and cybersecurity guidance. "
+        "The founder of NEXORA AI is Yamin Zoabi."
+    )
+    mode_instruction = TOOL_INSTRUCTIONS.get(st.session_state.get("active_tool", ""), "")
+    recent_context = []
+    for item in st.session_state.get("messages", [])[-10:]:
+        role = "User" if item.get("role") == "user" else "NEXORA"
+        content = str(item.get("content", "")).strip()
+        if content:
+            recent_context.append(f"{role}: {content[:1800]}")
+    if mode_instruction:
+        base_instructions += "\n\nCurrent NEXORA mode instructions:\n" + mode_instruction[:4000]
+    if recent_context:
+        base_instructions += "\n\nRecent text conversation context (reference only):\n" + "\n".join(recent_context)
+    payload = {
+        "expires_after": {"anchor": "created_at", "seconds": 600},
+        "session": {
+            "type": "realtime",
+            "model": "gpt-realtime",
+            "instructions": base_instructions,
+            "audio": {
+                "input": {
+                    "transcription": {"model": "gpt-4o-mini-transcribe"},
+                    "turn_detection": {
+                        "type": "server_vad",
+                        "create_response": True,
+                        "interrupt_response": True,
+                    },
+                },
+                "output": {"voice": "marin"},
+            },
+        },
+    }
+    response = requests.post(
+        "https://api.openai.com/v1/realtime/client_secrets",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "OpenAI-Safety-Identifier": hashlib.sha256(str(get_user_id() or "anonymous").encode()).hexdigest(),
+        },
+        json=payload,
+        timeout=30,
+    )
+    if not response.ok:
+        # Avoid echoing request headers or the permanent API key in user-facing errors.
+        raise RuntimeError(f"تعذّر إنشاء رمز الصوت من OpenAI ({response.status_code}). افحص صلاحية المفتاح وإعدادات الفوترة في OpenAI.")
+    data = response.json()
+    token = data.get("value")
+    if not token:
+        raise RuntimeError("لم تُرجع OpenAI رمز اتصال صوتي صالحاً.")
+    return token
+
+
+@st.cache_resource(show_spinner=False)
+def get_nexora_voice_component():
+    component_dir = Path(tempfile.gettempdir()) / "nexora_realtime_voice_component"
+    component_dir.mkdir(parents=True, exist_ok=True)
+    html_path = component_dir / "index.html"
+    if not html_path.exists() or html_path.read_text(encoding="utf-8") != VOICE_COMPONENT_HTML:
+        html_path.write_text(VOICE_COMPONENT_HTML, encoding="utf-8")
+    return components.declare_component("nexora_realtime_voice", path=str(component_dir))
+
+
+# =====================================
 # المصادقة والمستخدم
 # =====================================
 COOKIE_NAME = "nexora_auth"
@@ -746,7 +947,8 @@ def logout():
         "user", "access_token", "refresh_token",
         "conversation_id", "messages", "show_settings",
         "show_profile", "profile_image", "profile_name", "voice_transcript",
-        "send_voice_transcript",
+        "send_voice_transcript", "nx_voice_client_secret", "nx_voice_last_event",
+        "nx_voice_error", "nx_voice_processed_ids",
     ]:
         st.session_state[key] = [] if key == "messages" else (
             False if key in ("show_settings", "show_profile") else None
@@ -1770,77 +1972,70 @@ else:
 
 
 # =====================================
-# المحادثة الصوتية والكتابة والمرفقات
+# المحادثة الصوتية المباشرة + الكتابة والمرفقات
 # =====================================
-# التسجيل الصوتي داخل المحادثة: يُحوّل إلى نص أولاً، ويمكن مراجعته قبل الإرسال.
-with st.expander("🎙️ التحدث إلى NEXORA", expanded=False):
-    audio_file = st.audio_input("سجّل رسالتك الصوتية")
-    if audio_file is not None:
-        audio_bytes = audio_file.getvalue()
-        audio_hash = hashlib.sha256(audio_bytes).hexdigest()
-        if len(audio_bytes) > 25 * 1024 * 1024:
-            st.error("حجم التسجيل يتجاوز الحد المسموح 25 MB.")
-        elif st.button("تحويل التسجيل إلى نص", key="nx_transcribe_inline", disabled=(audio_hash == st.session_state.get("voice_recording_hash"))):
+st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+voice_component = get_nexora_voice_component()
+voice_value = voice_component(
+    client_secret=st.session_state.get("nx_voice_client_secret", ""),
+    error=st.session_state.get("nx_voice_error", ""),
+    key="nx_realtime_voice_component",
+    default=None,
+)
+
+if isinstance(voice_value, dict):
+    event_id = str(voice_value.get("id", ""))
+    if event_id and event_id != st.session_state.get("nx_voice_last_event", ""):
+        st.session_state.nx_voice_last_event = event_id
+        event_type = voice_value.get("type")
+        if event_type == "request_token":
+            st.session_state.nx_voice_error = ""
             try:
-                transcription = groq.audio.transcriptions.create(
-                    file=(getattr(audio_file, "name", None) or "recording.wav", audio_bytes),
-                    model="whisper-large-v3-turbo",
-                    response_format="text",
-                )
-                if isinstance(transcription, str):
-                    transcript_text = transcription
-                else:
-                    transcript_text = getattr(transcription, "text", "") or ""
-                transcript_text = transcript_text.strip()
-                if transcript_text:
-                    st.session_state.voice_transcript = transcript_text
-                    st.session_state.voice_recording_hash = audio_hash
-                    st.session_state["nx_transcript_edit"] = transcript_text
-                    st.success("تم تحويل التسجيل. راجع النص ثم أرسله إلى NEXORA.")
-                    st.rerun()
-                else:
-                    st.warning("لم يتم العثور على كلام واضح في التسجيل.")
-            except Exception:
-                st.error("تعذّر تحويل التسجيل. افحص صيغة الصوت وحد الحجم وحالة Groq API.")
-
-    if st.session_state.get("voice_transcript"):
-        edited_transcript = st.text_area(
-            "النص المستخرج (يمكنك تعديله قبل الإرسال)",
-            key="nx_transcript_edit",
-            height=100,
-        )
-        if st.button("إرسال التسجيل إلى NEXORA", key="nx_send_voice", type="primary"):
-            clean_transcript = (edited_transcript or "").strip()
-            if clean_transcript:
-                st.session_state.voice_transcript = clean_transcript
-                st.session_state.send_voice_transcript = True
+                st.session_state.nx_voice_client_secret = create_realtime_client_secret()
+            except Exception as voice_error:
+                st.session_state.nx_voice_client_secret = ""
+                st.session_state.nx_voice_error = str(voice_error)
+            st.rerun()
+        elif event_type == "error":
+            st.session_state.nx_voice_client_secret = ""
+            st.session_state.nx_voice_error = str(voice_value.get("message", "تعذّر تشغيل الصوت."))[:300]
+            st.rerun()
+        elif event_type == "status" and voice_value.get("status") == "ended":
+            st.session_state.nx_voice_client_secret = ""
+            st.rerun()
+        elif event_type == "transcripts":
+            transcript_events = voice_value.get("events", [])
+            changed = False
+            for transcript_event in transcript_events:
+                if not isinstance(transcript_event, dict):
+                    continue
+                role = transcript_event.get("role")
+                content = str(transcript_event.get("text", "")).strip()
+                if role not in ("user", "assistant") or not content:
+                    continue
+                # Per-event deduplication protects against Streamlit reruns.
+                transcript_id = str(transcript_event.get("id", ""))
+                processed_ids = st.session_state.get("nx_voice_processed_ids", [])
+                if transcript_id and transcript_id in processed_ids:
+                    continue
+                if not st.session_state.conversation_id:
+                    create_conversation()
+                cid = str(st.session_state.conversation_id)
+                first_message = len(st.session_state.messages) == 0
+                st.session_state.messages.append({"role": role, "content": content})
+                try:
+                    save_message(cid, role, content)
+                    if role == "user" and first_message:
+                        update_title(cid, generate_title(content))
+                    update_activity(cid)
+                except Exception as save_error:
+                    st.session_state.nx_voice_error = "وصل الرد الصوتي، لكن تعذّر حفظه في سجل المحادثة."
+                    show_error(save_error)
+                processed_ids = (processed_ids + [transcript_id])[-100:]
+                st.session_state.nx_voice_processed_ids = processed_ids
+                changed = True
+            if changed:
                 st.rerun()
-            else:
-                st.warning("النص فارغ؛ سجّل مرة أخرى أو اكتب رسالة.")
-
-# الاستماع إلى آخر رد نصي. قد لا تكون خدمة TTS متاحة لكل حسابات Groq.
-last_answer_for_voice = next((m.get("content", "") for m in reversed(st.session_state.messages) if m.get("role") == "assistant"), "")
-if last_answer_for_voice:
-    if st.button("🔊 قراءة آخر رد بصوت عربي", key="nx_tts_inline"):
-        try:
-            speech = groq.audio.speech.create(
-                model="canopylabs/orpheus-arabic-saudi",
-                voice="fahad",
-                input=last_answer_for_voice[:200],
-                response_format="wav",
-            )
-            if hasattr(speech, "read"):
-                audio_bytes_out = speech.read()
-            elif hasattr(speech, "content"):
-                audio_bytes_out = speech.content
-            else:
-                audio_bytes_out = bytes(speech)
-            if not audio_bytes_out:
-                raise ValueError("Empty speech response")
-            st.audio(audio_bytes_out, format="audio/wav")
-            st.caption("الصوت العربي المتاح قد يكون باللهجة السعودية، وقد لا يتوفر في جميع حسابات Groq.")
-        except Exception:
-            st.warning("تعذّر إنشاء الصوت في هذه المحاولة. بقي الرد النصي متاحاً.")
 
 prompt = st.chat_input(
     t("chat_placeholder"),
