@@ -987,44 +987,42 @@ def get_css():
     }
 }
 }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
-            gap: 4px !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-            flex: 0 0 32px !important;
-            width: 32px !important;
-            min-width: 32px !important;
-            max-width: 32px !important;
-        }
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 0 0 32px !important;
-            width: 32px !important;
-            min-width: 32px !important;
-            max-width: 32px !important;
-        }
-        .st-key-nx_composer .st-key-nx_add_files,
-        .st-key-nx_composer .st-key-nx_add_files [data-testid="stPopover"],
-        .st-key-nx_composer .st-key-nx_chat_send,
-        .st-key-nx_composer .st-key-nx_chat_send [data-testid="stFormSubmitButton"] {
-            width: 32px !important;
-            min-width: 32px !important;
-            max-width: 32px !important;
-            flex: 0 0 32px !important;
-        }
-        .st-key-nx_composer .st-key-nx_add_files button,
-        .st-key-nx_composer .st-key-nx_chat_send button {
-            width: 28px !important;
-            min-width: 28px !important;
-            height: 28px !important;
-            min-height: 28px !important;
-        }
-        .st-key-nx_composer [data-testid="stTextInput"] input {
-            height: 34px !important;
-            min-height: 34px !important;
-            font-size: 13px !important;
-            padding: 0 8px !important;
-        }
+        @media screen and (max-width: 768px) {
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
+        gap: 4px !important;
     }
+
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child,
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 0 0 30px !important;
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 30px !important;
+    }
+
+    .st-key-nx_composer .st-key-nx_add_files,
+    .st-key-nx_composer .st-key-nx_chat_send {
+        width: 30px !important;
+        min-width: 30px !important;
+        max-width: 30px !important;
+        flex: 0 0 30px !important;
+    }
+
+    .st-key-nx_composer .st-key-nx_add_files button,
+    .st-key-nx_composer .st-key-nx_chat_send button {
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+    }
+
+    .st-key-nx_composer [data-testid="stTextInput"] input {
+        height: 32px !important;
+        min-height: 32px !important;
+        font-size: 13px !important;
+        padding: 0 8px !important;
+    }
+}
     </style>
     """
     if st.session_state.theme == "light":
