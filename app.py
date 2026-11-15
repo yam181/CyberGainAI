@@ -939,20 +939,53 @@ def get_css():
     }
 
     @media screen and (max-width: 768px) {
+
+    /* Mobile composer only */
     .st-key-nx_composer {
-        position: fixed !important;
-        left: 50% !important;
-        bottom: max(12px, env(safe-area-inset-bottom)) !important;
-        transform: translateX(-50%) !important;
-        z-index: 9999 !important;
         width: calc(100% - 12px) !important;
         max-width: calc(100% - 12px) !important;
         min-width: 0 !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         padding: 4px 6px !important;
         border-radius: 23px !important;
         overflow: visible !important;
+        transform: none !important;
+        left: auto !important;
+        position: relative !important;
     }
+
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
+        gap: 4px !important;
+    }
+
+    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 0 0 32px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+    }
+
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 0 0 32px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+    }
+
+    .st-key-nx_composer .st-key-nx_add_files,
+    .st-key-nx_composer .st-key-nx_chat_send {
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        flex: 0 0 32px !important;
+    }
+
+    .st-key-nx_composer [data-testid="stTextInput"] input {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 14px !important;
+    }
+}
 }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
             gap: 4px !important;
