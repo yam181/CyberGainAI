@@ -2107,7 +2107,7 @@ with st.container(key="nx_composer"):
             )
 
     with chat_form_col:
-        with st.form("nx_chat_form", clear_on_submit=False, border=False):
+        with st.form("nx_chat_form", clear_on_submit=False, border=False, enter_to_submit=False):
             text_col, send_col = st.columns([8.5, 0.8], vertical_alignment="center")
             with text_col:
                 typed_text = st.text_input(
