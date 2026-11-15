@@ -388,14 +388,14 @@ def get_css():
         background: rgba(23, 18, 36, .96) !important;
         border: 1px solid rgba(164, 128, 226, .38) !important;
         border-radius: 28px !important;
-        padding: 6px 9px !important;
-        margin-top: 12px !important;
+        padding: 3px 7px !important;
+        margin-top: 8px !important;
         box-shadow: 0 8px 28px rgba(0, 0, 0, .20) !important;
     }
     .st-key-nx_composer [data-testid="stHorizontalBlock"] {
         align-items: center !important;
         flex-wrap: nowrap !important;
-        gap: 6px !important;
+        gap: 3px !important;
         width: 100% !important;
     }
     .st-key-nx_composer [data-testid="column"] {
@@ -416,26 +416,33 @@ def get_css():
         gap: 3px !important;
     }
     .st-key-nx_voice_mode_toggle button {
-        min-height: 42px !important;
-        border-radius: 22px !important;
-        border: 1px solid rgba(164, 128, 226, .35) !important;
-        background: rgba(35, 29, 49, .72) !important;
+        min-height: 30px !important;
+        height: 30px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
         color: #d8caff !important;
-        font-size: 12px !important;
-        padding: 0 10px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 0 2px !important;
         white-space: nowrap !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input {
-        height: 48px !important;
-        min-height: 48px !important;
+        height: 38px !important;
+        min-height: 38px !important;
         background: transparent !important;
         color: #f3effa !important;
         border: 0 !important;
         border-radius: 18px !important;
         text-align: right !important;
         direction: rtl !important;
-        padding: 0 16px !important;
+        padding: 0 8px !important;
         box-shadow: none !important;
+    }
+    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+        color: #c9b8ed !important;
+        opacity: 1 !important;
     }
     .st-key-nx_composer [data-testid="stTextInput"] input:focus {
         border: 0 !important;
@@ -444,34 +451,36 @@ def get_css():
     }
     .st-key-nx_add_files button,
     .st-key-nx_chat_send button {
-        width: 44px !important;
-        min-width: 44px !important;
-        height: 44px !important;
-        min-height: 44px !important;
+        width: 30px !important;
+        min-width: 30px !important;
+        height: 30px !important;
+        min-height: 30px !important;
         padding: 0 !important;
         border-radius: 50% !important;
-        font-size: 20px !important;
+        font-size: 18px !important;
     }
     .st-key-nx_add_files button {
-        background: rgba(35, 29, 49, .96) !important;
-        border: 1px solid rgba(164, 128, 226, .25) !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
         color: #d8caff !important;
     }
     .st-key-nx_chat_send button {
-        background: linear-gradient(135deg, #8d63dc, #6240a7) !important;
-        border: 1px solid rgba(190, 163, 255, .4) !important;
-        color: white !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        color: #d8caff !important;
     }
     /* Keep Streamlit's recorder itself transparent: no grey panel or padded card. */
     .st-key-nx_composer [data-testid="stAudioInput"] {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
-        height: 44px !important;
-        min-height: 44px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
         margin: 0 !important;
         padding: 0 !important;
         background: transparent !important;
@@ -491,11 +500,11 @@ def get_css():
     }
     .st-key-nx_composer [data-testid="stAudioInput"] > div,
     .st-key-nx_composer [data-testid="stAudioInput"] > div > div {
-        width: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
         min-height: 0 !important;
-        height: 44px !important;
+        height: 32px !important;
         margin: 0 !important;
         padding: 0 !important;
         display: flex !important;
@@ -506,23 +515,22 @@ def get_css():
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        max-height: 44px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
         padding: 0 !important;
         margin: 0 !important;
         border-radius: 50% !important;
-        background: rgba(35, 29, 49, .72) !important;
-        border: 1px solid rgba(164, 128, 226, .32) !important;
+        background: transparent !important;
+        border: 0 !important;
         box-shadow: none !important;
         color: #d8caff !important;
     }
     .st-key-nx_composer [data-testid="stAudioInput"] button:hover {
-        background: rgba(91, 65, 137, .72) !important;
-        border-color: rgba(190, 163, 255, .62) !important;
+        background: transparent !important;
     }
     .st-key-nx_composer [data-testid="stAudioInput"] label {
         display: none !important;
@@ -532,7 +540,7 @@ def get_css():
     }
     .st-key-nx_talk_label {
         color: #d8caff !important;
-        font-size: 12px !important;
+        font-size: 10px !important;
         font-weight: 600 !important;
         white-space: nowrap !important;
         text-align: center !important;
@@ -540,10 +548,10 @@ def get_css():
         padding-top: 2px !important;
     }
     .st-key-nx_composer [data-testid="stPopover"] button {
-        width: 44px !important;
-        min-width: 44px !important;
-        height: 44px !important;
-        min-height: 44px !important;
+        width: 30px !important;
+        min-width: 30px !important;
+        height: 30px !important;
+        min-height: 30px !important;
         padding: 0 !important;
         border-radius: 50% !important;
     }
@@ -674,8 +682,8 @@ def get_css():
             padding: 1.2rem .8rem 6rem !important;
         }
         .st-key-nx_composer {
-            padding: 4px 5px !important;
-            border-radius: 25px !important;
+            padding: 2px 4px !important;
+            border-radius: 22px !important;
             width: 100% !important;
             overflow: visible !important;
         }
@@ -685,7 +693,7 @@ def get_css():
             display: flex !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
-            gap: 4px !important;
+            gap: 2px !important;
             width: 100% !important;
         }
         .st-key-nx_composer [data-testid="column"] {
@@ -694,20 +702,20 @@ def get_css():
         }
         /* Outer row: add | message+send | record | voice mode */
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(1) {
-            flex: 0 0 34px !important;
-            width: 34px !important;
+            flex: 0 0 27px !important;
+            width: 27px !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
             flex: 1 1 0 !important;
             width: auto !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(3) {
-            flex: 0 0 38px !important;
-            width: 38px !important;
+            flex: 0 0 30px !important;
+            width: 30px !important;
         }
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(4) {
-            flex: 0 0 72px !important;
-            width: 72px !important;
+            flex: 0 0 62px !important;
+            width: 62px !important;
         }
         /* Keep the text field and send button side by side inside the form. */
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
@@ -719,26 +727,35 @@ def get_css():
             width: 36px !important;
         }
         .st-key-nx_composer [data-testid="stTextInput"] input {
-            height: 44px !important;
-            min-height: 44px !important;
-            padding: 0 9px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            padding: 0 6px !important;
             font-size: 14px !important;
         }
         .st-key-nx_add_files button,
         .st-key-nx_chat_send button,
         .st-key-nx_composer [data-testid="stAudioInput"] button {
-            width: 36px !important;
-            min-width: 36px !important;
-            height: 40px !important;
-            min-height: 40px !important;
+            width: 28px !important;
+            min-width: 28px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+        }
+        .st-key-nx_composer [data-testid="stPopover"] button {
+            width: 27px !important;
+            min-width: 27px !important;
+            height: 30px !important;
+            min-height: 30px !important;
         }
         .st-key-nx_voice_mode_toggle button {
-            width: 72px !important;
-            min-width: 72px !important;
-            height: 40px !important;
-            min-height: 40px !important;
-            padding: 0 3px !important;
-            font-size: 10px !important;
+            width: 62px !important;
+            min-width: 62px !important;
+            height: 30px !important;
+            min-height: 30px !important;
+            padding: 0 1px !important;
+            font-size: 9px !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
             white-space: nowrap !important;
         }
 
