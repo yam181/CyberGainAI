@@ -481,7 +481,7 @@ def get_css():
         color: #d8caff !important;
     }
     .st-key-nx_composer [data-testid="stPopover"] button {
-        width: 30px !important;
+        
         min-width: 30px !important;
         height: 30px !important;
         min-height: 30px !important;
@@ -726,14 +726,7 @@ def get_css():
             height: 32px !important;
             min-height: 32px !important;
         }
-        .st-key-nx_composer [data-testid="stPopover"] button {
-            width: 27px !important;
-            min-width: 27px !important;
-            height: 30px !important;
-            min-height: 30px !important;
-        }
-
-        .welcome-container {
+        
             min-height: 48vh;
         }
 
