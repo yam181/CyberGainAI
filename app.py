@@ -1254,7 +1254,7 @@ def generate_title(question):
                 },
                 {"role": "user", "content": question},
             ],
-            max_tokens: 40,
+            max_tokens=40,
             temperature=0.2,
         )
         title = (result.choices[0].message.content or "").strip()
