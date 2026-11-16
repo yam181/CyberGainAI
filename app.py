@@ -1002,6 +1002,81 @@ def get_css():
         box-sizing: border-box !important;
     }
 }
+
+/* NEXORA — fixed bottom composer */
+.st-key-nx_composer {
+    position: fixed !important;
+    left: 50% !important;
+    bottom: 12px !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 32px), 680px) !important;
+    max-width: 680px !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 4px 8px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(129, 85, 217, .55) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 0 12px rgba(129, 85, 217, .25),
+                0 0 25px rgba(129, 85, 217, .14) !important;
+    box-sizing: border-box !important;
+    z-index: 9999 !important;
+    overflow: hidden !important;
+}
+
+.st-key-nx_composer [data-testid="stForm"] {
+    background: #ffffff !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.st-key-nx_composer input {
+    background: #ffffff !important;
+    color: #211a2d !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.st-key-nx_composer input::placeholder {
+    color: #8b8298 !important;
+}
+
+.st-key-nx_composer button {
+    min-height: 30px !important;
+}
+
+[data-testid="stMainBlockContainer"] {
+    padding-bottom: 90px !important;
+}
+
+@media (max-width: 768px) {
+    .st-key-nx_composer {
+        width: calc(100vw - 20px) !important;
+        max-width: none !important;
+        bottom: 8px !important;
+        padding: 3px 5px !important;
+        border-radius: 20px !important;
+    }
+
+    .st-key-nx_composer input {
+        height: 34px !important;
+        min-height: 34px !important;
+        font-size: 14px !important;
+    }
+
+    .st-key-nx_composer button {
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+    }
+
+    [data-testid="stMainBlockContainer"] {
+        padding-bottom: 75px !important;
+    }
+}
+
     </style>
     """
     if st.session_state.theme == "light":
