@@ -375,8 +375,8 @@ def get_css():
     [data-testid="stChatInput"] {
         background: linear-gradient(135deg, rgba(28, 20, 46, .98), rgba(18, 14, 31, .98)) !important;
         border: 1px solid rgba(169, 130, 255, .38) !important;
-        border-radius: 24px !important;
-        padding: 7px 10px !important;
+        border-radius: 20px !important;
+        padding: 3px 8px !important;
         box-shadow:
             0 14px 42px rgba(0, 0, 0, .34),
             0 0 26px rgba(126, 79, 214, .16),
@@ -398,9 +398,10 @@ def get_css():
     [data-testid="stChatInput"] textarea {
         color: #f6f1ff !important;
         caret-color: #c4a7ff !important;
-        font-size: 15px !important;
-        line-height: 1.6 !important;
-        padding: 10px 8px !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+        min-height: 26px !important;
+        padding: 5px 7px !important;
     }
 
     [data-testid="stChatInput"] textarea::placeholder {
@@ -411,7 +412,11 @@ def get_css():
     [data-testid="stChatInput"] button {
         background: linear-gradient(135deg, #9a6af0 0%, #7042c4 55%, #59339f 100%) !important;
         border: 1px solid rgba(211, 188, 255, .48) !important;
-        border-radius: 15px !important;
+        border-radius: 12px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
+        width: 36px !important;
+        height: 36px !important;
         color: #ffffff !important;
         box-shadow:
             0 5px 16px rgba(100, 57, 174, .32),
@@ -551,15 +556,25 @@ def get_css():
 
     @media (max-width: 768px) {
         [data-testid="stChatInput"] {
-            border-radius: 19px !important;
-            padding: 5px 7px !important;
+            border-radius: 17px !important;
+            padding: 2px 6px !important;
             box-shadow:
                 0 10px 30px rgba(0, 0, 0, .34),
                 0 0 20px rgba(126, 79, 214, .14) !important;
         }
 
         [data-testid="stChatInput"] textarea {
-            font-size: 14px !important;
+            font-size: 13px !important;
+            line-height: 1.35 !important;
+            min-height: 24px !important;
+            padding: 4px 6px !important;
+        }
+
+        [data-testid="stChatInput"] button {
+            min-width: 33px !important;
+            min-height: 33px !important;
+            width: 33px !important;
+            height: 33px !important;
         }
 
         .block-container {
