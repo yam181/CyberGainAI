@@ -1147,6 +1147,25 @@ overflow: hidden !important;
 
 st.markdown(get_css(), unsafe_allow_html=True)
 
+st.markdown("""
+<style>
+/* NEXORA: left-aligned message input on all devices and themes */
+.st-key-nx_composer [data-testid="stTextInput"] input,
+.st-key-nx_composer input#nx_chat_text {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: plaintext !important;
+    padding-left: 14px !important;
+    padding-right: 8px !important;
+}
+
+.st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+    direction: ltr !important;
+    text-align: left !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 
 # =====================================
