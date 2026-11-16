@@ -1014,14 +1014,17 @@ def get_css():
     min-width: 0 !important;
     margin: 0 !important;
     padding: 4px 8px !important;
-    background: #ffffff !important;
-    border: 1px solid rgba(129, 85, 217, .55) !important;
-    border-radius: 24px !important;
-    box-shadow: 0 0 12px rgba(129, 85, 217, .25),
-                0 0 25px rgba(129, 85, 217, .14) !important;
-    box-sizing: border-box !important;
-    z-index: 9999 !important;
-    overflow: hidden !important;
+background: rgba(190, 155, 255, .18) !important;
+border: 1px solid rgba(210, 185, 255, .55) !important;
+border-radius: 24px !important;
+backdrop-filter: blur(14px) !important;
+-webkit-backdrop-filter: blur(14px) !important;
+box-shadow:
+    0 0 12px rgba(155, 92, 255, .30),
+    0 0 26px rgba(155, 92, 255, .18) !important;
+box-sizing: border-box !important;
+z-index: 9999 !important;
+overflow: hidden !important;
 }
 
 .st-key-nx_composer [data-testid="stForm"] {
