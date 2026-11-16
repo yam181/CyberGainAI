@@ -1111,6 +1111,19 @@ overflow: hidden !important;
         h1, h2, h3, p, label, [data-testid="stMarkdownContainer"] { color: #2b2238; }
         .nexora-title, .welcome-logo, .welcome-text { color: #593995 !important; }
         .nexora-subtitle, .welcome-sub, .date-group { color: #75668a !important; }
+        .st-key-nx_composer [data-testid="stTextInput"],
+.st-key-nx_composer [data-testid="stTextInput"] > div,
+.st-key-nx_composer [data-baseweb="input"],
+.st-key-nx_composer [data-baseweb="input"] > div {
+    background: rgba(190, 155, 255, .18) !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.st-key-nx_composer input {
+    background: transparent !important;
+    color: #ffffff !important;
+}
         </style>
         """
     return base_css
