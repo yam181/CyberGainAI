@@ -1068,7 +1068,6 @@ overflow: hidden !important;
         padding: 3px 5px !important;
         border-radius: 20px !important;
     }
-}
 
     .st-key-nx_composer input {
         height: 34px !important;
@@ -1087,7 +1086,6 @@ overflow: hidden !important;
         padding-bottom: 75px !important;
     }
 }
-
     </style>
     """
     if st.session_state.theme == "light":
