@@ -1039,8 +1039,9 @@ overflow: hidden !important;
     color: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
+    text-align: left !important;
+    direction: ltr !important;
 }
-
 .st-key-nx_composer [data-testid="stTextInput"] > div {
     background: rgba(190, 155, 255, .18) !important;
     border-radius: 18px !important;
