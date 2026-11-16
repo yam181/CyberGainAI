@@ -1125,6 +1125,17 @@ overflow: hidden !important;
     .st-key-nx_composer input {
     text-align: left !important;
     direction: ltr !important;
+    .st-key-nx_composer [data-testid="stTextInput"] {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+.st-key-nx_composer [data-testid="stTextInput"] input {
+    direction: ltr !important;
+    text-align: left !important;
+    padding-left: 14px !important;
+    padding-right: 8px !important;
+}
 }
         </style>
         """
