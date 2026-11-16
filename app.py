@@ -369,21 +369,72 @@ def get_css():
         color: #a99cbe;
     }
 
-    /* Composer */
+    /* =====================================
+       NEXORA Ultra Premium Purple Composer
+       ===================================== */
     [data-testid="stChatInput"] {
-        background: rgba(23, 18, 36, .96) !important;
-        border: 1px solid rgba(164, 128, 226, .32) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 12px 42px rgba(0, 0, 0, .24), 0 0 24px rgba(111, 69, 183, .08) !important;
+        background: linear-gradient(135deg, rgba(28, 20, 46, .98), rgba(18, 14, 31, .98)) !important;
+        border: 1px solid rgba(169, 130, 255, .38) !important;
+        border-radius: 24px !important;
+        padding: 7px 10px !important;
+        box-shadow:
+            0 14px 42px rgba(0, 0, 0, .34),
+            0 0 26px rgba(126, 79, 214, .16),
+            inset 0 1px 0 rgba(255, 255, 255, .045) !important;
+        backdrop-filter: blur(18px) !important;
+        -webkit-backdrop-filter: blur(18px) !important;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease !important;
     }
 
     [data-testid="stChatInput"]:focus-within {
-        border-color: rgba(185, 157, 255, .72) !important;
-        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2), 0 12px 42px rgba(0, 0, 0, .24) !important;
+        border-color: rgba(194, 166, 255, .82) !important;
+        box-shadow:
+            0 0 0 1px rgba(157, 112, 255, .24),
+            0 16px 46px rgba(0, 0, 0, .38),
+            0 0 30px rgba(137, 87, 231, .24),
+            inset 0 1px 0 rgba(255, 255, 255, .06) !important;
     }
 
     [data-testid="stChatInput"] textarea {
-        color: #f3effa !important;
+        color: #f6f1ff !important;
+        caret-color: #c4a7ff !important;
+        font-size: 15px !important;
+        line-height: 1.6 !important;
+        padding: 10px 8px !important;
+    }
+
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #a99bbf !important;
+        opacity: 1 !important;
+    }
+
+    [data-testid="stChatInput"] button {
+        background: linear-gradient(135deg, #9a6af0 0%, #7042c4 55%, #59339f 100%) !important;
+        border: 1px solid rgba(211, 188, 255, .48) !important;
+        border-radius: 15px !important;
+        color: #ffffff !important;
+        box-shadow:
+            0 5px 16px rgba(100, 57, 174, .32),
+            inset 0 1px 0 rgba(255, 255, 255, .18) !important;
+        transition: transform .18s ease, box-shadow .18s ease, filter .18s ease !important;
+    }
+
+    [data-testid="stChatInput"] button:hover {
+        filter: brightness(1.12) !important;
+        transform: translateY(-1px) !important;
+        box-shadow:
+            0 7px 20px rgba(119, 72, 202, .42),
+            0 0 16px rgba(164, 119, 255, .2) !important;
+    }
+
+    [data-testid="stChatInput"] button:active {
+        transform: translateY(0) scale(.97) !important;
+    }
+
+    [data-testid="stChatInput"] [data-testid="stFileUploader"] button,
+    [data-testid="stChatInput"] button[aria-label*="Attach"],
+    [data-testid="stChatInput"] button[aria-label*="attach"] {
+        color: #d9c7ff !important;
     }
 
     /* Buttons */
@@ -499,6 +550,18 @@ def get_css():
     }
 
     @media (max-width: 768px) {
+        [data-testid="stChatInput"] {
+            border-radius: 19px !important;
+            padding: 5px 7px !important;
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, .34),
+                0 0 20px rgba(126, 79, 214, .14) !important;
+        }
+
+        [data-testid="stChatInput"] textarea {
+            font-size: 14px !important;
+        }
+
         .block-container {
             padding: 1.2rem .8rem 6rem !important;
         }
