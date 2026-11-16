@@ -491,7 +491,7 @@ def get_css():
     }
 
     /* =============================================
-       NEXORA Composer — Fixed Bottom (Clean)
+       NEXORA Composer — Fixed Bottom
        ============================================= */
     .st-key-nx_composer {
         position: fixed !important;
@@ -649,55 +649,128 @@ def get_css():
         padding-bottom: 90px !important;
     }
 
-    /* ========== Mobile ========== */
+    /* ========== Mobile - Aggressive Fix ========== */
     @media (max-width: 768px) {
         .block-container {
-            padding: 1.2rem .8rem 6rem !important;
+            padding: 1.2rem .8rem 7rem !important;
         }
 
         .st-key-nx_composer {
-            left: 12px !important;
-            right: 12px !important;
-            transform: none !important;          /* الإصلاح الحاسم */
+            left: 10px !important;
+            right: 10px !important;
+            transform: none !important;
             width: auto !important;
             max-width: none !important;
-            bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
-            padding: 4px 6px !important;
-            border-radius: 20px !important;
+            bottom: max(16px, env(safe-area-inset-bottom, 16px)) !important;
+            padding: 6px 8px !important;
+            border-radius: 22px !important;
+            min-height: 48px !important;
+            display: flex !important;
+            align-items: center !important;
         }
 
+        /* Force every wrapper to expand */
+        .st-key-nx_composer,
+        .st-key-nx_composer > div,
+        .st-key-nx_composer > div > div,
+        .st-key-nx_composer [data-testid="stHorizontalBlock"],
+        .st-key-nx_composer [data-testid="stForm"],
+        .st-key-nx_composer [data-testid="stForm"] > div,
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 6px !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Left column (+ button) */
         .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-            flex: 0 0 32px !important;
-            width: 32px !important;
-            min-width: 32px !important;
-            max-width: 32px !important;
+            flex: 0 0 36px !important;
+            width: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+        }
+
+        /* Right side (form) takes remaining space */
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex: 1 1 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        /* Inside form: input expands, send fixed */
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex: 1 1 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
         }
 
         .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 0 0 30px !important;
-            width: 30px !important;
-            min-width: 30px !important;
-            max-width: 30px !important;
+            flex: 0 0 34px !important;
+            width: 34px !important;
+            min-width: 34px !important;
+            max-width: 34px !important;
+        }
+
+        /* Make input fully visible */
+        .st-key-nx_composer [data-testid="stTextInput"],
+        .st-key-nx_composer [data-testid="stTextInput"] > div,
+        .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"],
+        .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"] > div {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
 
         .st-key-nx_composer [data-testid="stTextInput"] input {
-            height: 34px !important;
-            min-height: 34px !important;
-            font-size: 14px !important;
-            padding: 0 10px !important;
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            padding: 0 12px !important;
+            font-size: 15px !important;
+            color: #f3effa !important;
+            -webkit-text-fill-color: #f3effa !important;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            direction: ltr !important;
+            text-align: left !important;
         }
 
+        .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+            color: #c9b8ff !important;
+            -webkit-text-fill-color: #c9b8ff !important;
+            opacity: 0.85 !important;
+        }
+
+        /* Buttons */
         .st-key-nx_composer .st-key-nx_add_files button,
-        .st-key-nx_composer .st-key-nx_chat_send button {
-            width: 28px !important;
-            min-width: 28px !important;
-            height: 28px !important;
-            min-height: 28px !important;
-            font-size: 15px !important;
+        .st-key-nx_composer .st-key-nx_chat_send button,
+        .st-key-nx_composer [data-testid="stPopover"] button {
+            width: 32px !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            font-size: 16px !important;
         }
 
         [data-testid="stMainBlockContainer"] {
-            padding-bottom: 80px !important;
+            padding-bottom: 100px !important;
         }
 
         .welcome-container {
@@ -710,7 +783,6 @@ def get_css():
 
         [data-testid="stSidebar"] {
             border-right: none !important;
-            min-width: 260px !important;
         }
 
         .st-key-nx_profile_button {
@@ -792,7 +864,7 @@ st.markdown(get_css(), unsafe_allow_html=True)
 
 st.markdown("""
 <style>
-/* Force LTR for the message input on all devices */
+/* Force LTR for the message input */
 .st-key-nx_composer [data-testid="stTextInput"] input,
 .st-key-nx_composer input#nx_chat_text {
     direction: ltr !important;
@@ -977,7 +1049,6 @@ def logout():
    
 
 def delete_account():
-    """Delete the authenticated account only through a trusted Supabase Edge Function."""
     function_name = st.secrets.get("DELETE_ACCOUNT_FUNCTION", "delete-account")
     try:
         apply_token()
@@ -1266,7 +1337,6 @@ def generate_title(question):
 
 
 def _extract_document_text(file):
-    """Extract readable text from common office/document formats."""
     name = file.name.lower()
     raw = file.getvalue()
     limit = 24000
@@ -1409,7 +1479,6 @@ def tavily_search(query, api_key):
 
 
 def create_office_exports(text_value):
-    """Build Office exports; expose safe per-format errors to the UI."""
     exports = {}
     errors = {}
 
