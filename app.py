@@ -24,6 +24,8 @@ st.set_page_config(
 # =====================================
 defaults = {
     "user": None,
+    "guest_mode": False,
+    "guest_message_count": 0,
     "access_token": None,
     "refresh_token": None,
     "conversation_id": None,
@@ -925,7 +927,7 @@ if st.session_state.access_token and not st.session_state.user:
 # =====================================
 # تسجيل الدخول وإنشاء الحساب
 # =====================================
-if not st.session_state.user:
+if not st.session_state.user and not st.session_state.guest_mode:
     st.markdown(
         """
         <div class="welcome-container">
@@ -1017,22 +1019,32 @@ if not st.session_state.user:
                 except Exception:
                     st.error(t("error_signup"))
 
+    st.divider()
+    guest_label = "👤 الدخول كزائر — 10 رسائل" if st.session_state.language == "ar" else "👤 Continue as Guest — 10 messages"
+    if st.button(guest_label, use_container_width=True):
+        st.session_state.guest_mode = True
+        st.session_state.guest_message_count = 0
+        st.session_state.messages = []
+        st.session_state.conversation_id = None
+        st.rerun()
+
     st.stop()
 
 
-try:
-    apply_token()
-except Exception:
-    st.warning("انتهت جلسة الدخول. سجّل الدخول مرة أخرى للمتابعة.")
-    st.stop()
+if not st.session_state.guest_mode:
+    try:
+        apply_token()
+    except Exception:
+        st.warning("انتهت جلسة الدخول. سجّل الدخول مرة أخرى للمتابعة.")
+        st.stop()
 
-# تحميل اسم الحساب من بيانات Supabase
-user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
+    # تحميل اسم الحساب من بيانات Supabase
+    user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
 
-if not st.session_state.profile_name:
-    st.session_state.profile_name = user_metadata.get(
-        "full_name", get_user_email().split("@")[0]
-    )
+    if not st.session_state.profile_name:
+        st.session_state.profile_name = user_metadata.get(
+            "full_name", get_user_email().split("@")[0]
+        )
 
 
 # =====================================
@@ -1238,325 +1250,355 @@ def group_conversations_by_date(conversations):
     return groups
 
 
-# =====================================
-# زر الملف الشخصي
-# =====================================
-with st.container(key="nx_profile_button"):
-    if st.button("👤", key="nx_profile_open", help=t("profile")):
-        st.session_state.show_profile = True
-        st.session_state.show_settings = False
-        st.rerun()
+if not st.session_state.guest_mode:
+    # =====================================
+    # زر الملف الشخصي
+    # =====================================
+    with st.container(key="nx_profile_button"):
+        if st.button("👤", key="nx_profile_open", help=t("profile")):
+            st.session_state.show_profile = True
+            st.session_state.show_settings = False
+            st.rerun()
 
 
-# =====================================
-# صفحة الملف الشخصي
-# =====================================
-if st.session_state.show_profile:
-    st.title("👤 " + t("profile"))
-    st.caption("NEXORA AI")
-    st.divider()
+    # =====================================
+    # صفحة الملف الشخصي
+    # =====================================
+    if st.session_state.show_profile:
+        st.title("👤 " + t("profile"))
+        st.caption("NEXORA AI")
+        st.divider()
 
-    if st.button(t("back"), key="profile_back"):
-        st.session_state.show_profile = False
-        st.rerun()
+        if st.button(t("back"), key="profile_back"):
+            st.session_state.show_profile = False
+            st.rerun()
 
-    left, right = st.columns([1, 2], gap="large")
+        left, right = st.columns([1, 2], gap="large")
 
-    with left:
-        if st.session_state.profile_image:
-            st.image(st.session_state.profile_image, width=180)
-        else:
-            st.markdown(
-                """
-                <div style="
-                    width:150px;height:150px;border-radius:50%;
-                    background:#211638;border:3px solid #7546C8;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:60px;color:#C4B5FD;">
-                    👤
-                </div>
-                """,
-                unsafe_allow_html=True,
+        with left:
+            if st.session_state.profile_image:
+                st.image(st.session_state.profile_image, width=180)
+            else:
+                st.markdown(
+                    """
+                    <div style="
+                        width:150px;height:150px;border-radius:50%;
+                        background:#211638;border:3px solid #7546C8;
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:60px;color:#C4B5FD;">
+                        👤
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            uploaded = st.file_uploader(
+                t("choose_photo"),
+                type=["png", "jpg", "jpeg", "webp"],
+                key="profile_photo_upload",
             )
 
-        uploaded = st.file_uploader(
-            t("choose_photo"),
-            type=["png", "jpg", "jpeg", "webp"],
-            key="profile_photo_upload",
+            if uploaded is not None:
+                if uploaded.size > 5 * 1024 * 1024:
+                    st.error("حجم الصورة كبير. الحد الأقصى 5 MB.")
+                else:
+                    st.session_state.profile_image = uploaded.getvalue()
+                    st.rerun()
+
+            if st.session_state.profile_image:
+                if st.button(t("remove_photo"), key="remove_profile_photo"):
+                    st.session_state.profile_image = None
+                    st.rerun()
+
+            st.caption(t("photo_note"))
+
+        with right:
+            st.subheader(t("account_info"))
+
+            with st.form("profile_form"):
+                new_name = st.text_input(
+                    t("profile_name"),
+                    value=st.session_state.profile_name,
+                )
+
+                st.text_input(
+                    t("email"),
+                    value=get_user_email(),
+                    disabled=True,
+                )
+
+                save_profile = st.form_submit_button(
+                    t("save_profile"),
+                    type="primary",
+                    use_container_width=True,
+                )
+
+            if save_profile:
+                clean_name = new_name.strip()
+
+                if not clean_name:
+                    st.warning("يرجى إدخال الاسم.")
+                else:
+                    try:
+                        result = supabase.auth.update_user({
+                            "data": {"full_name": clean_name}
+                        })
+
+                        st.session_state.profile_name = clean_name
+
+                        if getattr(result, "user", None):
+                            st.session_state.user = result.user
+
+                        st.success(t("profile_saved"))
+                    except Exception:
+                        st.error(t("profile_error"))
+
+        st.divider()
+        st.subheader(t("account_settings"))
+
+        if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
+            st.session_state.show_profile = False
+            st.session_state.show_settings = True
+            st.rerun()
+
+        if st.button("🚪 " + t("logout"), use_container_width=True):
+            logout()
+
+        st.stop()
+
+
+    # =====================================
+    # الشريط الجانبي
+    # =====================================
+    with st.sidebar:
+        st.markdown(
+            f'<div class="nexora-title">{t("app_title")}</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="nexora-subtitle">{t("subtitle")}</div>',
+            unsafe_allow_html=True,
         )
 
-        if uploaded is not None:
-            if uploaded.size > 5 * 1024 * 1024:
-                st.error("حجم الصورة كبير. الحد الأقصى 5 MB.")
-            else:
-                st.session_state.profile_image = uploaded.getvalue()
-                st.rerun()
+        if st.button(t("new_chat"), use_container_width=True, type="primary"):
+            st.session_state.conversation_id = None
+            st.session_state.messages = []
+            st.session_state.show_settings = False
+            st.rerun()
 
-        if st.session_state.profile_image:
-            if st.button(t("remove_photo"), key="remove_profile_photo"):
-                st.session_state.profile_image = None
-                st.rerun()
-
-        st.caption(t("photo_note"))
-
-    with right:
-        st.subheader(t("account_info"))
-
-        with st.form("profile_form"):
-            new_name = st.text_input(
-                t("profile_name"),
-                value=st.session_state.profile_name,
-            )
-
-            st.text_input(
-                t("email"),
-                value=get_user_email(),
-                disabled=True,
-            )
-
-            save_profile = st.form_submit_button(
-                t("save_profile"),
-                type="primary",
-                use_container_width=True,
-            )
-
-        if save_profile:
-            clean_name = new_name.strip()
-
-            if not clean_name:
-                st.warning("يرجى إدخال الاسم.")
-            else:
-                try:
-                    result = supabase.auth.update_user({
-                        "data": {"full_name": clean_name}
-                    })
-
-                    st.session_state.profile_name = clean_name
-
-                    if getattr(result, "user", None):
-                        st.session_state.user = result.user
-
-                    st.success(t("profile_saved"))
-                except Exception:
-                    st.error(t("profile_error"))
-
-    st.divider()
-    st.subheader(t("account_settings"))
-
-    if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
-        st.session_state.show_profile = False
-        st.session_state.show_settings = True
-        st.rerun()
-
-    if st.button("🚪 " + t("logout"), use_container_width=True):
-        logout()
-
-    st.stop()
-
-
-# =====================================
-# الشريط الجانبي
-# =====================================
-with st.sidebar:
-    st.markdown(
-        f'<div class="nexora-title">{t("app_title")}</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f'<div class="nexora-subtitle">{t("subtitle")}</div>',
-        unsafe_allow_html=True,
-    )
-
-    if st.button(t("new_chat"), use_container_width=True, type="primary"):
-        st.session_state.conversation_id = None
-        st.session_state.messages = []
-        st.session_state.show_settings = False
-        st.rerun()
-
-    search_query = st.text_input(
-        "🔎",
-        placeholder=t("search_placeholder"),
-        label_visibility="collapsed",
-        key="sidebar_search",
-    )
+        search_query = st.text_input(
+            "🔎",
+            placeholder=t("search_placeholder"),
+            label_visibility="collapsed",
+            key="sidebar_search",
+        )
     
-    try:
-        conversations = list_conversations()
-    except Exception as error:
-        st.error("حدث خطأ أثناء تحميل المحادثات:")
-        st.exception(error)
-        conversations = []
+        try:
+            conversations = list_conversations()
+        except Exception as error:
+            st.error("حدث خطأ أثناء تحميل المحادثات:")
+            st.exception(error)
+            conversations = []
 
-    if search_query.strip():
-        query = search_query.strip().casefold()
-        conversations = [
-            conv for conv in conversations
-            if query in (conv.get("title") or "").casefold()
-        ]
+        if search_query.strip():
+            query = search_query.strip().casefold()
+            conversations = [
+                conv for conv in conversations
+                if query in (conv.get("title") or "").casefold()
+            ]
 
-    if not conversations:
-        st.caption(t("no_conversations"))
-    else:
-        groups = group_conversations_by_date(conversations)
+        if not conversations:
+            st.caption(t("no_conversations"))
+        else:
+            groups = group_conversations_by_date(conversations)
 
-        def render_group(title_key, items):
-            if not items:
-                return
+            def render_group(title_key, items):
+                if not items:
+                    return
 
-            st.markdown(
-                f'<div class="date-group">{t(title_key)}</div>',
-                unsafe_allow_html=True,
-            )
+                st.markdown(
+                    f'<div class="date-group">{t(title_key)}</div>',
+                    unsafe_allow_html=True,
+                )
 
-            for conv in items:
-                cid = str(conv["id"])
-                title = conv.get("title") or t("new_chat")
-                active = str(st.session_state.conversation_id) == cid
+                for conv in items:
+                    cid = str(conv["id"])
+                    title = conv.get("title") or t("new_chat")
+                    active = str(st.session_state.conversation_id) == cid
 
-                col1, col2 = st.columns([6, 1], gap="small")
+                    col1, col2 = st.columns([6, 1], gap="small")
 
-                with col1:
-                    label = title[:24] + ("…" if len(title) > 24 else "")
-                    if st.button(
-                        label,
-                        key=f"open_{cid}",
-                        use_container_width=True,
-                        type="primary" if active else "tertiary",
-                    ):
-                        try:
-                            st.session_state.conversation_id = cid
-                            st.session_state.messages = load_messages(cid)
-                            st.rerun()
-                        except Exception as error:
-                            show_error(error)
-
-                with col2:
-                    if st.button("⋯", key=f"menu_{cid}"):
-                        key = f"show_menu_{cid}"
-                        st.session_state[key] = not st.session_state.get(key, False)
-
-                if st.session_state.get(f"show_menu_{cid}", False):
-                    st.caption(t("delete_confirm", title=title))
-                    c1, c2 = st.columns(2)
-
-                    with c1:
-                        if st.button(t("yes"), key=f"yes_{cid}"):
+                    with col1:
+                        label = title[:24] + ("…" if len(title) > 24 else "")
+                        if st.button(
+                            label,
+                            key=f"open_{cid}",
+                            use_container_width=True,
+                            type="primary" if active else "tertiary",
+                        ):
                             try:
-                                delete_conversation(cid)
-                                st.session_state.pop(f"show_menu_{cid}", None)
+                                st.session_state.conversation_id = cid
+                                st.session_state.messages = load_messages(cid)
                                 st.rerun()
                             except Exception as error:
                                 show_error(error)
 
-                    with c2:
-                        if st.button(t("cancel"), key=f"no_{cid}"):
-                            st.session_state.pop(f"show_menu_{cid}", None)
-                            st.rerun()
+                    with col2:
+                        if st.button("⋯", key=f"menu_{cid}"):
+                            key = f"show_menu_{cid}"
+                            st.session_state[key] = not st.session_state.get(key, False)
 
-        render_group("today", groups["today"])
-        render_group("yesterday", groups["yesterday"])
-        render_group("last_7_days", groups["last_7_days"])
-        render_group("older", groups["older"])
+                    if st.session_state.get(f"show_menu_{cid}", False):
+                        st.caption(t("delete_confirm", title=title))
+                        c1, c2 = st.columns(2)
 
-    st.divider()
-    st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
+                        with c1:
+                            if st.button(t("yes"), key=f"yes_{cid}"):
+                                try:
+                                    delete_conversation(cid)
+                                    st.session_state.pop(f"show_menu_{cid}", None)
+                                    st.rerun()
+                                except Exception as error:
+                                    show_error(error)
 
-    if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
-        st.session_state.show_settings = not st.session_state.show_settings
-        st.rerun()
+                        with c2:
+                            if st.button(t("cancel"), key=f"no_{cid}"):
+                                st.session_state.pop(f"show_menu_{cid}", None)
+                                st.rerun()
 
+            render_group("today", groups["today"])
+            render_group("yesterday", groups["yesterday"])
+            render_group("last_7_days", groups["last_7_days"])
+            render_group("older", groups["older"])
 
-# =====================================
-# الإعدادات
-# =====================================
-if st.session_state.show_settings:
-    st.title("⚙️ " + t("settings"))
+        st.divider()
+        st.caption("👤 " + (st.session_state.profile_name or get_user_email()))
 
-    if st.button(t("close")):
-        st.session_state.show_settings = False
-        st.rerun()
-
-    st.subheader(t("language"))
-
-    lang1, lang2 = st.columns(2)
-
-    with lang1:
-        if st.button(t("arabic"), use_container_width=True):
-            st.session_state.language = "ar"
+        if st.button("⚙️ " + t("settings_prefs"), use_container_width=True):
+            st.session_state.show_settings = not st.session_state.show_settings
             st.rerun()
 
-    with lang2:
-        if st.button(t("english"), use_container_width=True):
-            st.session_state.language = "en"
+
+    # =====================================
+    # الإعدادات
+    # =====================================
+    if st.session_state.show_settings:
+        st.title("⚙️ " + t("settings"))
+
+        if st.button(t("close")):
+            st.session_state.show_settings = False
             st.rerun()
 
-    st.divider()
-    st.subheader(t("theme"))
+        st.subheader(t("language"))
 
-    theme1, theme2 = st.columns(2)
+        lang1, lang2 = st.columns(2)
 
-    with theme1:
-        if st.button("🌙 " + t("dark"), use_container_width=True):
-            st.session_state.theme = "dark"
-            st.rerun()
-
-    with theme2:
-        if st.button("☀️ " + t("light"), use_container_width=True):
-            st.session_state.theme = "light"
-            st.rerun()
-
-    st.divider()
-
-    with st.expander(t("chat_settings"), expanded=True):
-        temp = st.slider(
-            t("temperature"), 0.0, 1.0,
-            float(st.session_state.temperature), 0.1,
-        )
-        tokens = st.slider(
-            t("max_tokens"), 200, 2000,
-            int(st.session_state.max_tokens), 50,
-        )
-
-        if st.button(t("save_settings")):
-            st.session_state.temperature = temp
-            st.session_state.max_tokens = tokens
-            st.success("✓")
-
-    with st.expander(t("about")):
-        st.markdown(t("about_text"))
-        st.caption("Founder: Yamin Zoabi")
-
-    with st.expander(t("privacy")):
-        st.markdown(t("privacy_text"))
-
-    st.divider()
-
-    if st.button(t("delete_account"), type="primary"):
-        st.session_state.confirm_delete_account = True
-
-    if st.session_state.confirm_delete_account:
-        st.warning(t("delete_account_confirm"))
-
-        yes_col, no_col = st.columns(2)
-
-        with yes_col:
-            if st.button(t("yes"), key="confirm_delete_yes"):
-                delete_account()
-
-        with no_col:
-            if st.button(t("cancel"), key="confirm_delete_no"):
-                st.session_state.confirm_delete_account = False
+        with lang1:
+            if st.button(t("arabic"), use_container_width=True):
+                st.session_state.language = "ar"
                 st.rerun()
 
-    if st.button(t("logout"), use_container_width=True):
-        logout()
+        with lang2:
+            if st.button(t("english"), use_container_width=True):
+                st.session_state.language = "en"
+                st.rerun()
 
-    st.stop()
+        st.divider()
+        st.subheader(t("theme"))
+
+        theme1, theme2 = st.columns(2)
+
+        with theme1:
+            if st.button("🌙 " + t("dark"), use_container_width=True):
+                st.session_state.theme = "dark"
+                st.rerun()
+
+        with theme2:
+            if st.button("☀️ " + t("light"), use_container_width=True):
+                st.session_state.theme = "light"
+                st.rerun()
+
+        st.divider()
+
+        with st.expander(t("chat_settings"), expanded=True):
+            temp = st.slider(
+                t("temperature"), 0.0, 1.0,
+                float(st.session_state.temperature), 0.1,
+            )
+            tokens = st.slider(
+                t("max_tokens"), 200, 2000,
+                int(st.session_state.max_tokens), 50,
+            )
+
+            if st.button(t("save_settings")):
+                st.session_state.temperature = temp
+                st.session_state.max_tokens = tokens
+                st.success("✓")
+
+        with st.expander(t("about")):
+            st.markdown(t("about_text"))
+            st.caption("Founder: Yamin Zoabi")
+
+        with st.expander(t("privacy")):
+            st.markdown(t("privacy_text"))
+
+        st.divider()
+
+        if st.button(t("delete_account"), type="primary"):
+            st.session_state.confirm_delete_account = True
+
+        if st.session_state.confirm_delete_account:
+            st.warning(t("delete_account_confirm"))
+
+            yes_col, no_col = st.columns(2)
+
+            with yes_col:
+                if st.button(t("yes"), key="confirm_delete_yes"):
+                    delete_account()
+
+            with no_col:
+                if st.button(t("cancel"), key="confirm_delete_no"):
+                    st.session_state.confirm_delete_account = False
+                    st.rerun()
+
+        if st.button(t("logout"), use_container_width=True):
+            logout()
+
+        st.stop()
+
+
+else:
+    with st.sidebar:
+        st.markdown('<div class="nexora-title">NEXORA AI</div>', unsafe_allow_html=True)
+        st.caption("👤 " + ("وضع الزائر" if st.session_state.language == "ar" else "Guest mode"))
+        st.caption(
+            f"{'الرسائل المتبقية:' if st.session_state.language == 'ar' else 'Messages remaining:'} "
+            f"{max(0, 10 - st.session_state.guest_message_count)} / 10"
+        )
+        if st.button("🚪 تسجيل الدخول / إنشاء حساب" if st.session_state.language == "ar" else "🚪 Login / Sign up", use_container_width=True):
+            st.session_state.guest_mode = False
+            st.session_state.guest_message_count = 0
+            st.session_state.messages = []
+            st.session_state.conversation_id = None
+            st.rerun()
 
 
 # =====================================
 # المحتوى الرئيسي
 # =====================================
+if st.session_state.guest_mode and st.session_state.guest_message_count >= 10:
+    st.warning(
+        "وصلت إلى الحد الأقصى وهو 10 رسائل. أنشئ حسابًا أو سجّل الدخول لمتابعة المحادثة."
+        if st.session_state.language == "ar"
+        else "You have reached the 10-message limit. Create an account or log in to continue."
+    )
+    if st.button("إنشاء حساب / تسجيل الدخول" if st.session_state.language == "ar" else "Create account / Log in", type="primary"):
+        st.session_state.guest_mode = False
+        st.session_state.guest_message_count = 0
+        st.session_state.messages = []
+        st.session_state.conversation_id = None
+        st.rerun()
+
 if not st.session_state.messages:
     st.markdown(
         f"""
@@ -1579,7 +1621,11 @@ else:
 # =====================================
 prompt = st.chat_input(
     t("chat_placeholder"),
-    accept_file="multiple",
+    accept_file=False if st.session_state.guest_mode else "multiple",
+    disabled=(
+        st.session_state.guest_mode
+        and st.session_state.guest_message_count >= 10
+    ),
 )
 
 if prompt:
@@ -1605,10 +1651,21 @@ if prompt:
             )
 
     try:
-        if not st.session_state.conversation_id:
+        is_guest = st.session_state.guest_mode
+
+        # Enforce the limit before sending anything to the AI.
+        if is_guest and st.session_state.guest_message_count >= 10:
+            st.warning(
+                "انتهت رسائل الزائر العشر. سجّل الدخول للمتابعة."
+                if st.session_state.language == "ar"
+                else "The 10 guest messages have been used. Log in to continue."
+            )
+            st.stop()
+
+        if not is_guest and not st.session_state.conversation_id:
             create_conversation()
 
-        cid = str(st.session_state.conversation_id)
+        cid = str(st.session_state.conversation_id) if not is_guest else None
         first_message = len(st.session_state.messages) == 0
 
         st.session_state.messages.append({
@@ -1616,7 +1673,8 @@ if prompt:
             "content": final_prompt,
         })
 
-        save_message(cid, "user", final_prompt)
+        if not is_guest:
+            save_message(cid, "user", final_prompt)
 
         with st.chat_message("user", avatar=None):
             st.markdown(final_prompt)
@@ -1659,12 +1717,16 @@ if prompt:
             "content": answer,
         })
 
-        save_message(cid, "assistant", answer)
+        if is_guest:
+            st.session_state.guest_message_count += 1
+        else:
+            save_message(cid, "assistant", answer)
 
-        if first_message:
-            update_title(cid, generate_title(final_prompt))
+            if first_message:
+                update_title(cid, generate_title(final_prompt))
 
-        update_activity(cid)
+            update_activity(cid)
+
         st.rerun()
 
     except Exception as error:
