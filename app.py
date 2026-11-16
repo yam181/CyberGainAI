@@ -1122,6 +1122,9 @@ overflow: hidden !important;
 .st-key-nx_composer input {
     background: transparent !important;
     color: #ffffff !important;
+    .st-key-nx_composer input {
+    text-align: left !important;
+    direction: ltr !important;
 }
         </style>
         """
