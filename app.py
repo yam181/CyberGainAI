@@ -1135,11 +1135,11 @@ overflow: hidden !important;
     text-align: left !important;
     padding-left: 14px !important;
     padding-right: 8px !important;
-    .st-key-nx_chat_text input {
-    text-align: left !important;
-    direction: ltr !important;
 }
 
+.st-key-nx_chat_text input {
+    text-align: left !important;
+    direction: ltr !important;
 }
         </style>
         """
