@@ -1059,12 +1059,16 @@ overflow: hidden !important;
 
 @media (max-width: 768px) {
     .st-key-nx_composer {
-        width: calc(100vw - 20px) !important;
-        max-width: none !important;
+        width: calc(100% - 20px) !important;
+        max-width: calc(100% - 20px) !important;
+        left: 10px !important;
+        right: 10px !important;
         bottom: 80px !important;
+        box-sizing: border-box !important;
         padding: 3px 5px !important;
         border-radius: 20px !important;
     }
+}
 
     .st-key-nx_composer input {
         height: 34px !important;
