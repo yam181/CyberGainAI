@@ -673,9 +673,84 @@ GENERAL RULES:
 COOKIE_NAME = "nexora_auth"
 
 
+def _jwt_expiry(token):
+    """Return JWT exp timestamp, or 0 when the token cannot be decoded."""
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return 0
+        payload_part = parts[1]
+        payload_part += "=" * (-len(payload_part) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(payload_part.encode()))
+        return int(payload.get("exp", 0))
+    except Exception:
+        return 0
+
+
+def _store_auth_session(session, user=None, persist=True):
+    """Keep Streamlit state, Supabase PostgREST auth, and cookie in sync."""
+    if not session:
+        raise Exception("لم تُرجع Supabase جلسة دخول صالحة.")
+
+    st.session_state.access_token = session.access_token
+    st.session_state.refresh_token = session.refresh_token
+
+    if user:
+        st.session_state.user = user
+
+    supabase.postgrest.auth(session.access_token)
+
+    if persist:
+        save_session_cookie()
+
+
+def _clear_auth_session():
+    for key in ("user", "access_token", "refresh_token"):
+        st.session_state[key] = None
+
+    try:
+        cookie_manager.delete(
+            COOKIE_NAME,
+            key="nexora_auth_expired",
+            path="/",
+        )
+    except Exception:
+        pass
+
+
 def apply_token():
-    if st.session_state.access_token:
-        supabase.postgrest.auth(st.session_state.access_token)
+    """Refresh the access token before it expires and apply it to PostgREST."""
+    access = st.session_state.get("access_token")
+    refresh = st.session_state.get("refresh_token")
+
+    if not refresh:
+        if not access:
+            return
+        expiry = _jwt_expiry(access)
+        if not expiry or expiry <= int(datetime.now(timezone.utc).timestamp()):
+            _clear_auth_session()
+            raise Exception("انتهت جلسة الدخول. سجّل الدخول مرة أخرى.")
+        supabase.postgrest.auth(access)
+        return
+
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    expiry = _jwt_expiry(access) if access else 0
+
+    # Refresh if the token is expired, cannot be decoded, or has 5 minutes left.
+    if not access or not expiry or expiry <= now_ts + 300:
+        try:
+            result = supabase.auth.refresh_session(refresh)
+            if not result or not result.session:
+                raise Exception("لم يتمكن Supabase من تجديد جلسة الدخول.")
+            _store_auth_session(result.session, result.user)
+            access = result.session.access_token
+        except Exception as error:
+            _clear_auth_session()
+            raise Exception(
+                "انتهت جلسة الدخول وتعذّر تجديدها. سجّل الخروج ثم ادخل مرة أخرى."
+            ) from error
+
+    supabase.postgrest.auth(access)
 
 
 def save_session_cookie():
@@ -710,7 +785,6 @@ def restore_session_cookie():
         return
 
     encrypted = cookie_manager.get(COOKIE_NAME)
-
     if not encrypted:
         return
 
@@ -718,28 +792,38 @@ def restore_session_cookie():
         session_data = COOKIE_CIPHER.decrypt(
             encrypted.encode()
         ).decode()
-
         tokens = json.loads(session_data)
 
-        result = supabase.auth.set_session(
-            tokens["access_token"],
-            tokens["refresh_token"],
-        )
+        old_access = tokens.get("access_token")
+        refresh = tokens.get("refresh_token")
+        if not refresh:
+            raise Exception("لا يوجد Refresh Token في ملف الجلسة.")
 
-        if result and result.session and result.user:
-            st.session_state.user = result.user
-            st.session_state.access_token = result.session.access_token
-            st.session_state.refresh_token = result.session.refresh_token
-            apply_token()
+        expiry = _jwt_expiry(old_access) if old_access else 0
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+
+        # Do not try to restore an expired access token first.
+        if not old_access or not expiry or expiry <= now_ts + 300:
+            result = supabase.auth.refresh_session(refresh)
+        else:
+            try:
+                result = supabase.auth.set_session(old_access, refresh)
+            except Exception:
+                # If the stored access token has expired, try the refresh token.
+                result = supabase.auth.refresh_session(refresh)
+
+        if not result or not result.session:
+            raise Exception("تعذّرت استعادة جلسة Supabase.")
+
+        _store_auth_session(result.session, result.user)
+
+        if not st.session_state.user:
+            user_result = supabase.auth.get_user()
+            if user_result and user_result.user:
+                st.session_state.user = user_result.user
 
     except Exception:
-        st.session_state.access_token = None
-        st.session_state.refresh_token = None
-        st.session_state.user = None
-        cookie_manager.delete(
-            COOKIE_NAME,
-            key="nexora_auth_delete",
-        )
+        _clear_auth_session()
 
 
 def get_user_id():
@@ -936,7 +1020,11 @@ if not st.session_state.user:
     st.stop()
 
 
-apply_token()
+try:
+    apply_token()
+except Exception:
+    st.warning("انتهت جلسة الدخول. سجّل الدخول مرة أخرى للمتابعة.")
+    st.stop()
 
 # تحميل اسم الحساب من بيانات Supabase
 user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
