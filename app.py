@@ -228,7 +228,7 @@ def get_css():
         padding-right: 2rem !important;
     }
 
-    /* Sidebar: quiet, clean, and fixed-width */
+    /* Sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #100d1b 0%, #0d0b15 100%) !important;
         border-right: 1px solid var(--nx-border) !important;
@@ -295,7 +295,7 @@ def get_css():
         box-shadow: 0 0 22px rgba(129, 85, 217, .13) !important;
     }
 
-    /* Chat messages: simple, readable, no avatars */
+    /* Chat messages */
     [data-testid="stChatMessageAvatar"],
     [data-testid*="chatAvatarIcon"],
     [data-testid="stChatMessage"] > div:first-child {
@@ -378,126 +378,6 @@ def get_css():
         color: #a99cbe;
     }
 
-    /* One unified ChatGPT-style composer: every control lives inside one capsule. */
-    .st-key-nx_composer {
-        background: #171222 !important;
-        border: 1px solid rgba(164, 128, 226, .30) !important;
-        border-radius: 24px !important;
-        padding: 2px 6px !important;
-        margin-top: 8px !important;
-        box-shadow: 0 5px 18px rgba(0, 0, 0, .16) !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
-        overflow: hidden !important;
-    }
-    .st-key-nx_composer [data-testid="stHorizontalBlock"] {
-        align-items: center !important;
-        flex-wrap: nowrap !important;
-        gap: 3px !important;
-        width: 100% !important;
-    }
-    .st-key-nx_composer [data-testid="column"] {
-        min-width: 0 !important;
-        padding: 0 !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] {
-        margin: 0 !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] {
-        border: 0 !important;
-        background: transparent !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-        gap: 3px !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input {
-        display: block !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        background: #171222 !important;
-        background-color: #171222 !important;
-        color: #f3effa !important;
-        -webkit-text-fill-color: #f3effa !important;
-        border: 0 !important;
-        border-radius: 18px !important;
-        text-align: right !important;
-        direction: rtl !important;
-        padding: 0 9px !important;
-        box-shadow: none !important;
-        box-sizing: border-box !important;
-        font-size: 14px !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        opacity: 1 !important;
-        text-align: right !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] > div,
-    .st-key-nx_composer [data-testid="stTextInput"] > div > div,
-    .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"] {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        background: #171222 !important;
-        background-color: #171222 !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        box-sizing: border-box !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input:focus {
-        border: 0 !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-    .st-key-nx_add_files button,
-    .st-key-nx_chat_send button {
-        width: 30px !important;
-        min-width: 30px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-        font-size: 18px !important;
-    }
-    .st-key-nx_add_files button {
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        color: #d8caff !important;
-    }
-    .st-key-nx_chat_send button {
-        background: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer [data-testid="stPopover"] button {
-        width: 30px !important;
-        min-width: 30px !important;
-        height: 30px !important;
-        min-height: 30px !important;
-        padding: 0 !important;
-        border-radius: 50% !important;
-    }
-
-    [data-testid="stChatInput"]:focus-within {
-        border-color: rgba(185, 157, 255, .72) !important;
-        box-shadow: 0 0 0 1px rgba(129, 85, 217, .2), 0 12px 42px rgba(0, 0, 0, .24) !important;
-    }
-
-    [data-testid="stChatInput"] textarea {
-        color: #f3effa !important;
-    }
-
     /* Buttons */
     .stButton > button,
     [data-testid="stFormSubmitButton"] button,
@@ -522,32 +402,6 @@ def get_css():
         background: linear-gradient(135deg, #8962d0, #6844aa) !important;
         border-color: rgba(210, 190, 255, .7) !important;
         transform: translateY(-1px);
-    }
-
-    /* Final composer overrides: no individual button tiles or bright fills. */
-    .st-key-nx_composer .st-key-nx_add_files button,
-    .st-key-nx_composer .st-key-nx_chat_send button {
-        background: transparent !important;
-        background-color: transparent !important;
-        background-image: none !important;
-        border: 0 !important;
-        box-shadow: none !important;
-        transform: none !important;
-    }
-    .st-key-nx_composer .st-key-nx_chat_send button {
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer .st-key-nx_add_files button {
-        color: #d8caff !important;
-    }
-    .st-key-nx_composer [data-testid="stForm"],
-    .st-key-nx_composer [data-testid="stTextInput"],
-    .st-key-nx_composer [data-testid="stTextInput"] > div,
-    .st-key-nx_composer [data-testid="stTextInput"] > div > div {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        box-sizing: border-box !important;
     }
 
     [data-testid="stSidebar"] .stButton > button {
@@ -636,165 +490,36 @@ def get_css():
         letter-spacing: -.3px;
     }
 
-    @media (max-width: 768px) {
-        .block-container {
-            padding: 1.2rem .8rem 6rem !important;
-        }
-        /* Mobile layout: attachment | message field | send button. */
-        .st-key-nx_composer {
-            display: block !important;
-            position: relative !important;
-            z-index: 50 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            min-height: 36px !important;
-            padding: 2px 5px !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: center !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            gap: 3px !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"] {
-            min-width: 0 !important;
-            padding: 0 !important;
-        }
-        /* Only the OUTER row: keep the plus button narrow. */
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-            flex: 0 0 32px !important;
-            width: 32px !important;
-            min-width: 32px !important;
-        }
-        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 1 1 0% !important;
-            width: 0 !important;
-            min-width: 0 !important;
-        }
-        /* Only the INNER form row: input takes the remaining space. */
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: center !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            gap: 3px !important;
-        }
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="column"] {
-            min-width: 0 !important;
-            padding: 0 !important;
-        }
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-            flex: 1 1 0% !important;
-            width: 0 !important;
-            min-width: 0 !important;
-        }
-        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-            flex: 0 0 30px !important;
-            width: 30px !important;
-            min-width: 30px !important;
-        }
-        .st-key-nx_composer [data-testid="stForm"],
-        .st-key-nx_composer [data-testid="stTextInput"],
-        .st-key-nx_composer [data-testid="stTextInput"] > div,
-        .st-key-nx_composer [data-testid="stTextInput"] > div > div,
-        .st-key-nx_composer [data-baseweb="input"] {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            box-sizing: border-box !important;
-            background: #171222 !important;
-        }
-        .st-key-nx_composer [data-testid="stTextInput"] input {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            height: 30px !important;
-            min-height: 30px !important;
-            max-height: 30px !important;
-            margin: 0 !important;
-            padding: 0 7px !important;
-            border: 0 !important;
-            border-radius: 14px !important;
-            background: #171222 !important;
-            background-color: #171222 !important;
-            color: #f3effa !important;
-            -webkit-text-fill-color: #f3effa !important;
-            font-size: 12px !important;
-            line-height: 30px !important;
-            text-align: right !important;
-            direction: rtl !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            box-sizing: border-box !important;
-        }
-        .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-            color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
-            opacity: 1 !important;
-        }
-        .st-key-nx_composer .st-key-nx_add_files button,
-        .st-key-nx_composer .st-key-nx_chat_send button,
-        .st-key-nx_composer [data-testid="stPopover"] button {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 28px !important;
-            min-width: 28px !important;
-            height: 28px !important;
-            min-height: 28px !important;
-            padding: 0 !important;
-            font-size: 15px !important;
-            border-radius: 50% !important;
-        }
-        .st-key-nx_composer,
-        .st-key-nx_composer * {
-            pointer-events: auto !important;
-        }
-        .welcome-container {
-            min-height: 48vh;
-        }
-        .welcome-text {
-            font-size: 24px !important;
-        }
-        [data-testid="stSidebar"] {
-            border-right: none !important;
-            min-width: 260px !important;
-        }
-        .st-key-nx_profile_button {
-            top: 7px !important;
-            right: 8px !important;
-        }
-        [data-testid="stMainBlockContainer"] {
-            padding-bottom: 2rem !important;
-        }
-    }
-
-    /* NEXORA composer — one consistent layout for desktop and mobile */
+    /* =============================================
+       NEXORA Composer — Fixed Bottom (Clean)
+       ============================================= */
     .st-key-nx_composer {
-        width: min(100%, 680px) !important;
+        position: fixed !important;
+        left: 50% !important;
+        bottom: 14px !important;
+        transform: translateX(-50%) !important;
+        z-index: 9999 !important;
+
+        width: min(calc(100vw - 32px), 680px) !important;
         max-width: 680px !important;
         min-width: 0 !important;
-        margin: 0 auto !important;
+
+        margin: 0 !important;
         padding: 5px 8px !important;
         box-sizing: border-box !important;
-        border: 1px solid #49365f !important;
-        border-radius: 26px !important;
-        background: #171222 !important;
+
+        background: rgba(190, 155, 255, 0.18) !important;
+        border: 1px solid rgba(210, 185, 255, 0.55) !important;
+        border-radius: 24px !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        box-shadow:
+            0 0 12px rgba(155, 92, 255, 0.30),
+            0 0 26px rgba(155, 92, 255, 0.18) !important;
+
         overflow: visible !important;
     }
+
     .st-key-nx_composer > div,
     .st-key-nx_composer [data-testid="stForm"] {
         width: 100% !important;
@@ -802,11 +527,12 @@ def get_css():
         min-width: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
-        box-sizing: border-box !important;
         background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
-    /* Outer row: attachment button + message form */
+    /* Outer row: + | form */
     .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-flow: row nowrap !important;
@@ -814,59 +540,45 @@ def get_css():
         gap: 6px !important;
         width: 100% !important;
         min-width: 0 !important;
-        box-sizing: border-box !important;
     }
+
     .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
         flex: 0 0 36px !important;
         width: 36px !important;
         min-width: 36px !important;
         max-width: 36px !important;
     }
+
     .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
         flex: 1 1 0% !important;
         width: auto !important;
         min-width: 0 !important;
-        max-width: none !important;
     }
 
-    /* Inner row: input takes all remaining space + send button */
+    /* Inner form row: input | send */
     .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 4px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-}
+        display: flex !important;
+        flex-flow: row nowrap !important;
+        align-items: center !important;
+        gap: 4px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
 
-.st-key-nx_composer [data-testid="stForm"] [data-testid="column"] {
-    min-width: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-}
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+        flex: 1 1 0% !important;
+        width: 0 !important;
+        min-width: 0 !important;
+    }
 
-.st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
-    flex: 1 1 0% !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-}
+    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+        flex: 0 0 32px !important;
+        width: 32px !important;
+        min-width: 32px !important;
+        max-width: 32px !important;
+    }
 
-.st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-    flex: 0 0 32px !important;
-    width: 32px !important;
-    min-width: 32px !important;
-    max-width: 32px !important;
-}
-
-    /* Make the actual input fill its column, so tapping the center works */
+    /* Input */
     .st-key-nx_composer [data-testid="stTextInput"],
     .st-key-nx_composer [data-testid="stTextInput"] > div,
     .st-key-nx_composer [data-testid="stTextInput"] [data-baseweb="input"],
@@ -876,11 +588,13 @@ def get_css():
         max-width: 100% !important;
         min-width: 0 !important;
         margin: 0 !important;
-        box-sizing: border-box !important;
         background: transparent !important;
-        pointer-events: auto !important;
+        border: none !important;
+        box-shadow: none !important;
     }
-    .st-key-nx_composer [data-testid="stTextInput"] input {
+
+    .st-key-nx_composer [data-testid="stTextInput"] input,
+    .st-key-nx_composer input#nx_chat_text {
         display: block !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -891,267 +605,194 @@ def get_css():
         margin: 0 !important;
         box-sizing: border-box !important;
         border: 0 !important;
-        border-radius: 20px !important;
+        border-radius: 18px !important;
         outline: none !important;
         box-shadow: none !important;
         background: transparent !important;
         color: #f3effa !important;
         -webkit-text-fill-color: #f3effa !important;
-        direction: rtl !important;
-        text-align: right !important;
         font-size: 14px !important;
-        pointer-events: auto !important;
-        touch-action: manipulation !important;
-    }
-    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
-        color: #fff !important;
-        -webkit-text-fill-color: #fff !important;
-        opacity: 1 !important;
+        direction: ltr !important;
+        text-align: left !important;
+        unicode-bidi: plaintext !important;
     }
 
-    /* Keep both controls visible and compact */
-    .st-key-nx_composer .st-key-nx_add_files,
-    .st-key-nx_composer .st-key-nx_add_files [data-testid="stPopover"],
-    .st-key-nx_composer .st-key-nx_chat_send,
-    .st-key-nx_composer .st-key-nx_chat_send [data-testid="stFormSubmitButton"] {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 36px !important;
-        min-width: 36px !important;
-        max-width: 36px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        flex: 0 0 36px !important;
+    .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+        color: #c9b8ff !important;
+        -webkit-text-fill-color: #c9b8ff !important;
+        opacity: 0.9 !important;
+        direction: ltr !important;
+        text-align: left !important;
     }
+
+    /* Buttons inside composer */
     .st-key-nx_composer .st-key-nx_add_files button,
-    .st-key-nx_composer .st-key-nx_chat_send button {
+    .st-key-nx_composer .st-key-nx_chat_send button,
+    .st-key-nx_composer [data-testid="stPopover"] button {
         display: inline-flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
         align-items: center !important;
         justify-content: center !important;
         width: 30px !important;
         min-width: 30px !important;
         height: 30px !important;
         min-height: 30px !important;
-        margin: 0 !important;
         padding: 0 !important;
         border: 0 !important;
         border-radius: 50% !important;
         background: transparent !important;
         color: #e5d9ff !important;
         box-shadow: none !important;
-        pointer-events: auto !important;
-    }
-
-    
-    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] {
-        gap: 4px !important;
-    }
-
-    .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child,
-    .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
-        flex: 0 0 30px !important;
-        width: 30px !important;
-        min-width: 30px !important;
-        max-width: 30px !important;
-    }
-
-    .st-key-nx_composer .st-key-nx_add_files,
-    .st-key-nx_composer .st-key-nx_chat_send {
-        width: 30px !important;
-        min-width: 30px !important;
-        max-width: 30px !important;
-        flex: 0 0 30px !important;
-    }
-
-    .st-key-nx_composer .st-key-nx_add_files button,
-    .st-key-nx_composer .st-key-nx_chat_send button {
-        width: 28px !important;
-        min-width: 28px !important;
-        height: 28px !important;
-        min-height: 28px !important;
-    }
-
-    .st-key-nx_composer [data-testid="stTextInput"] input {
-        height: 32px !important;
-        min-height: 32px !important;
-        font-size: 13px !important;
-        padding: 0 8px !important;
-    }
-}
-@media (max-width: 768px) {
-    .st-key-nx_composer {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    .st-key-nx_composer > div,
-    .st-key-nx_composer [data-testid="stForm"] {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }
-}
-
-/* NEXORA — fixed bottom composer */
-.st-key-nx_composer {
-    position: fixed !important;
-    left: 50% !important;
-    bottom: 12px !important;
-    transform: translateX(-50%) !important;
-    width: min(calc(100vw - 32px), 680px) !important;
-    max-width: 680px !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 4px 8px !important;
-background: rgba(190, 155, 255, .18) !important;
-border: 1px solid rgba(210, 185, 255, .55) !important;
-border-radius: 24px !important;
-backdrop-filter: blur(14px) !important;
--webkit-backdrop-filter: blur(14px) !important;
-box-shadow:
-    0 0 12px rgba(155, 92, 255, .30),
-    0 0 26px rgba(155, 92, 255, .18) !important;
-box-sizing: border-box !important;
-z-index: 9999 !important;
-overflow: hidden !important;
-}
-
-.st-key-nx_composer [data-testid="stForm"] {
-    background: #ffffff !important;
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-.st-key-nx_composer input {
-    background: rgba(190, 155, 255, .18) !important;
-    color: #ffffff !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-.st-key-nx_composer [data-testid="stTextInput"] > div {
-    background: rgba(190, 155, 255, .18) !important;
-    border-radius: 18px !important;
-}
-
-.st-key-nx_composer input::placeholder {
-    color: #8b8298 !important;
-}
-
-.st-key-nx_composer button {
-    min-height: 30px !important;
-}
-
-[data-testid="stMainBlockContainer"] {
-    padding-bottom: 90px !important;
-}
-
-@media (max-width: 768px) {
-    .st-key-nx_composer {
-        width: calc(100% - 20px) !important;
-        max-width: calc(100% - 20px) !important;
-        left: 10px !important;
-        right: 10px !important;
-        bottom: 80px !important;
-        box-sizing: border-box !important;
-        padding: 3px 5px !important;
-        border-radius: 20px !important;
-    }
-
-    .st-key-nx_composer input {
-        height: 34px !important;
-        min-height: 34px !important;
-        font-size: 14px !important;
-    }
-
-    .st-key-nx_composer button {
-        min-width: 28px !important;
-        width: 28px !important;
-        height: 28px !important;
-        min-height: 28px !important;
+        font-size: 16px !important;
     }
 
     [data-testid="stMainBlockContainer"] {
-        padding-bottom: 75px !important;
+        padding-bottom: 90px !important;
     }
-}
+
+    /* ========== Mobile ========== */
+    @media (max-width: 768px) {
+        .block-container {
+            padding: 1.2rem .8rem 6rem !important;
+        }
+
+        .st-key-nx_composer {
+            left: 12px !important;
+            right: 12px !important;
+            transform: none !important;          /* الإصلاح الحاسم */
+            width: auto !important;
+            max-width: none !important;
+            bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
+            padding: 4px 6px !important;
+            border-radius: 20px !important;
+        }
+
+        .st-key-nx_composer > div > [data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child {
+            flex: 0 0 32px !important;
+            width: 32px !important;
+            min-width: 32px !important;
+            max-width: 32px !important;
+        }
+
+        .st-key-nx_composer [data-testid="stForm"] [data-testid="stHorizontalBlock"] > [data-testid="column"]:last-child {
+            flex: 0 0 30px !important;
+            width: 30px !important;
+            min-width: 30px !important;
+            max-width: 30px !important;
+        }
+
+        .st-key-nx_composer [data-testid="stTextInput"] input {
+            height: 34px !important;
+            min-height: 34px !important;
+            font-size: 14px !important;
+            padding: 0 10px !important;
+        }
+
+        .st-key-nx_composer .st-key-nx_add_files button,
+        .st-key-nx_composer .st-key-nx_chat_send button {
+            width: 28px !important;
+            min-width: 28px !important;
+            height: 28px !important;
+            min-height: 28px !important;
+            font-size: 15px !important;
+        }
+
+        [data-testid="stMainBlockContainer"] {
+            padding-bottom: 80px !important;
+        }
+
+        .welcome-container {
+            min-height: 48vh;
+        }
+
+        .welcome-text {
+            font-size: 24px !important;
+        }
+
+        [data-testid="stSidebar"] {
+            border-right: none !important;
+            min-width: 260px !important;
+        }
+
+        .st-key-nx_profile_button {
+            top: 7px !important;
+            right: 8px !important;
+        }
+    }
     </style>
     """
+
     if st.session_state.theme == "light":
         return base_css + """
         <style>
         .stApp, [data-testid="stMain"], [data-testid="stAppViewContainer"] {
-            background: #f5f3fa !important; color: #211a2d !important;
+            background: #f5f3fa !important;
+            color: #211a2d !important;
         }
         [data-testid="stSidebar"] {
-            background: #ece7f5 !important; border-right: 1px solid #d8cce9 !important;
+            background: #ece7f5 !important;
+            border-right: 1px solid #d8cce9 !important;
         }
-        [data-testid="stSidebar"] > div:first-child { background: transparent !important; }
-        [data-testid="stSidebar"] input, [data-testid="stTextInput"] input,
-        [data-testid="stTextArea"] textarea, [data-testid="stNumberInput"] input,
-        [data-testid="stChatInput"], [data-testid="stChatInput"] textarea,
-        [data-testid="stForm"] { background: #ffffff !important; color: #211a2d !important; }
-        [data-testid="stChatMessage"] { color: #211a2d !important; }
+        [data-testid="stSidebar"] > div:first-child {
+            background: transparent !important;
+        }
+        [data-testid="stSidebar"] input,
+        [data-testid="stTextInput"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stChatInput"],
+        [data-testid="stChatInput"] textarea,
+        [data-testid="stForm"] {
+            background: #ffffff !important;
+            color: #211a2d !important;
+        }
+        [data-testid="stChatMessage"] {
+            color: #211a2d !important;
+        }
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
-            background: #eee8f8 !important; border-color: #dfd2f0 !important;
+            background: #eee8f8 !important;
+            border-color: #dfd2f0 !important;
         }
         [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
-            background: #ffffff !important; border-color: #e7e0ef !important;
+            background: #ffffff !important;
+            border-color: #e7e0ef !important;
         }
-        h1, h2, h3, p, label, [data-testid="stMarkdownContainer"] { color: #2b2238; }
-        .nexora-title, .welcome-logo, .welcome-text { color: #593995 !important; }
-        .nexora-subtitle, .welcome-sub, .date-group { color: #75668a !important; }
-        .st-key-nx_composer [data-testid="stTextInput"],
-.st-key-nx_composer [data-testid="stTextInput"] > div,
-.st-key-nx_composer [data-baseweb="input"],
-.st-key-nx_composer [data-baseweb="input"] > div {
-    background: rgba(190, 155, 255, .18) !important;
-    border: none !important;
-    box-shadow: none !important;
-}
+        h1, h2, h3, p, label, [data-testid="stMarkdownContainer"] {
+            color: #2b2238;
+        }
+        .nexora-title, .welcome-logo, .welcome-text {
+            color: #593995 !important;
+        }
+        .nexora-subtitle, .welcome-sub, .date-group {
+            color: #75668a !important;
+        }
 
-.st-key-nx_composer input {
-    background: transparent !important;
-    color: #ffffff !important;
-    .st-key-nx_composer input {
-    text-align: left !important;
-    direction: ltr !important;
-    .st-key-nx_composer [data-testid="stTextInput"] {
-    direction: ltr !important;
-    text-align: left !important;
-}
-
-.st-key-nx_composer [data-testid="stTextInput"] input {
-    direction: ltr !important;
-    text-align: left !important;
-    padding-left: 14px !important;
-    padding-right: 8px !important;
-}
-
-.st-key-nx_chat_text input {
-    text-align: left !important;
-    direction: ltr !important;
-}
+        .st-key-nx_composer {
+            background: rgba(120, 90, 180, 0.12) !important;
+            border: 1px solid rgba(120, 90, 180, 0.35) !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input,
+        .st-key-nx_composer input#nx_chat_text {
+            color: #211a2d !important;
+            -webkit-text-fill-color: #211a2d !important;
+        }
+        .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
+            color: #75668a !important;
+            -webkit-text-fill-color: #75668a !important;
+        }
+        .st-key-nx_composer .st-key-nx_add_files button,
+        .st-key-nx_composer .st-key-nx_chat_send button {
+            color: #593995 !important;
+        }
         </style>
         """
     return base_css
+
 
 st.markdown(get_css(), unsafe_allow_html=True)
 
 st.markdown("""
 <style>
-/* NEXORA: left-aligned message input on all devices and themes */
+/* Force LTR for the message input on all devices */
 .st-key-nx_composer [data-testid="stTextInput"] input,
 .st-key-nx_composer input#nx_chat_text {
     direction: ltr !important;
@@ -1160,14 +801,12 @@ st.markdown("""
     padding-left: 14px !important;
     padding-right: 8px !important;
 }
-
 .st-key-nx_composer [data-testid="stTextInput"] input::placeholder {
     direction: ltr !important;
     text-align: left !important;
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 
 # =====================================
@@ -1182,6 +821,7 @@ try:
 except Exception:
     st.error(t("secrets_error"))
     st.stop()
+
 # =====================================
 # تشفير جلسة تسجيل الدخول
 # =====================================
@@ -1192,6 +832,7 @@ try:
 except Exception:
     st.error("إعداد COOKIE_SECRET غير صحيح أو غير موجود في Secrets.")
     st.stop()
+
 MODEL = "qwen/qwen3.8-27b"
 
 SYSTEM_PROMPT = """
@@ -1335,13 +976,8 @@ def logout():
     st.rerun()
    
 
-
 def delete_account():
-    """Delete the authenticated account only through a trusted Supabase Edge Function.
-
-    The service-role key must never be placed in Streamlit client code or secrets
-    exposed to the browser. The Edge Function must verify the caller's JWT.
-    """
+    """Delete the authenticated account only through a trusted Supabase Edge Function."""
     function_name = st.secrets.get("DELETE_ACCOUNT_FUNCTION", "delete-account")
     try:
         apply_token()
@@ -1379,11 +1015,8 @@ def delete_account():
 # =====================================
 # استعادة الجلسة
 # =====================================
-
-# محاولة استعادة الجلسة من الكوكيز
 restore_session_cookie()
 
-# استعادة الجلسة الحالية إذا كانت موجودة
 if st.session_state.access_token and not st.session_state.user:
     try:
         if st.session_state.refresh_token:
@@ -1505,7 +1138,6 @@ if not st.session_state.user:
 
 apply_token()
 
-# تحميل اسم الحساب من بيانات Supabase
 user_metadata = getattr(st.session_state.user, "user_metadata", None) or {}
 
 if not st.session_state.profile_name:
@@ -1622,7 +1254,7 @@ def generate_title(question):
                 },
                 {"role": "user", "content": question},
             ],
-            max_tokens=40,
+            max_tokens: 40,
             temperature=0.2,
         )
         title = (result.choices[0].message.content or "").strip()
@@ -2402,7 +2034,6 @@ if send_clicked:
         if extra:
             final_prompt = f"{user_text}\n\n---\n{extra}" if user_text else extra
 
-    # أضف نتائج البحث إلى طلب النموذج قبل بناء محتوى الرسالة متعددة الوسائط.
     model_prompt = final_prompt
     if active_tool == "AI Web Research" and st.session_state.get("nx_research_context"):
         model_prompt += (
@@ -2412,7 +2043,6 @@ if send_clicked:
         )
 
     try:
-        # لا نحفظ رسالة المستخدم قبل نجاح طلب النموذج، حتى لا تبقى رسالة يتيمة عند فشل Groq.
         previous_messages = [
             {"role": m.get("role"), "content": m.get("content", "")}
             for m in st.session_state.messages[-12:]
@@ -2444,7 +2074,6 @@ if send_clicked:
                 answer = (result.choices[0].message.content or "عذراً، لم أتمكن من إنشاء رد.").strip()
                 st.markdown(answer)
 
-        # أنشئ المحادثة واحفظ الرسائل بعد الحصول على رد ناجح.
         if not st.session_state.conversation_id:
             create_conversation()
         cid = str(st.session_state.conversation_id)
