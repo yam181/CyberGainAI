@@ -1054,7 +1054,7 @@ def get_css():
     .st-key-nx_composer {
         width: calc(100vw - 20px) !important;
         max-width: none !important;
-        bottom: 20px !important;
+        bottom: 30px !important;
         padding: 3px 5px !important;
         border-radius: 20px !important;
     }
