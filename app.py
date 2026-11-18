@@ -303,11 +303,31 @@ def get_css():
         box-shadow: 0 0 22px rgba(129, 85, 217, .13) !important;
     }
 
-    /* Chat messages: simple, readable, no avatars */
-    [data-testid="stChatMessageAvatar"],
-    [data-testid*="chatAvatarIcon"],
-    [data-testid="stChatMessage"] > div:first-child {
+    /* Chat messages: hide only user avatars; keep the NEXORA assistant logo */
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) [data-testid="stChatMessageAvatar"],
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) > div:first-child {
         display: none !important;
+    }
+
+    [data-testid="stChatMessage"] [data-testid="stChatMessageAvatar"] {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 38px !important;
+        min-width: 38px !important;
+        height: 38px !important;
+        border-radius: 50% !important;
+        overflow: hidden !important;
+        border: 1px solid rgba(183, 148, 255, .58) !important;
+        background: linear-gradient(145deg, #25183c, #110d20) !important;
+        box-shadow: 0 0 17px rgba(137, 91, 225, .22) !important;
+    }
+
+    [data-testid="stChatMessage"] [data-testid="stChatMessageAvatar"] img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
     }
 
     [data-testid="stChatMessage"] {
@@ -328,7 +348,8 @@ def get_css():
         padding: 13px 18px !important;
     }
 
-    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]),
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatar"] img) {
         background: rgba(22, 18, 31, .52) !important;
         border: 1px solid rgba(174, 143, 232, .10) !important;
         border-radius: 18px !important;
@@ -771,26 +792,43 @@ def get_css():
         cursor: zoom-in !important;
     }
 
-    [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] {
-        width: fit-content !important;
-        margin-top: 5px !important;
+    [class*="st-key-nx_image_card_"] [data-testid="stHorizontalBlock"] {
+        align-items: center !important;
+        gap: 7px !important;
+        margin-top: 6px !important;
     }
 
+    [class*="st-key-nx_image_card_"] [data-testid="stButton"],
+    [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] {
+        width: fit-content !important;
+        margin: 0 !important;
+    }
+
+    [class*="st-key-nx_image_card_"] [data-testid="stButton"] button,
     [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] button {
-        width: auto !important;
-        min-height: 32px !important;
-        padding: 4px 13px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        min-width: 36px !important;
+        max-width: 36px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 !important;
         border-radius: 10px !important;
         background: rgba(112, 66, 196, .22) !important;
         border: 1px solid rgba(177, 143, 255, .32) !important;
         color: #e8ddff !important;
-        font-size: 12px !important;
+        font-size: 16px !important;
         box-shadow: none !important;
     }
 
+    [class*="st-key-nx_image_card_"] [data-testid="stButton"] button:hover,
     [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] button:hover {
-        background: rgba(129, 85, 217, .36) !important;
-        border-color: rgba(194, 166, 255, .65) !important;
+        background: rgba(129, 85, 217, .42) !important;
+        border-color: rgba(194, 166, 255, .72) !important;
+        color: #ffffff !important;
+        transform: translateY(-1px) !important;
     }
 
     </style>
@@ -1757,6 +1795,30 @@ else:
 
 
 # =====================================
+# شعار NEXORA المصغّر لرسائل المساعد
+# =====================================
+@st.cache_resource
+def get_nexora_avatar():
+    """Create the NEXORA purple orbital N mark in memory (no extra asset file)."""
+    try:
+        from PIL import Image, ImageDraw
+
+        avatar = Image.new("RGBA", (96, 96), (12, 8, 24, 255))
+        draw = ImageDraw.Draw(avatar)
+        draw.ellipse((3, 3, 93, 93), fill=(27, 18, 45, 255),
+                     outline=(160, 119, 239, 255), width=4)
+        draw.arc((12, 12, 84, 84), start=205, end=335,
+                 fill=(221, 202, 255, 255), width=3)
+        draw.line([(29, 68), (29, 28), (67, 68), (67, 28)],
+                  fill=(205, 180, 255, 255), width=8, joint="curve")
+        draw.ellipse((70, 18, 79, 27), fill=(235, 218, 255, 255))
+        return avatar
+    except Exception:
+        # Safe fallback if Pillow is unavailable in the deployment.
+        return "✦"
+
+
+# =====================================
 # توليد الصور وتعديلها (للمستخدمين المسجلين فقط)
 # =====================================
 def image_request_type(prompt_text, uploaded_files):
@@ -1892,8 +1954,10 @@ def create_or_edit_image(prompt_text, uploaded_files=None):
 
 
 def render_chat_image(image_bytes, key_suffix):
-    """Render a compact, rounded chat image with an open-original link and download control."""
+    """Render a compact image card with icon-only feedback and download controls."""
     encoded = base64.b64encode(image_bytes).decode("ascii")
+    feedback_key = f"nx_image_feedback_{key_suffix}"
+
     with st.container(key=f"nx_image_card_{key_suffix}"):
         st.markdown(
             f"""
@@ -1908,13 +1972,34 @@ def render_chat_image(image_bytes, key_suffix):
             """,
             unsafe_allow_html=True,
         )
-        st.download_button(
-            "⬇️ حفظ الصورة" if st.session_state.language == "ar" else "⬇️ Save image",
-            data=image_bytes,
-            file_name="nexora_image.png",
-            mime="image/png",
-            key=f"nx_image_download_{key_suffix}",
+
+        like_col, dislike_col, spacer_col, download_col = st.columns(
+            [1, 1, 7, 1], gap="small"
         )
+        is_ar = st.session_state.language == "ar"
+
+        with like_col:
+            if st.button(
+                "👍", key=f"nx_image_like_{key_suffix}",
+                help="أعجبني" if is_ar else "Like this image",
+            ):
+                st.session_state[feedback_key] = "like"
+
+        with dislike_col:
+            if st.button(
+                "👎", key=f"nx_image_dislike_{key_suffix}",
+                help="لم يعجبني" if is_ar else "Dislike this image",
+            ):
+                st.session_state[feedback_key] = "dislike"
+
+        with download_col:
+            st.download_button(
+                "⬇", data=image_bytes,
+                file_name="nexora_image.png",
+                mime="image/png",
+                key=f"nx_image_download_{key_suffix}",
+                help="حفظ الصورة" if is_ar else "Download image",
+            )
 
 
 # =====================================
@@ -1947,7 +2032,10 @@ if not st.session_state.messages:
     )
 else:
     for message_index, message in enumerate(st.session_state.messages):
-        with st.chat_message(message["role"], avatar=None):
+        with st.chat_message(
+            message["role"],
+            avatar=get_nexora_avatar() if message["role"] == "assistant" else None,
+        ):
             st.markdown(message["content"])
             if message.get("image_b64"):
                 image_data = base64.b64decode(message["image_b64"])
@@ -2029,7 +2117,7 @@ if prompt:
             st.markdown(final_prompt)
 
         generated_image_b64 = None
-        with st.chat_message("assistant", avatar=None):
+        with st.chat_message("assistant", avatar=get_nexora_avatar()):
             with st.spinner(t("thinking")):
                 if request_type in ("generate", "edit"):
                     edit_images = [file for file in files if (file.type or "").startswith("image/")]
