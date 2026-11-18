@@ -382,20 +382,32 @@ def get_css():
     }
 
     /* =====================================
-       NEXORA Ultra Premium Purple Composer
+       NEXORA Glass Composer — remove the large outer tray
+       Keep only one compact, translucent writing field.
        ===================================== */
+    [data-testid="stBottom"],
+    [data-testid="stBottom"] > div,
+    [data-testid="stBottom"] > div > div,
+    [data-testid="stBottom"]::before,
+    [data-testid="stBottom"] > div::before {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: 0 !important;
+    }
+
     [data-testid="stChatInput"] {
-        background: linear-gradient(135deg, rgba(28, 20, 46, .98), rgba(18, 14, 31, .98)) !important;
-        border: 1px solid rgba(169, 130, 255, .38) !important;
-        border-radius: 20px !important;
+        background: rgba(12, 10, 25, .62) !important;
+        border: 1px solid rgba(174, 143, 255, .48) !important;
+        border-radius: 18px !important;
         padding: 3px 8px !important;
         box-shadow:
-            0 14px 42px rgba(0, 0, 0, .34),
-            0 0 26px rgba(126, 79, 214, .16),
-            inset 0 1px 0 rgba(255, 255, 255, .045) !important;
-        backdrop-filter: blur(18px) !important;
-        -webkit-backdrop-filter: blur(18px) !important;
-        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease !important;
+            0 8px 28px rgba(0, 0, 0, .22),
+            0 0 18px rgba(126, 79, 214, .13),
+            inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+        backdrop-filter: blur(20px) saturate(135%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(135%) !important;
+        transition: border-color .2s ease, box-shadow .2s ease !important;
     }
 
     [data-testid="stChatInput"]:focus-within {
@@ -407,7 +419,16 @@ def get_css():
             inset 0 1px 0 rgba(255, 255, 255, .06) !important;
     }
 
+    [data-testid="stChatInput"] [data-baseweb="textarea"],
+    [data-testid="stChatInput"] [data-baseweb="textarea"] > div {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
     [data-testid="stChatInput"] textarea {
+        background: transparent !important;
         color: #f6f1ff !important;
         caret-color: #c4a7ff !important;
         font-size: 14px !important;
@@ -513,11 +534,22 @@ def get_css():
         border-color: rgba(174, 143, 232, .12) !important;
     }
 
-    [data-testid="stSidebar"] input {
-        background: #171222 !important;
+    /* Sidebar search: match the glass-purple visual language */
+    [data-testid="stSidebar"] .st-key-sidebar_search input,
+    [data-testid="stSidebar"] input[aria-label="🔎"] {
+        background: rgba(12, 10, 25, .58) !important;
         color: #f4efff !important;
-        border: 1px solid rgba(174, 143, 232, .18) !important;
-        border-radius: 11px !important;
+        border: 1px solid rgba(174, 143, 255, .34) !important;
+        border-radius: 12px !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.045) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+    }
+
+    [data-testid="stSidebar"] .st-key-sidebar_search input:focus,
+    [data-testid="stSidebar"] input[aria-label="🔎"]:focus {
+        border-color: rgba(194, 166, 255, .72) !important;
+        box-shadow: 0 0 0 1px rgba(154, 120, 223, .20), 0 0 16px rgba(129,85,217,.12) !important;
     }
 
     [data-testid="stSidebar"] input:focus {
