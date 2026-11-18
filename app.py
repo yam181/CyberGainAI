@@ -708,14 +708,14 @@ def get_css():
         -webkit-backdrop-filter: blur(16px) !important;
     }
 
-    /* FINAL COMPOSER INNER SURFACE FIX: remove Streamlit's gray textarea fill */
+    /* FINAL COMPOSER INNER SURFACE FIX: keep the typing area transparent */
     [data-testid="stChatInput"] [data-baseweb="textarea"],
     [data-testid="stChatInput"] [data-baseweb="textarea"] > div,
     [data-testid="stChatInput"] [data-baseweb="textarea"] > div > div,
     [data-testid="stChatInput"] [data-baseweb="textarea"] textarea,
     [data-testid="stChatInput"] textarea {
-        background: rgba(35, 24, 58, .42) !important;
-        background-color: rgba(35, 24, 58, .42) !important;
+        background: transparent !important;
+        background-color: transparent !important;
         color: #f6f1ff !important;
         border-color: transparent !important;
         box-shadow: none !important;
@@ -723,9 +723,10 @@ def get_css():
     }
 
     [data-testid="stChatInput"] [data-baseweb="textarea"]:focus-within,
+    [data-testid="stChatInput"] [data-baseweb="textarea"] > div:focus-within,
     [data-testid="stChatInput"] textarea:focus {
-        background: rgba(35, 24, 58, .42) !important;
-        background-color: rgba(35, 24, 58, .42) !important;
+        background: transparent !important;
+        background-color: transparent !important;
         outline: none !important;
     }
 
