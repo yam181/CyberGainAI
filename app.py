@@ -9,6 +9,7 @@ import uuid
 import re
 import base64
 import io
+import requests
 
 # =====================================
 # إعداد الصفحة
@@ -1745,43 +1746,105 @@ def image_request_type(prompt_text, uploaded_files):
 
 
 def create_or_edit_image(prompt_text, uploaded_files=None):
-    """Call OpenAI image API and return raw image bytes."""
-    from openai import OpenAI
+    """Generate or edit an image through Cloudflare Workers AI FLUX.2 Klein 4B."""
+    account_id = st.secrets.get("CLOUDFLARE_ACCOUNT_ID")
+    api_token = st.secrets.get("CLOUDFLARE_API_TOKEN")
 
-    api_key = st.secrets.get("OPENAI_API_KEY")
-    if not api_key:
-        raise Exception("مفتاح OPENAI_API_KEY غير موجود في Streamlit Secrets.")
-
-    client = OpenAI(api_key=api_key)
-
-    if uploaded_files:
-        source_file = uploaded_files[0]
-        allowed_types = {"image/png", "image/jpeg", "image/webp"}
-        if source_file.type not in allowed_types:
-            raise Exception("تعديل الصور يدعم حاليًا PNG وJPG وWEBP فقط.")
-        if source_file.size >= 50 * 1024 * 1024:
-            raise Exception("حجم الصورة يجب أن يكون أقل من 50 MB.")
-        source_bytes = source_file.getvalue()
-        image_file = (source_file.name, io.BytesIO(source_bytes), source_file.type or "image/png")
-        result = client.images.edit(
-            model="gpt-image-2.5-sunburst",
-            image=image_file,
-            prompt=prompt_text,
-            n=1,
-            size="1024x1024",
-        )
-    else:
-        result = client.images.generate(
-            model="gpt-image-2.5-flare",
-            prompt=prompt_text,
-            n=1,
-            size="1024x1024",
+    if not account_id or not api_token:
+        raise Exception(
+            "بيانات Cloudflare غير مكتملة. افحص CLOUDFLARE_ACCOUNT_ID وCLOUDFLARE_API_TOKEN في Streamlit Secrets."
         )
 
-    encoded = result.data[0].b64_json
-    if not encoded:
-        raise Exception("لم تُرجع خدمة الصور ملف الصورة المتوقع.")
-    return base64.b64decode(encoded)
+    model_id = "@cf/black-forest-labs/flux-2-klein-4b"
+    endpoint = (
+        f"https://api.cloudflare.com/client/v4/accounts/"
+        f"{account_id}/ai/run/{model_id}"
+    )
+
+    multipart_fields = {
+        "prompt": (None, prompt_text or "Create a high-quality image."),
+        "width": (None, "1024"),
+        "height": (None, "1024"),
+    }
+    image_files = [
+        file for file in (uploaded_files or [])
+        if (getattr(file, "type", "") or "").startswith("image/")
+    ]
+
+    if len(image_files) > 4:
+        raise Exception("يمكن تعديل الصورة باستخدام 4 صور مرجعية كحد أقصى.")
+
+    if image_files:
+        try:
+            from PIL import Image
+        except Exception as exc:
+            raise Exception("مكتبة Pillow غير متوفرة لمعالجة الصورة المرفوعة.") from exc
+
+        for index, source_file in enumerate(image_files):
+            allowed_types = {"image/png", "image/jpeg", "image/webp"}
+            if source_file.type not in allowed_types:
+                raise Exception("تعديل الصور يدعم حاليًا PNG وJPG وWEBP فقط.")
+            if source_file.size > 20 * 1024 * 1024:
+                raise Exception("حجم كل صورة يجب ألا يتجاوز 20 MB.")
+
+            try:
+                image = Image.open(io.BytesIO(source_file.getvalue())).convert("RGB")
+                image.thumbnail((512, 512))
+                image_buffer = io.BytesIO()
+                image.save(image_buffer, format="PNG", optimize=True)
+                image_buffer.seek(0)
+            except Exception as exc:
+                raise Exception(f"تعذّرت قراءة الصورة المرفوعة: {source_file.name}") from exc
+
+            multipart_fields[f"input_image_{index}"] = (
+                f"reference_{index}.png",
+                image_buffer.getvalue(),
+                "image/png",
+            )
+
+    try:
+        response = requests.post(
+            endpoint,
+            headers={"Authorization": f"Bearer {api_token}"},
+            files=multipart_fields,
+            timeout=180,
+        )
+    except requests.RequestException as exc:
+        raise Exception(f"تعذّر الاتصال بخدمة Cloudflare Workers AI: {exc}") from exc
+
+    if not response.ok:
+        try:
+            error_data = response.json()
+            details = error_data.get("errors") or error_data.get("messages") or error_data
+            details_text = str(details)[:1200]
+        except Exception:
+            details_text = response.text[:1200]
+        raise Exception(
+            f"Cloudflare رفض طلب الصورة (HTTP {response.status_code}): {details_text}"
+        )
+
+    try:
+        result_data = response.json()
+    except ValueError:
+        raise Exception("أرجعت Cloudflare استجابة غير مفهومة بدل بيانات الصورة.")
+
+    result = result_data.get("result", result_data)
+    encoded_image = result.get("image") if isinstance(result, dict) else None
+
+    if not encoded_image:
+        raise Exception(
+            "لم تُرجع Cloudflare الصورة المتوقعة. تحقق من استجابة Workers AI وإعدادات النموذج."
+        )
+
+    try:
+        image_bytes = base64.b64decode(encoded_image, validate=True)
+    except Exception as exc:
+        raise Exception("تعذّر فك ترميز الصورة التي أرجعتها Cloudflare.") from exc
+
+    if not image_bytes:
+        raise Exception("أرجعت Cloudflare ملف صورة فارغًا.")
+
+    return image_bytes
 
 
 # =====================================
