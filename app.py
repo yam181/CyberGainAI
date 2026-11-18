@@ -1875,11 +1875,19 @@ if not st.session_state.messages:
         unsafe_allow_html=True,
     )
 else:
-    for message in st.session_state.messages:
+    for message_index, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"], avatar=None):
             st.markdown(message["content"])
             if message.get("image_b64"):
-                st.image(base64.b64decode(message["image_b64"]), use_container_width=True)
+                image_data = base64.b64decode(message["image_b64"])
+                st.image(image_data, width=420)
+                st.download_button(
+                    "⬇️ حفظ الصورة" if st.session_state.language == "ar" else "⬇️ Save image",
+                    data=image_data,
+                    file_name="nexora_image.png",
+                    mime="image/png",
+                    key=f"history_image_download_{message_index}",
+                )
 
 
 # =====================================
@@ -1971,7 +1979,14 @@ if prompt:
                         else "Image edited successfully."
                     )
                     st.markdown(answer)
-                    st.image(image_bytes, use_container_width=True)
+                    st.image(image_bytes, width=420)
+                    st.download_button(
+                        "⬇️ حفظ الصورة" if st.session_state.language == "ar" else "⬇️ Save image",
+                        data=image_bytes,
+                        file_name="nexora_image.png",
+                        mime="image/png",
+                        key="generated_image_download",
+                    )
                 else:
                     user_content = [
                         {
