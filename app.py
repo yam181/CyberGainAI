@@ -749,6 +749,50 @@ def get_css():
         opacity: 1 !important;
     }
 
+    /* NEXORA chat image card */
+    [class*="st-key-nx_image_card_"] {
+        width: fit-content !important;
+        max-width: min(100%, 460px) !important;
+        margin-top: 10px !important;
+        margin-bottom: 8px !important;
+        padding: 7px !important;
+        border: 1px solid rgba(177, 143, 255, .22) !important;
+        border-radius: 17px !important;
+        background: rgba(18, 14, 31, .58) !important;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, .20) !important;
+    }
+
+    [class*="st-key-nx_image_card_"] img {
+        display: block !important;
+        width: 100% !important;
+        max-width: 420px !important;
+        height: auto !important;
+        border-radius: 12px !important;
+        cursor: zoom-in !important;
+    }
+
+    [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] {
+        width: fit-content !important;
+        margin-top: 5px !important;
+    }
+
+    [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] button {
+        width: auto !important;
+        min-height: 32px !important;
+        padding: 4px 13px !important;
+        border-radius: 10px !important;
+        background: rgba(112, 66, 196, .22) !important;
+        border: 1px solid rgba(177, 143, 255, .32) !important;
+        color: #e8ddff !important;
+        font-size: 12px !important;
+        box-shadow: none !important;
+    }
+
+    [class*="st-key-nx_image_card_"] [data-testid="stDownloadButton"] button:hover {
+        background: rgba(129, 85, 217, .36) !important;
+        border-color: rgba(194, 166, 255, .65) !important;
+    }
+
     </style>
     """
 
@@ -1847,9 +1891,36 @@ def create_or_edit_image(prompt_text, uploaded_files=None):
     return image_bytes
 
 
+def render_chat_image(image_bytes, key_suffix):
+    """Render a compact, rounded chat image with an open-original link and download control."""
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    with st.container(key=f"nx_image_card_{key_suffix}"):
+        st.markdown(
+            f"""
+            <a href="data:image/png;base64,{encoded}" target="_blank"
+               rel="noopener noreferrer" title="Open full-size image"
+               style="display:block;width:fit-content;max-width:100%;">
+                <img src="data:image/png;base64,{encoded}"
+                     alt="NEXORA generated image"
+                     style="display:block;width:100%;max-width:420px;height:auto;
+                            border-radius:12px;object-fit:contain;">
+            </a>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.download_button(
+            "⬇️ حفظ الصورة" if st.session_state.language == "ar" else "⬇️ Save image",
+            data=image_bytes,
+            file_name="nexora_image.png",
+            mime="image/png",
+            key=f"nx_image_download_{key_suffix}",
+        )
+
+
 # =====================================
 # المحتوى الرئيسي
 # =====================================
+
 if st.session_state.guest_mode and st.session_state.guest_message_count >= 10:
     st.warning(
         "وصلت إلى الحد الأقصى وهو 10 رسائل. أنشئ حسابًا أو سجّل الدخول لمتابعة المحادثة."
@@ -1880,14 +1951,7 @@ else:
             st.markdown(message["content"])
             if message.get("image_b64"):
                 image_data = base64.b64decode(message["image_b64"])
-                st.image(image_data, width=420)
-                st.download_button(
-                    "⬇️ حفظ الصورة" if st.session_state.language == "ar" else "⬇️ Save image",
-                    data=image_data,
-                    file_name="nexora_image.png",
-                    mime="image/png",
-                    key=f"history_image_download_{message_index}",
-                )
+                render_chat_image(image_data, f"history_{message_index}")
 
 
 # =====================================
@@ -1979,14 +2043,7 @@ if prompt:
                         else "Image edited successfully."
                     )
                     st.markdown(answer)
-                    st.image(image_bytes, width=420)
-                    st.download_button(
-                        "⬇️ حفظ الصورة" if st.session_state.language == "ar" else "⬇️ Save image",
-                        data=image_bytes,
-                        file_name="nexora_image.png",
-                        mime="image/png",
-                        key="generated_image_download",
-                    )
+                    render_chat_image(image_bytes, "generated")
                 else:
                     user_content = [
                         {
