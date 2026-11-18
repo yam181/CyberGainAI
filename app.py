@@ -580,7 +580,7 @@ def get_css():
     }
 
     /* Form controls */
-    [data-testid="stTextInput"] input,
+    [data-testid="stTextInput"]:not(.st-key-sidebar_search) input,
     [data-testid="stTextArea"] textarea,
     [data-testid="stNumberInput"] input,
     [data-testid="stDateInput"] input,
@@ -593,7 +593,7 @@ def get_css():
         border-radius: 11px !important;
     }
 
-    [data-testid="stTextInput"] input:focus,
+    [data-testid="stTextInput"]:not(.st-key-sidebar_search) input:focus,
     [data-testid="stTextArea"] textarea:focus,
     [data-testid="stNumberInput"] input:focus,
     [data-testid="stDateInput"] input:focus {
