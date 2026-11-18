@@ -730,6 +730,18 @@ def get_css():
         outline: none !important;
     }
 
+    /* Fix the actual gray BaseWeb surface identified in DevTools */
+    [data-testid="stChatInput"] .st-emotion-cache-1bdk92a {
+        background: linear-gradient(
+            135deg,
+            rgba(42, 28, 67, .78),
+            rgba(20, 15, 39, .78)
+        ) !important;
+        background-color: rgba(31, 22, 52, .78) !important;
+        border: 1px solid rgba(177, 143, 255, .34) !important;
+        box-shadow: none !important;
+    }
+
     [data-testid="stChatInput"] textarea::placeholder {
         color: #b8a9d2 !important;
         opacity: 1 !important;
