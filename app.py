@@ -41,6 +41,8 @@ defaults = {
     "profile_image": None,
     "profile_name": "",
     "confirm_delete_account": False,
+    "work_mode": "normal",
+    "pending_prompt": None,
 }
 
 for key, value in defaults.items():
@@ -1377,52 +1379,101 @@ def generate_title(question):
 
 
 
+def _extract_document_text(file):
+    """Extract text from common document formats using optional parsers."""
+    name = file.name.lower()
+    raw = file.getvalue()
+    max_bytes = 15 * 1024 * 1024
+    if len(raw) > max_bytes:
+        return "[تجاوز الملف حد القراءة البالغ 15 MB]"
+
+    if name.endswith((".txt", ".md", ".csv", ".json", ".py", ".js", ".html", ".css", ".yaml", ".yml", ".xml", ".log")):
+        return raw.decode("utf-8", errors="replace")[:18000]
+
+    if name.endswith(".pdf"):
+        try:
+            from pypdf import PdfReader
+            reader = PdfReader(io.BytesIO(raw))
+            return "\n".join((page.extract_text() or "") for page in reader.pages[:40])[:18000]
+        except ImportError:
+            return "[لقراءة PDF ثبّت pypdf في requirements.txt]"
+        except Exception as exc:
+            return f"[تعذرت قراءة PDF: {type(exc).__name__}]"
+
+    if name.endswith(".docx"):
+        try:
+            from docx import Document
+            doc = Document(io.BytesIO(raw))
+            return "\n".join(p.text for p in doc.paragraphs)[:18000]
+        except ImportError:
+            return "[لقراءة DOCX ثبّت python-docx في requirements.txt]"
+        except Exception as exc:
+            return f"[تعذرت قراءة DOCX: {type(exc).__name__}]"
+
+    if name.endswith(".xlsx"):
+        try:
+            from openpyxl import load_workbook
+            wb = load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+            chunks = []
+            for ws in wb.worksheets[:8]:
+                chunks.append(f"[Sheet: {ws.title}]")
+                for row in ws.iter_rows(min_row=1, max_row=150, values_only=True):
+                    vals = [str(v) if v is not None else "" for v in row[:20]]
+                    if any(vals):
+                        chunks.append(" | ".join(vals))
+            wb.close()
+            return "\n".join(chunks)[:18000]
+        except ImportError:
+            return "[لقراءة XLSX ثبّت openpyxl في requirements.txt]"
+        except Exception as exc:
+            return f"[تعذرت قراءة XLSX: {type(exc).__name__}]"
+
+    if name.endswith(".pptx"):
+        try:
+            from pptx import Presentation
+            prs = Presentation(io.BytesIO(raw))
+            chunks = []
+            for index, slide in enumerate(prs.slides[:40], 1):
+                chunks.append(f"[Slide {index}]")
+                for shape in slide.shapes:
+                    if getattr(shape, "has_text_frame", False):
+                        chunks.append(shape.text)
+            return "\n".join(chunks)[:18000]
+        except ImportError:
+            return "[لقراءة PPTX ثبّت python-pptx في requirements.txt]"
+        except Exception as exc:
+            return f"[تعذرت قراءة PPTX: {type(exc).__name__}]"
+
+    return "[نوع الملف غير مدعوم لاستخراج النص؛ يمكن إرفاقه للمراجعة اليدوية إن كان مدعوماً]"
+
+
 def process_uploaded_files(files):
     parts = []
     image_contents = []
 
     for file in files:
         name = file.name
+        mime = file.type or ""
 
-        if file.type and file.type.startswith("image/"):
+        if mime.startswith("image/"):
             if len(image_contents) >= 3:
                 parts.append("[تم تجاهل الصورة: الحد الأقصى 3 صور]")
                 continue
-
             if file.size > 20 * 1024 * 1024:
                 parts.append(f"[الصورة {name} أكبر من 20 MB]")
                 continue
-
             try:
-                image_data = base64.b64encode(
-                    file.getvalue()
-                ).decode("utf-8")
-
+                image_data = base64.b64encode(file.getvalue()).decode("utf-8")
                 image_contents.append({
                     "type": "image_url",
-                    "image_url": {
-                        "url": f"data:{file.type};base64,{image_data}"
-                    },
+                    "image_url": {"url": f"data:{mime};base64,{image_data}"},
                 })
-
                 parts.append(f"[صورة مرفقة: {name}]")
-
             except Exception:
                 parts.append(f"[تعذرت قراءة الصورة: {name}]")
-
-        elif name.lower().endswith(
-            (".txt", ".md", ".csv", ".json", ".py", ".js", ".html", ".css")
-        ):
-            try:
-                content = file.getvalue().decode(
-                    "utf-8", errors="ignore"
-                )
-                parts.append(f"[ملف {name}]\n{content[:3000]}")
-            except Exception:
-                parts.append(f"[ملف {name} - تعذر قراءة المحتوى]")
-
         else:
-            parts.append(f"[ملف مرفق: {name}]")
+            extracted = _extract_document_text(file)
+            parts.append(f"[محتوى الملف: {name}]\n{extracted}")
 
     return "\n\n".join(parts), image_contents
 
@@ -2003,6 +2054,168 @@ def render_chat_image(image_bytes, key_suffix):
 
 
 # =====================================
+# أدوات NEXORA: الوكلاء والبحث وتشغيل Python
+# =====================================
+WORK_MODES = {
+    "normal": {
+        "ar": "عادي", "en": "Normal",
+        "instruction": "Answer naturally and helpfully. Keep the answer clear and appropriately concise."
+    },
+    "technical": {
+        "ar": "تقني", "en": "Technical",
+        "instruction": "Use precise technical language, explain assumptions, and provide practical step-by-step guidance and code when useful."
+    },
+    "research": {
+        "ar": "بحث", "en": "Research",
+        "instruction": "Prioritize evidence, source quality, dates, links, uncertainty, and structured findings. Never fabricate citations."
+    },
+    "creative": {
+        "ar": "إبداعي", "en": "Creative",
+        "instruction": "Explore original ideas and useful alternatives while staying practical and clear."
+    },
+}
+
+QUICK_PROMPTS = [
+    ("💡", "اقترح أفكارًا لمشروعي", "Suggest ideas for my project"),
+    ("💻", "اشرح لي موضوعًا تقنيًا خطوة بخطوة", "Explain a technical topic step by step"),
+    ("🔍", "ابحث عن معلومات موثوقة حول موضوع", "Research a topic using reliable sources"),
+    ("🧠", "حلّل ملفًا واشرح أهم ما فيه", "Analyze a file and explain its key points"),
+]
+
+
+def _groq_text(messages, max_tokens=None, temperature=None):
+    response = groq.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+        temperature=st.session_state.temperature if temperature is None else temperature,
+        max_tokens=st.session_state.max_tokens if max_tokens is None else max_tokens,
+    )
+    return (response.choices[0].message.content or "").strip()
+
+
+def _looks_like_web_research(prompt, mode):
+    p = prompt.casefold()
+    terms = ["ابحث", "مصادر", "آخر الأخبار", "اليوم", "مقارنة حديثة", "معلومات حديثة", "research", "search the web", "latest", "current news", "sources", "look up"]
+    return mode == "research" or any(term in p for term in terms)
+
+
+def _web_research(prompt):
+    """Optional Tavily search. Requires TAVILY_API_KEY in Streamlit Secrets."""
+    try:
+        api_key = st.secrets.get("TAVILY_API_KEY", "")
+    except Exception:
+        api_key = ""
+    if not api_key:
+        return "", "لم يتم إجراء بحث ويب خارجي: أضف TAVILY_API_KEY إلى Streamlit Secrets لتفعيل البحث الحقيقي."
+    try:
+        response = requests.post(
+            "https://api.tavily.com/search",
+            json={"api_key": api_key, "query": prompt, "search_depth": "basic", "max_results": 5, "include_answer": False},
+            timeout=20,
+        )
+        response.raise_for_status()
+        data = response.json()
+        items = data.get("results", [])
+        formatted = []
+        for item in items[:5]:
+            title = item.get("title", "Source")
+            url = item.get("url", "")
+            content = item.get("content", "")[:1200]
+            formatted.append(f"- {title}\n  URL: {url}\n  Summary: {content}")
+        return "\n\n".join(formatted), ("تم العثور على مصادر ويب." if formatted else "لم يُرجع البحث مصادر.")
+    except Exception as exc:
+        return "", f"تعذر إكمال بحث الويب: {type(exc).__name__}."
+
+
+def _extract_python_code(prompt):
+    matches = re.findall(r"```(?:python|py)?\s*\n(.*?)```", prompt, flags=re.IGNORECASE | re.DOTALL)
+    return matches[-1].strip() if matches else ""
+
+
+def _wants_python_execution(prompt):
+    p = prompt.casefold()
+    triggers = ["شغّل الكود", "شغل الكود", "نفّذ الكود", "نفذ الكود", "نفذ بايثون", "شغّل python", "run this python", "execute this python", "run the code", "execute the code"]
+    return bool(_extract_python_code(prompt)) and any(x in p for x in triggers)
+
+
+def _execute_python_sandbox(code):
+    """Execute code remotely in the Piston sandbox; user code is not eval'ed by this app."""
+    if len(code) > 12000:
+        return "تم رفض التنفيذ: الكود أطول من الحد المسموح (12,000 حرف)."
+    try:
+        response = requests.post(
+            "https://emkc.org/api/v2/piston/execute",
+            json={"language": "python", "version": "3.10.0", "files": [{"name": "main.py", "content": code}], "stdin": "", "args": [], "compile_timeout": 10000, "run_timeout": 5000, "compile_memory_limit": -1, "run_memory_limit": 50000000},
+            timeout=18,
+        )
+        response.raise_for_status()
+        data = response.json()
+        run = data.get("run", {})
+        output = (run.get("stdout", "") or "").strip()
+        errors = (run.get("stderr", "") or "").strip()
+        status = run.get("code")
+        result = f"Exit code: {status}\nOutput:\n{output or '(no output)'}"
+        if errors:
+            result += f"\nErrors:\n{errors}"
+        return result[:7000]
+    except Exception as exc:
+        return f"تعذر تشغيل Python في بيئة Piston المعزولة: {type(exc).__name__}. يمكنك المحاولة لاحقًا."
+
+
+def run_multi_agent(prompt, history, image_contents=None):
+    """Three sequential model roles: researcher, writer, and reviewer."""
+    mode = st.session_state.get("work_mode", "normal")
+    mode_instruction = WORK_MODES.get(mode, WORK_MODES["normal"])["instruction"]
+    web_context, web_status = ("", "لم يُطلب بحث ويب.")
+    if _looks_like_web_research(prompt, mode):
+        web_context, web_status = _web_research(prompt)
+
+    python_result = ""
+    if _wants_python_execution(prompt):
+        python_result = _execute_python_sandbox(_extract_python_code(prompt))
+
+    status_lines = []
+    with st.status("NEXORA AI — مراحل معالجة الطلب", expanded=False) as status:
+        status.update(label="1/3 — الباحث: جمع السياق والمعلومات", state="running")
+        researcher_prompt = (
+            "You are the Researcher agent in NEXORA's three-stage workflow. "
+            "Identify the user's actual question, extract relevant facts from the conversation, "
+            "analyze attached content, and distinguish verified facts from unknowns. "
+            "Use ONLY the web results supplied below as external research; do not invent sources. "
+            "Return concise findings, uncertainties, and useful source URLs.\n\n"
+            f"User request:\n{prompt}\n\nConversation context:\n{history}\n\n"
+            f"Web results:\n{web_context or web_status}\n\nPython sandbox result:\n{python_result or 'Not requested.'}"
+        )
+        research = _groq_text([
+            {"role": "system", "content": SYSTEM_PROMPT + "\nYou are the Researcher agent."},
+            {"role": "user", "content": researcher_prompt},
+        ], max_tokens=min(1100, st.session_state.max_tokens + 200), temperature=0.2)
+
+        status.update(label="2/3 — الكاتب: إعداد الإجابة", state="running")
+        writer = _groq_text([
+            {"role": "system", "content": SYSTEM_PROMPT + "\nYou are the Writer agent. " + mode_instruction},
+            {"role": "user", "content": f"User request:\n{prompt}\n\nResearcher findings:\n{research}\n\nWrite the best direct answer in the user's language. Include source URLs when supplied."},
+        ], temperature=st.session_state.temperature)
+
+        status.update(label="3/3 — المراجع: تدقيق الإجابة", state="running")
+        reviewed = _groq_text([
+            {"role": "system", "content": SYSTEM_PROMPT + "\nYou are the Reviewer agent. Check factual consistency, unsupported claims, clarity, safety, and whether the answer actually addresses the request. Do not reveal private chain-of-thought. Return only the corrected final answer."},
+            {"role": "user", "content": f"Original request:\n{prompt}\n\nDraft answer:\n{writer}\n\nResearch notes for verification:\n{research}\n\nImprove and return the final answer only."},
+        ], temperature=0.15)
+        status.update(label="اكتملت المراحل الثلاث", state="complete")
+
+    if web_status and web_status not in ("لم يُطلب بحث ويب.", "تم العثور على مصادر ويب."):
+        reviewed += "\n\n---\n" + web_status
+    if python_result:
+        reviewed += (
+            "\n\n**نتيجة تشغيل Python (بيئة Piston خارج التطبيق):**\n"
+            "تنبيه: أُرسل الكود إلى خدمة تنفيذ خارجية معزولة؛ لا تضع كلمات مرور أو مفاتيح API أو بيانات خاصة داخل الكود.\n"
+            "```text\n" + python_result + "\n```"
+        )
+    return reviewed or writer or research
+
+
+# =====================================
 # المحتوى الرئيسي
 # =====================================
 
@@ -2018,6 +2231,28 @@ if st.session_state.guest_mode and st.session_state.guest_message_count >= 10:
         st.session_state.messages = []
         st.session_state.conversation_id = None
         st.rerun()
+
+# وضع العمل
+mode_label = "وضع العمل" if st.session_state.language == "ar" else "Work mode"
+mode_options = list(WORK_MODES.keys())
+mode_names = [WORK_MODES[key]["ar" if st.session_state.language == "ar" else "en"] for key in mode_options]
+selected_mode = st.selectbox(
+    mode_label,
+    options=mode_options,
+    format_func=lambda value: WORK_MODES[value]["ar" if st.session_state.language == "ar" else "en"],
+    index=mode_options.index(st.session_state.get("work_mode", "normal")),
+    key="nx_work_mode_select",
+)
+st.session_state.work_mode = selected_mode
+
+if not st.session_state.messages:
+    st.caption("اقتراحات سريعة" if st.session_state.language == "ar" else "Quick suggestions")
+    quick_cols = st.columns(2)
+    for idx, (emoji, ar_text, en_text) in enumerate(QUICK_PROMPTS):
+        with quick_cols[idx % 2]:
+            if st.button(f"{emoji} {ar_text if st.session_state.language == 'ar' else en_text}", key=f"nx_quick_{idx}", use_container_width=True):
+                st.session_state.pending_prompt = ar_text if st.session_state.language == "ar" else en_text
+                st.rerun()
 
 if not st.session_state.messages:
     st.markdown(
@@ -2045,7 +2280,7 @@ else:
 # =====================================
 # خانة الكتابة والمرفقات
 # =====================================
-prompt = st.chat_input(
+chat_prompt = st.chat_input(
     t("chat_placeholder"),
     accept_file=False if st.session_state.guest_mode else "multiple",
     disabled=(
@@ -2053,6 +2288,7 @@ prompt = st.chat_input(
         and st.session_state.guest_message_count >= 10
     ),
 )
+prompt = chat_prompt if chat_prompt is not None else st.session_state.pop("pending_prompt", None)
 
 if prompt:
     if hasattr(prompt, "text"):
@@ -2140,29 +2376,26 @@ if prompt:
                         }
                     ] + image_contents
 
-                    api_messages = [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        *[
-                            {"role": item["role"], "content": item["content"]}
-                            for item in st.session_state.messages[-12:-1]
-                        ],
-                        {
-                            "role": "user",
-                            "content": user_content if image_contents else final_prompt,
-                        },
-                    ]
-
-                    result = groq.chat.completions.create(
-                        model=MODEL,
-                        messages=api_messages,
-                        temperature=st.session_state.temperature,
-                        max_tokens=st.session_state.max_tokens,
+                    # Preserve recent context; image payloads are passed to the researcher as multimodal input.
+                    history_text = "\n\n".join(
+                        f"{item['role']}: {item['content']}"
+                        for item in st.session_state.messages[-12:-1]
                     )
-
-                    answer = (
-                        result.choices[0].message.content
-                        or "عذرًا، لم أتمكن من إنشاء رد."
-                    ).strip()
+                    agent_prompt = final_prompt or "حلّل الصورة المرفقة واشرح ما يظهر فيها."
+                    if image_contents:
+                        # Vision analysis is handled directly by the model with the supplied image payload.
+                        vision_response = groq.chat.completions.create(
+                            model=MODEL,
+                            messages=[
+                                {"role": "system", "content": SYSTEM_PROMPT + "\nAnalyze the attached image accurately."},
+                                {"role": "user", "content": user_content},
+                            ],
+                            temperature=st.session_state.temperature,
+                            max_tokens=st.session_state.max_tokens,
+                        )
+                        image_analysis = (vision_response.choices[0].message.content or "").strip()
+                        agent_prompt += "\n\nImage analysis supplied to the agents:\n" + image_analysis
+                    answer = run_multi_agent(agent_prompt, history_text)
                     st.markdown(answer)
 
         assistant_message = {
