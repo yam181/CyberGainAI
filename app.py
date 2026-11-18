@@ -382,32 +382,20 @@ def get_css():
     }
 
     /* =====================================
-       NEXORA Glass Composer — remove the large outer tray
-       Keep only one compact, translucent writing field.
+       NEXORA Ultra Premium Purple Composer
        ===================================== */
-    [data-testid="stBottom"],
-    [data-testid="stBottom"] > div,
-    [data-testid="stBottom"] > div > div,
-    [data-testid="stBottom"]::before,
-    [data-testid="stBottom"] > div::before {
-        background: transparent !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-        border: 0 !important;
-    }
-
     [data-testid="stChatInput"] {
-        background: rgba(12, 10, 25, .62) !important;
-        border: 1px solid rgba(174, 143, 255, .48) !important;
-        border-radius: 18px !important;
+        background: linear-gradient(135deg, rgba(28, 20, 46, .98), rgba(18, 14, 31, .98)) !important;
+        border: 1px solid rgba(169, 130, 255, .38) !important;
+        border-radius: 20px !important;
         padding: 3px 8px !important;
         box-shadow:
-            0 8px 28px rgba(0, 0, 0, .22),
-            0 0 18px rgba(126, 79, 214, .13),
-            inset 0 1px 0 rgba(255, 255, 255, .07) !important;
-        backdrop-filter: blur(20px) saturate(135%) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(135%) !important;
-        transition: border-color .2s ease, box-shadow .2s ease !important;
+            0 14px 42px rgba(0, 0, 0, .34),
+            0 0 26px rgba(126, 79, 214, .16),
+            inset 0 1px 0 rgba(255, 255, 255, .045) !important;
+        backdrop-filter: blur(18px) !important;
+        -webkit-backdrop-filter: blur(18px) !important;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease !important;
     }
 
     [data-testid="stChatInput"]:focus-within {
@@ -419,16 +407,7 @@ def get_css():
             inset 0 1px 0 rgba(255, 255, 255, .06) !important;
     }
 
-    [data-testid="stChatInput"] [data-baseweb="textarea"],
-    [data-testid="stChatInput"] [data-baseweb="textarea"] > div {
-        background: transparent !important;
-        background-color: transparent !important;
-        border: 0 !important;
-        box-shadow: none !important;
-    }
-
     [data-testid="stChatInput"] textarea {
-        background: transparent !important;
         color: #f6f1ff !important;
         caret-color: #c4a7ff !important;
         font-size: 14px !important;
@@ -534,40 +513,11 @@ def get_css():
         border-color: rgba(174, 143, 232, .12) !important;
     }
 
-    /* Force every search-field wrapper to stay transparent.
-       Only the actual input keeps its purple glass surface. */
-    [data-testid="stSidebar"] .st-key-sidebar_search,
-    [data-testid="stSidebar"] .st-key-sidebar_search > *,
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"],
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"],
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"] *,
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"]::before,
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"]::after,
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"]::before,
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"]::after {
-        background: transparent !important;
-        background-color: transparent !important;
-        border-color: transparent !important;
-        box-shadow: none !important;
-    }
-
-    /* Sidebar search: match the glass-purple visual language */
-    [data-testid="stSidebar"] .st-key-sidebar_search input,
-    [data-testid="stSidebar"] input[aria-label="🔎"] {
-        background: rgba(12, 10, 25, .58) !important;
-        background-color: rgba(12, 10, 25, .58) !important;
+    [data-testid="stSidebar"] input {
+        background: #171222 !important;
         color: #f4efff !important;
-        border: 1px solid rgba(174, 143, 255, .34) !important;
-        border-radius: 12px !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.045) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-    }
-
-    [data-testid="stSidebar"] .st-key-sidebar_search input:focus,
-    [data-testid="stSidebar"] input[aria-label="🔎"]:focus {
-        border-color: rgba(194, 166, 255, .72) !important;
-        box-shadow: 0 0 0 1px rgba(154, 120, 223, .20), 0 0 16px rgba(129,85,217,.12) !important;
+        border: 1px solid rgba(174, 143, 232, .18) !important;
+        border-radius: 11px !important;
     }
 
     [data-testid="stSidebar"] input:focus {
@@ -598,7 +548,7 @@ def get_css():
     }
 
     /* Form controls */
-    [data-testid="stTextInput"]:not(.st-key-sidebar_search) input,
+    [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
     [data-testid="stNumberInput"] input,
     [data-testid="stDateInput"] input,
@@ -611,7 +561,7 @@ def get_css():
         border-radius: 11px !important;
     }
 
-    [data-testid="stTextInput"]:not(.st-key-sidebar_search) input:focus,
+    [data-testid="stTextInput"] input:focus,
     [data-testid="stTextArea"] textarea:focus,
     [data-testid="stNumberInput"] input:focus,
     [data-testid="stDateInput"] input:focus {
@@ -680,6 +630,84 @@ def get_css():
             right: 8px !important;
         }
     }
+    
+
+    /* FINAL GLASS OVERRIDES: top header, bottom composer tray, and sidebar search */
+    [data-testid="stHeader"],
+    header[data-testid="stHeader"] {
+        background: rgba(8, 7, 20, .12) !important;
+        background-color: rgba(8, 7, 20, .12) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: blur(18px) !important;
+        -webkit-backdrop-filter: blur(18px) !important;
+    }
+
+    [data-testid="stHeader"]::before,
+    [data-testid="stHeader"]::after {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stBottom"],
+    [data-testid="stBottom"] > div,
+    [data-testid="stBottomBlockContainer"],
+    [data-testid="stBottomBlockContainer"] > div {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stBottom"],
+    [data-testid="stBottomBlockContainer"] {
+        background: linear-gradient(180deg,
+            rgba(8, 7, 20, 0) 0%,
+            rgba(12, 9, 25, .08) 100%) !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+    }
+
+    [data-testid="stChatInput"] {
+        background: linear-gradient(135deg,
+            rgba(42, 28, 67, .78),
+            rgba(20, 15, 39, .78)) !important;
+        border: 1px solid rgba(177, 143, 255, .48) !important;
+        box-shadow: 0 12px 38px rgba(0, 0, 0, .24),
+                    0 0 24px rgba(126, 79, 214, .18),
+                    inset 0 1px 0 rgba(255, 255, 255, .07) !important;
+    }
+
+    [data-testid="stChatInput"] [data-baseweb="textarea"],
+    [data-testid="stChatInput"] [data-baseweb="textarea"] > div,
+    [data-testid="stChatInput"] textarea {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    [data-testid="stSidebar"] .st-key-sidebar_search,
+    [data-testid="stSidebar"] .st-key-sidebar_search > div,
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"],
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"] > div {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    [data-testid="stSidebar"] .st-key-sidebar_search input {
+        background: rgba(31, 22, 52, .76) !important;
+        background-color: rgba(31, 22, 52, .76) !important;
+        color: #f4efff !important;
+        border: 1px solid rgba(174, 143, 255, .42) !important;
+        border-radius: 12px !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.06),
+                    0 0 18px rgba(129,85,217,.10) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+    }
+
     </style>
     """
 
