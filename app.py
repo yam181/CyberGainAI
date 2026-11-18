@@ -534,6 +534,18 @@ def get_css():
         border-color: rgba(174, 143, 232, .12) !important;
     }
 
+    /* Remove Streamlit's gray wrapper behind the sidebar search field */
+    [data-testid="stSidebar"] .st-key-sidebar_search,
+    [data-testid="stSidebar"] .st-key-sidebar_search > div,
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"],
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"],
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"] > div {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
     /* Sidebar search: match the glass-purple visual language */
     [data-testid="stSidebar"] .st-key-sidebar_search input,
     [data-testid="stSidebar"] input[aria-label="🔎"] {
