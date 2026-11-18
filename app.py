@@ -534,15 +534,20 @@ def get_css():
         border-color: rgba(174, 143, 232, .12) !important;
     }
 
-    /* Remove Streamlit's gray wrapper behind the sidebar search field */
+    /* Force every search-field wrapper to stay transparent.
+       Only the actual input keeps its purple glass surface. */
     [data-testid="stSidebar"] .st-key-sidebar_search,
-    [data-testid="stSidebar"] .st-key-sidebar_search > div,
+    [data-testid="stSidebar"] .st-key-sidebar_search > *,
     [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"],
     [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"],
-    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"] > div {
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"] *,
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"]::before,
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-testid="stTextInput"]::after,
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"]::before,
+    [data-testid="stSidebar"] .st-key-sidebar_search [data-baseweb="input"]::after {
         background: transparent !important;
         background-color: transparent !important;
-        border: 0 !important;
+        border-color: transparent !important;
         box-shadow: none !important;
     }
 
@@ -550,6 +555,7 @@ def get_css():
     [data-testid="stSidebar"] .st-key-sidebar_search input,
     [data-testid="stSidebar"] input[aria-label="🔎"] {
         background: rgba(12, 10, 25, .58) !important;
+        background-color: rgba(12, 10, 25, .58) !important;
         color: #f4efff !important;
         border: 1px solid rgba(174, 143, 255, .34) !important;
         border-radius: 12px !important;
