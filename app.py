@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import re
 import base64
+import io
 
 # =====================================
 # إعداد الصفحة
@@ -1711,6 +1712,77 @@ else:
 
 
 # =====================================
+# توليد الصور وتعديلها (للمستخدمين المسجلين فقط)
+# =====================================
+def image_request_type(prompt_text, uploaded_files):
+    """Return generate/edit only for explicit image creation/edit requests."""
+    text = (prompt_text or "").lower()
+
+    edit_terms = (
+        "عدّل", "عدل", "تعديل", "غيّر", "غير", "تغيير", "احذف", "حذف",
+        "أضف", "اضف", "إضافة", "اضافة", "إزالة", "ازالة", "استبدل",
+        "بدّل", "بدل", "حوّلها", "حولها", "حوّل الصورة", "حول الصورة",
+        "خليها", "اجعل الخلفية", "غيّر الخلفية", "edit this", "edit the image",
+        "modify this", "change the image", "remove from the image",
+        "add to the image", "replace the", "retouch", "make the background",
+        "turn it into", "make it", "cartoonize",
+    )
+    generate_terms = (
+        "أنشئ صورة", "انشئ صورة", "ولد صورة", "ولّد صورة", "توليد صورة",
+        "اصنع صورة", "اعمل صورة", "ارسم", "ارسم صورة", "صمم صورة", "صمّم صورة",
+        "اريد صورة", "أريد صورة", "بدي صورة", "generate an image", "generate image",
+        "create an image", "make an image", "draw an image", "create a picture",
+    )
+
+    image_files = [file for file in (uploaded_files or []) if (file.type or "").startswith("image/")]
+    if image_files and any(term in text for term in edit_terms):
+        return "edit"
+    if not image_files and any(term in text for term in generate_terms):
+        return "generate"
+    return None
+
+
+def create_or_edit_image(prompt_text, uploaded_files=None):
+    """Call OpenAI image API and return raw image bytes."""
+    from openai import OpenAI
+
+    api_key = st.secrets.get("OPENAI_API_KEY")
+    if not api_key:
+        raise Exception("مفتاح OPENAI_API_KEY غير موجود في Streamlit Secrets.")
+
+    client = OpenAI(api_key=api_key)
+
+    if uploaded_files:
+        source_file = uploaded_files[0]
+        allowed_types = {"image/png", "image/jpeg", "image/webp"}
+        if source_file.type not in allowed_types:
+            raise Exception("تعديل الصور يدعم حاليًا PNG وJPG وWEBP فقط.")
+        if source_file.size >= 50 * 1024 * 1024:
+            raise Exception("حجم الصورة يجب أن يكون أقل من 50 MB.")
+        source_bytes = source_file.getvalue()
+        image_file = (source_file.name, io.BytesIO(source_bytes), source_file.type or "image/png")
+        result = client.images.edit(
+            model="gpt-image-2.5-sunburst",
+            image=image_file,
+            prompt=prompt_text,
+            n=1,
+            size="1024x1024",
+        )
+    else:
+        result = client.images.generate(
+            model="gpt-image-2.5-flare",
+            prompt=prompt_text,
+            n=1,
+            size="1024x1024",
+        )
+
+    encoded = result.data[0].b64_json
+    if not encoded:
+        raise Exception("لم تُرجع خدمة الصور ملف الصورة المتوقع.")
+    return base64.b64decode(encoded)
+
+
+# =====================================
 # المحتوى الرئيسي
 # =====================================
 if st.session_state.guest_mode and st.session_state.guest_message_count >= 10:
@@ -1741,6 +1813,8 @@ else:
     for message in st.session_state.messages:
         with st.chat_message(message["role"], avatar=None):
             st.markdown(message["content"])
+            if message.get("image_b64"):
+                st.image(base64.b64decode(message["image_b64"]), use_container_width=True)
 
 
 # =====================================
@@ -1780,12 +1854,23 @@ if prompt:
     try:
         is_guest = st.session_state.guest_mode
 
-        # Enforce the limit before sending anything to the AI.
+        # Enforce the guest limit before sending anything to an AI provider.
         if is_guest and st.session_state.guest_message_count >= 10:
             st.warning(
                 "انتهت رسائل الزائر العشر. سجّل الدخول للمتابعة."
                 if st.session_state.language == "ar"
                 else "The 10 guest messages have been used. Log in to continue."
+            )
+            st.stop()
+
+        request_type = image_request_type(user_text, files)
+
+        # Image creation/editing is restricted to authenticated accounts.
+        if is_guest and request_type in ("generate", "edit"):
+            st.warning(
+                "توليد الصور وتعديلها متاحان للمستخدمين المسجّلين فقط. سجّل الدخول لاستخدام هذه الميزة."
+                if st.session_state.language == "ar"
+                else "Image generation and editing are available to registered users only. Please log in."
             )
             st.stop()
 
@@ -1806,47 +1891,67 @@ if prompt:
         with st.chat_message("user", avatar=None):
             st.markdown(final_prompt)
 
+        generated_image_b64 = None
         with st.chat_message("assistant", avatar=None):
             with st.spinner(t("thinking")):
+                if request_type in ("generate", "edit"):
+                    edit_images = [file for file in files if (file.type or "").startswith("image/")]
+                    image_bytes = create_or_edit_image(user_text, edit_images if request_type == "edit" else None)
+                    generated_image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+                    answer = (
+                        "تم إنشاء الصورة بنجاح." if request_type == "generate"
+                        else "تم تعديل الصورة بنجاح."
+                    ) if st.session_state.language == "ar" else (
+                        "Image generated successfully." if request_type == "generate"
+                        else "Image edited successfully."
+                    )
+                    st.markdown(answer)
+                    st.image(image_bytes, use_container_width=True)
+                else:
+                    user_content = [
+                        {
+                            "type": "text",
+                            "text": final_prompt or "حلّل الصورة المرفقة واشرح ما يظهر فيها.",
+                        }
+                    ] + image_contents
 
-                user_content = [
-                    {
-                        "type": "text",
-                        "text": final_prompt or "حلّل الصورة المرفقة واشرح ما يظهر فيها.",
-                    }
-                ] + image_contents
+                    api_messages = [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        *[
+                            {"role": item["role"], "content": item["content"]}
+                            for item in st.session_state.messages[-12:-1]
+                        ],
+                        {
+                            "role": "user",
+                            "content": user_content if image_contents else final_prompt,
+                        },
+                    ]
 
-                api_messages = [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    *st.session_state.messages[-12:-1],
-                    {
-                        "role": "user",
-                        "content": user_content if image_contents else final_prompt,
-                    },
-                ]
+                    result = groq.chat.completions.create(
+                        model=MODEL,
+                        messages=api_messages,
+                        temperature=st.session_state.temperature,
+                        max_tokens=st.session_state.max_tokens,
+                    )
 
-                result = groq.chat.completions.create(
-                    model=MODEL,
-                    messages=api_messages,
-                    temperature=st.session_state.temperature,
-                    max_tokens=st.session_state.max_tokens,
-                )
+                    answer = (
+                        result.choices[0].message.content
+                        or "عذرًا، لم أتمكن من إنشاء رد."
+                    ).strip()
+                    st.markdown(answer)
 
-                answer = (
-                    result.choices[0].message.content
-                    or "عذرًا، لم أتمكن من إنشاء رد."
-                ).strip()
-
-                st.markdown(answer)
-
-        st.session_state.messages.append({
+        assistant_message = {
             "role": "assistant",
             "content": answer,
-        })
+        }
+        if generated_image_b64:
+            assistant_message["image_b64"] = generated_image_b64
+        st.session_state.messages.append(assistant_message)
 
         if is_guest:
             st.session_state.guest_message_count += 1
         else:
+            # Keep database chat_history text-only; image bytes remain in this session.
             save_message(cid, "assistant", answer)
 
             if first_message:
