@@ -206,9 +206,19 @@ def get_css():
     }
 
     .stApp {
-        background:
-            radial-gradient(ellipse at 52% 0%, rgba(91, 55, 150, .16), transparent 38%),
-            linear-gradient(145deg, #090812 0%, #0d0a16 55%, #090812 100%) !important;
+        background-color: #070817 !important;
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(5, 6, 18, .22) 0%,
+                rgba(5, 6, 18, .34) 58%,
+                rgba(5, 6, 18, .48) 100%
+            ),
+            url("https://raw.githubusercontent.com/yam181/nexora-ai/main/nexora_glass_background.png") !important;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
         color: var(--nx-text) !important;
     }
 
