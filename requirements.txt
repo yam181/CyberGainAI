@@ -14,3 +14,4 @@ arabic-reshaper
 python-bidi
 reportlab
 streamlit-mic-recorder
+openai
