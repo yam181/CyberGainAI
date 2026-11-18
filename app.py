@@ -708,6 +708,32 @@ def get_css():
         -webkit-backdrop-filter: blur(16px) !important;
     }
 
+    /* FINAL COMPOSER INNER SURFACE FIX: remove Streamlit's gray textarea fill */
+    [data-testid="stChatInput"] [data-baseweb="textarea"],
+    [data-testid="stChatInput"] [data-baseweb="textarea"] > div,
+    [data-testid="stChatInput"] [data-baseweb="textarea"] > div > div,
+    [data-testid="stChatInput"] [data-baseweb="textarea"] textarea,
+    [data-testid="stChatInput"] textarea {
+        background: rgba(35, 24, 58, .42) !important;
+        background-color: rgba(35, 24, 58, .42) !important;
+        color: #f6f1ff !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        -webkit-box-shadow: none !important;
+    }
+
+    [data-testid="stChatInput"] [data-baseweb="textarea"]:focus-within,
+    [data-testid="stChatInput"] textarea:focus {
+        background: rgba(35, 24, 58, .42) !important;
+        background-color: rgba(35, 24, 58, .42) !important;
+        outline: none !important;
+    }
+
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #b8a9d2 !important;
+        opacity: 1 !important;
+    }
+
     </style>
     """
 
